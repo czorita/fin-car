@@ -134,28 +134,27 @@ jobs:
         run: |
           TAG_NAME="${{ steps.versioning.outputs.release_version }}"
           IMAGE_NAME_LOWER=$(echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-
-          cat <<EOF > release_notes.md
-## 📦 Información de la Versión
-
-- **Versión:** \`${TAG_NAME}\`
-- **Imagen Docker:** \`${IMAGE_NAME_LOWER}:${TAG_NAME}\`
-- **Tag latest:** \`${IMAGE_NAME_LOWER}:latest\`
-
-### 🐳 Despliegue rápido con Docker
-\`\`\`bash
-# Descargar y arrancar la versión ${TAG_NAME}
-docker pull ${IMAGE_NAME_LOWER}:${TAG_NAME}
-docker run -d -p 8080:80 --name fin-car-app ${IMAGE_NAME_LOWER}:${TAG_NAME}
-\`\`\`
-
-### 📦 Arranque con Docker Compose
-\`\`\`bash
-DOCKER_IMAGE=${IMAGE_NAME_LOWER}:${TAG_NAME} docker compose up -d
-\`\`\`
-
----
-EOF
+          {
+            echo "## 📦 Información de la Versión"
+            echo ""
+            echo "- **Versión:** \`${TAG_NAME}\`"
+            echo "- **Imagen Docker:** \`${IMAGE_NAME_LOWER}:${TAG_NAME}\`"
+            echo "- **Tag latest:** \`${IMAGE_NAME_LOWER}:latest\`"
+            echo ""
+            echo "### 🐳 Despliegue rápido con Docker"
+            echo '```bash'
+            echo "# Descargar y arrancar la versión ${TAG_NAME}"
+            echo "docker pull ${IMAGE_NAME_LOWER}:${TAG_NAME}"
+            echo "docker run -d -p 8080:80 --name fin-car-app ${IMAGE_NAME_LOWER}:${TAG_NAME}"
+            echo '```'
+            echo ""
+            echo "### 📦 Arranque con Docker Compose"
+            echo '```bash'
+            echo "DOCKER_IMAGE=${IMAGE_NAME_LOWER}:${TAG_NAME} docker compose up -d"
+            echo '```'
+            echo ""
+            echo "---"
+          } > release_notes.md
 
           # Crear o actualizar GitHub Release
           if ! gh release view "$TAG_NAME" >/dev/null 2>&1; then
