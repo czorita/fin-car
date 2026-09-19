@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createDefaultOffer, OFFER_MODALITIES, MODALITY_LABELS } from '../../src/core/types.js';
+import { createDefaultOffer, OFFER_MODALITIES, MODALITY_LABELS, getOfferDisplayTitle, getOfferFinanceSubtitle } from '../../src/core/types.js';
 import { generateId, ID_PREFIX_OFFER, ID_PREFIX_PRODUCT, DEFAULTS } from '../../src/core/constants.js';
 
 describe('Tipos y Estructuras de Datos (types.js)', () => {
@@ -27,9 +27,7 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
     assert.equal(offer.downPayment, DEFAULTS.downPayment);
     assert.equal(offer.months, DEFAULTS.months);
     assert.equal(offer.tin, DEFAULTS.tin);
-    assert.equal(offer.openingFeePercentage, DEFAULTS.openingFeePercentage);
     assert.equal(offer.tradeInValue, 0);
-    assert.equal(offer.registrationFee, 0);
     assert.equal(offer.balloonPayment, 0);
     assert.deepEqual(offer.linkedProducts, []);
   });
@@ -37,18 +35,14 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
   test('Test 3: createDefaultOffer respeta el valor 0 en campos numéricos (no lo sustituye por default)', () => {
     const offer = createDefaultOffer({
       downPayment: 0,
-      openingFeePercentage: 0,
       tradeInValue: 0,
-      registrationFee: 0,
       balloonPayment: 0,
       tin: 0
     });
 
     assert.equal(offer.downPayment, 0, 'Entrada 0 debe mantenerse en 0');
-    assert.equal(offer.openingFeePercentage, 0, 'Comisión 0% debe mantenerse en 0');
     assert.equal(offer.tin, 0, 'TIN 0% debe mantenerse en 0');
     assert.equal(offer.tradeInValue, 0, 'Tasación 0 debe mantenerse en 0');
-    assert.equal(offer.registrationFee, 0, 'Matriculación 0 debe mantenerse en 0');
   });
 
   test('Test 4: Modalidades y etiquetas definidas correctamente', () => {
@@ -56,4 +50,72 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
     assert.equal(MODALITY_LABELS[OFFER_MODALITIES.STANDARD_FINANCE], 'Financiación Lineal Estándar');
     assert.equal(MODALITY_LABELS[OFFER_MODALITIES.FLEXIBLE_FINANCE], 'Financiación Flexible (Multiopción / Balloon)');
   });
+
+  test('Test 5: Soporte de vehículo explícito y extracción retrocompatible', () => {
+    const offerWithExplicit = createDefaultOffer({ vehicle: 'Toyota RAV4', title: 'Financiación 48m' });
+    assert.equal(offerWithExplicit.vehicle, 'Toyota RAV4');
+
+    const offerLegacyHyphen = createDefaultOffer({ title: 'Toyota Corolla 140H Style - Al Contado' });
+    assert.equal(offerLegacyHyphen.vehicle, 'Toyota Corolla 140H Style');
+
+    const offerLegacySuffix = createDefaultOffer({ title: 'Tucson fin' });
+    assert.equal(offerLegacySuffix.vehicle, 'Tucson');
+
+    const offerLegacySuffixCancel = createDefaultOffer({ title: 'RAV4 fin cancelando' });
+    assert.equal(offerLegacySuffixCancel.vehicle, 'RAV4');
+  });
+
+  test('Test 6: getOfferDisplayTitle genera el título con Modelo + Tipo de Financiación', () => {
+    assert.equal(
+      getOfferDisplayTitle({ vehicle: 'Hyundai Tucson', modality: OFFER_MODALITIES.CASH }),
+      'Hyundai Tucson - Al Contado'
+    );
+    assert.equal(
+      getOfferDisplayTitle({ vehicle: 'Hyundai Tucson', modality: OFFER_MODALITIES.STANDARD_FINANCE, months: 60 }),
+      'Hyundai Tucson - Financiación Lineal (60m)'
+    );
+    assert.equal(
+      getOfferDisplayTitle({ vehicle: 'Hyundai Tucson', modality: OFFER_MODALITIES.FLEXIBLE_FINANCE, months: 48 }),
+      'Hyundai Tucson - Compra Flexible (48m)'
+    );
+
+    // Subtítulo / Tipo de financiación a la derecha del guion para tarjetas en "Mismo vehículo"
+    assert.equal(
+      getOfferFinanceSubtitle({ vehicle: 'Toyota RAV4', modality: OFFER_MODALITIES.CASH }),
+      'Al Contado'
+    );
+    assert.equal(
+      getOfferFinanceSubtitle({ vehicle: 'Toyota RAV4', modality: OFFER_MODALITIES.STANDARD_FINANCE, months: 60 }),
+      'Financiación Lineal (60m)'
+    );
+    assert.equal(
+      getOfferFinanceSubtitle({ vehicle: 'Toyota RAV4', modality: OFFER_MODALITIES.FLEXIBLE_FINANCE, months: 48 }),
+      'Compra Flexible (48m)'
+    );
+  });
+
+  test('Test 7: En financiación, offerPrice es la resta entre vehiclePrice y financeDiscount', () => {
+    // Financiación lineal con precio y descuento explícitos
+    const financedOffer = createDefaultOffer({
+      vehicle: 'Kia Sportage',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      vehiclePrice: 30000,
+      financeDiscount: 3500
+    });
+    assert.equal(financedOffer.vehiclePrice, 30000);
+    assert.equal(financedOffer.financeDiscount, 3500);
+    assert.equal(financedOffer.offerPrice, 26500, 'offerPrice debe ser la resta: 30000 - 3500 = 26500');
+
+    // Al contado, el descuento es 0 y offerPrice es igual a vehiclePrice
+    const cashOffer = createDefaultOffer({
+      vehicle: 'Kia Sportage',
+      modality: OFFER_MODALITIES.CASH,
+      vehiclePrice: 30000,
+      financeDiscount: 3500 // Debe ignorarse en contado
+    });
+    assert.equal(cashOffer.vehiclePrice, 30000);
+    assert.equal(cashOffer.financeDiscount, 0);
+    assert.equal(cashOffer.offerPrice, 30000);
+  });
 });
+

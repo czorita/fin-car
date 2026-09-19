@@ -34,8 +34,7 @@ export const DEFAULTS = {
   offerPrice: 22500,
   downPayment: 4000,
   months: 60,
-  tin: 8.5,
-  openingFeePercentage: 3.0,
+  tin: 8.5
 };
 
 // --- LocalStorage Keys ---

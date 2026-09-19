@@ -27,16 +27,38 @@ export function normalizeOffer(offer) {
     .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
   const totalProductsCost = productsFinanced + productsUpfront;
 
-  const registrationFee = Number(offer.registrationFee) || 0;
   const tradeInValue = Number(offer.tradeInValue) || 0;
-  const cashPriceRef = Number(offer.cashPriceReference) || Number(offer.offerPrice) || 0;
-  const offerPrice = Number(offer.offerPrice) || 0;
+
+  // Precio del vehículo y descuento por financiar
+  const vehiclePrice = Number(offer.vehiclePrice) || Number(offer.cashPriceReference) || Number(offer.offerPrice) || 0;
+  let financeDiscount = 0;
+  if (!isCash) {
+    if (offer.financeDiscount !== undefined) {
+      financeDiscount = Number(offer.financeDiscount);
+    } else if (offer.advertisedDiscount !== undefined) {
+      financeDiscount = Number(offer.advertisedDiscount);
+    } else if (offer.cashPriceReference !== undefined && offer.offerPrice !== undefined && Number(offer.cashPriceReference) > Number(offer.offerPrice)) {
+      financeDiscount = Number(offer.cashPriceReference) - Number(offer.offerPrice);
+    }
+  }
+
+  // La resta será el precio con el que se hagan todos los cálculos
+  let calculationPrice = isCash ? vehiclePrice : Math.max(0, vehiclePrice - financeDiscount);
+  if (offer.offerPrice !== undefined && offer.vehiclePrice === undefined && offer.financeDiscount === undefined) {
+    calculationPrice = Number(offer.offerPrice);
+  }
+  const offerPrice = calculationPrice;
+  const cashPriceRef = vehiclePrice;
 
   // Si es contado
   if (isCash) {
-    const totalOutofPocket = Math.max(0, offerPrice - tradeInValue + registrationFee + totalProductsCost);
+    const totalOutofPocket = Math.max(0, offerPrice - tradeInValue + totalProductsCost);
     return {
       ...offer,
+      vehiclePrice,
+      financeDiscount: 0,
+      cashPriceReference: vehiclePrice,
+      offerPrice,
       isCash: true,
       downPayment: 0,
       principalFinanced: 0,
@@ -46,7 +68,6 @@ export function normalizeOffer(offer) {
       effectiveApr: 0,
       nominalTin: 0,
       totalInterest: 0,
-      openingFeeAmount: 0,
       upfrontPayment: totalOutofPocket,
       totalFinancedPayments: 0,
       totalOutOfPocketCost: totalOutofPocket,
@@ -55,12 +76,10 @@ export function normalizeOffer(offer) {
       costBreakdown: {
         vehicleNet: Math.max(0, offerPrice - tradeInValue),
         interests: 0,
-        openingFee: 0,
-        linkedProducts: totalProductsCost,
-        registrationFee: registrationFee
+        linkedProducts: totalProductsCost
       },
-      advertisedDiscount: Math.max(0, cashPriceRef - offerPrice),
-      netDifferenceVsCashRef: totalOutofPocket - (cashPriceRef - tradeInValue + registrationFee),
+      advertisedDiscount: 0,
+      netDifferenceVsCashRef: totalOutofPocket - (cashPriceRef - tradeInValue),
       verdict: generateVerdict({ isCash: true }),
       amortizationSchedule: []
     };
@@ -71,24 +90,10 @@ export function normalizeOffer(offer) {
   const months = Number(offer.months) || 60;
   const balloon = isFlexible ? (Number(offer.balloonPayment) || 0) : 0;
   const tin = Number(offer.tin) || 0;
-  const openingPct = Number(offer.openingFeePercentage) || 0;
-  const isOpeningFinanced = Boolean(offer.openingFeeFinanced);
 
   // Capital base del vehículo a financiar
   const netVehicleToFinance = Math.max(0, offerPrice - downPayment - tradeInValue);
-
-  // Base para calcular la comisión de apertura
-  const preOpeningPrincipal = netVehicleToFinance + productsFinanced;
-  const openingFeeAmount = Number(((preOpeningPrincipal * openingPct) / 100).toFixed(2));
-
-  let financedPrincipal = preOpeningPrincipal;
-  let upfrontOpeningFee = 0;
-
-  if (isOpeningFinanced) {
-    financedPrincipal += openingFeeAmount;
-  } else {
-    upfrontOpeningFee = openingFeeAmount;
-  }
+  const financedPrincipal = netVehicleToFinance + productsFinanced;
 
   // Cuota mensual
   let monthlyPayment = 0;
@@ -111,16 +116,13 @@ export function normalizeOffer(offer) {
   totalInterest = Number(totalInterest.toFixed(2));
 
   // Desembolso inicial (de tu bolsillo al firmar)
-  const initialCashOut = downPayment + registrationFee + upfrontOpeningFee + productsUpfront;
+  const initialCashOut = downPayment + productsUpfront;
 
   // Pagos futuros
   const totalInstallments = Number((monthlyPayment * months).toFixed(2));
   
-  // Coste total según decisión de cuota final
-  const willKeepCar = !isFlexible || offer.balloonDecision !== 'return';
-  const finalBalloonToPay = willKeepCar ? balloon : 0;
-  
-  const totalOutOfPocketCost = Number((initialCashOut + totalInstallments + finalBalloonToPay).toFixed(2));
+  // Coste total (desembolso inicial + cuotas + cuota final si aplica)
+  const totalOutOfPocketCost = Number((initialCashOut + totalInstallments + balloon).toFixed(2));
 
   // TAE real efectiva
   const effectiveApr = calculateEffectiveApr(
@@ -128,22 +130,20 @@ export function normalizeOffer(offer) {
     monthlyPayment,
     months,
     balloon,
-    upfrontOpeningFee + productsUpfront
+    productsUpfront
   );
 
   // Desglose de costes
   const costBreakdown = {
     vehicleNet: Math.max(0, offerPrice - tradeInValue),
     interests: totalInterest,
-    openingFee: openingFeeAmount,
-    linkedProducts: totalProductsCost,
-    registrationFee: registrationFee
+    linkedProducts: totalProductsCost
   };
 
   // Comparación contra precio contado de referencia
-  const baseCashReferenceTotal = Math.max(0, cashPriceRef - tradeInValue + registrationFee);
+  const baseCashReferenceTotal = Math.max(0, cashPriceRef - tradeInValue);
   const advertisedDiscount = Math.max(0, cashPriceRef - offerPrice); // El descuento que te promete el comercial por financiar
-  const financialSurcharge = totalInterest + openingFeeAmount + totalProductsCost; // Todo lo que añades por financiar
+  const financialSurcharge = totalInterest + totalProductsCost; // Todo lo que añades por financiar
   const netDifferenceVsCashRef = Number((totalOutOfPocketCost - baseCashReferenceTotal).toFixed(2));
 
   // Veredicto
@@ -159,6 +159,10 @@ export function normalizeOffer(offer) {
 
   return {
     ...offer,
+    vehiclePrice,
+    financeDiscount,
+    offerPrice,
+    cashPriceReference: vehiclePrice,
     isCash: false,
     principalFinanced: Number(financedPrincipal.toFixed(2)),
     monthlyPayment,
@@ -167,7 +171,6 @@ export function normalizeOffer(offer) {
     effectiveApr: effectiveApr || Number((effectiveTin * 1.05).toFixed(2)), // Si TAE da 0 aproximar
     nominalTin: effectiveTin,
     totalInterest,
-    openingFeeAmount,
     upfrontPayment: initialCashOut,
     totalFinancedPayments: totalInstallments,
     totalOutOfPocketCost,
@@ -189,12 +192,25 @@ export function normalizeOffer(offer) {
 export function rankOffers(normalizedOffers) {
   if (!normalizedOffers.length) return [];
 
-  // Mínimo coste total
-  const minTotalCost = Math.min(...normalizedOffers.map(o => o.totalOutOfPocketCost));
-  // Menor sobrecoste de intereses
-  const minInterest = Math.min(...normalizedOffers.map(o => o.totalInterest));
+  // Orden de modalidad: contado → financiación lineal → financiación flexible
+  const MODALITY_ORDER = {
+    [OFFER_MODALITIES.CASH]: 0,
+    [OFFER_MODALITIES.STANDARD_FINANCE]: 1,
+    [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 2
+  };
 
-  return normalizedOffers.map(offer => {
+  const sorted = [...normalizedOffers].sort((a, b) => {
+    const orderDiff = (MODALITY_ORDER[a.modality] ?? 99) - (MODALITY_ORDER[b.modality] ?? 99);
+    if (orderDiff !== 0) return orderDiff;
+    // Dentro de la misma modalidad, ordenar de menos a más meses
+    return (a.totalMonths || 0) - (b.totalMonths || 0);
+  });
+
+  // Mínimo coste total y menor interés (sobre el conjunto original, no el ordenado)
+  const minTotalCost = Math.min(...sorted.map(o => o.totalOutOfPocketCost));
+  const minInterest = Math.min(...sorted.map(o => o.totalInterest));
+
+  return sorted.map(offer => {
     const badges = [];
     if (offer.totalOutOfPocketCost === minTotalCost) {
       badges.push('🏆 Menor Coste Total');

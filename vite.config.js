@@ -19,6 +19,11 @@ function htmlPartialsPlugin() {
         console.warn(`[html-partials] Parcial no encontrado: ${partialPath}`);
         return '';
       });
+    },
+    handleHotUpdate({ file, server }) {
+      if (file.includes('partials') || file.endsWith('.html')) {
+        server.ws.send({ type: 'full-reload' });
+      }
     }
   };
 }

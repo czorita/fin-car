@@ -1,6 +1,6 @@
 {
   "id": "offer_1789829894536_ez5jq",
-  "title": "Tucson fin",
+  "title": "Tucson",
   "dealer": "Syrluz Fernando",
   "notes": "",
   "modality": "standard_finance",
@@ -8,14 +8,12 @@
   "offerPrice": 35969.99,
   "downPayment": 19969.99,
   "tradeInValue": 0,
-  "registrationFee": 0,
   "months": 60,
   "tin": 0,
   "manualMonthlyPayment": 360.07,
   "balloonPayment": 0,
   "balloonDecision": "keep",
-  "openingFeePercentage": 0,
-  "openingFeeFinanced": false,
   "linkedProducts": [],
-  "createdAt": "2026-09-19T15:02:30.153Z"
+  "createdAt": "2026-09-19T15:02:30.153Z",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/2022_Hyundai_Tucson_Preferred%2C_Front_Right%2C_05-24-2021.jpg/960px-2022_Hyundai_Tucson_Preferred%2C_Front_Right%2C_05-24-2021.jpg"
 }

@@ -11,7 +11,6 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
       modality: OFFER_MODALITIES.CASH,
       offerPrice: 20000,
       cashPriceReference: 20000,
-      registrationFee: 400,
       tradeInValue: 2000
     });
 
@@ -20,7 +19,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.equal(normalized.downPayment, 0, 'La entrada de una oferta al contado debe ser 0');
     assert.equal(normalized.monthlyPayment, 0);
     assert.equal(normalized.totalInterest, 0);
-    assert.equal(normalized.totalOutOfPocketCost, 18400); // 20000 - 2000 + 400
+    assert.equal(normalized.totalOutOfPocketCost, 18000); // 20000 - 2000
     assert.equal(normalized.verdict.status, 'neutral');
     assert.equal(normalized.verdict.badge, 'Pago al Contado');
 
@@ -109,4 +108,41 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
       'No debe incluirse la insignia de cuota mensual más baja'
     );
   });
+
+  test('Test 6: Normalización realiza todos los cálculos con la resta (vehiclePrice - financeDiscount)', () => {
+    // Coche de 28.000 € con descuento por financiar de 3.000 € -> precio base para cálculos = 25.000 €
+    // Entrada: 5.000 € -> Capital a financiar = 20.000 €
+    const offer = createDefaultOffer({
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      vehiclePrice: 28000,
+      financeDiscount: 3000,
+      downPayment: 5000,
+      tradeInValue: 0,
+      months: 60,
+      tin: 8
+    });
+
+    const normalized = normalizeOffer(offer);
+    assert.equal(normalized.vehiclePrice, 28000);
+    assert.equal(normalized.financeDiscount, 3000);
+    assert.equal(normalized.offerPrice, 25000, 'El precio base de cálculo debe ser 25.000 €');
+    assert.equal(normalized.principalFinanced, 20000, 'El capital financiado debe ser 25.000 - 5.000 = 20.000 €');
+    assert.equal(normalized.advertisedDiscount, 3000);
+
+    // Comparado contra una oferta que introdujo directamente 25.000 € de precio sin descuento
+    const offerDirectNet = createDefaultOffer({
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      offerPrice: 25000,
+      downPayment: 5000,
+      tradeInValue: 0,
+      months: 60,
+      tin: 8
+    });
+    const normalizedDirect = normalizeOffer(offerDirectNet);
+
+    assert.equal(normalized.monthlyPayment, normalizedDirect.monthlyPayment, 'La cuota calculada debe ser idéntica');
+    assert.equal(normalized.totalInterest, normalizedDirect.totalInterest, 'El total de intereses debe ser idéntico');
+    assert.equal(normalized.totalOutOfPocketCost, normalizedDirect.totalOutOfPocketCost, 'El desembolso total debe ser idéntico');
+  });
 });
+

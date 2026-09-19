@@ -1,0 +1,29 @@
+{
+  "id": "ejemplo-5-i30-financiacion",
+  "vehicle": "Hyundai i30 1.5 T-GDI",
+  "title": "Hyundai i30 1.5 T-GDI - Financiación Smart 60m",
+  "dealer": "Hyundai Gamboa",
+  "notes": "Descuento de concesionario por financiar con TIN 7.95% a 5 años.",
+  "modality": "standard_finance",
+  "cashPriceReference": 25500,
+  "offerPrice": 22900,
+  "downPayment": 4000,
+  "tradeInValue": 0,
+  "months": 60,
+  "tin": 7.95,
+  "manualMonthlyPayment": null,
+  "balloonPayment": 0,
+  "balloonDecision": "keep",
+  "linkedProducts": [
+    {
+      "id": "p_i30_1",
+      "name": "Pack Mantenimiento 5 años",
+      "cost": 600,
+      "financed": true,
+      "required": false
+    }
+  ],
+  "isExample": true,
+  "createdAt": "2026-09-05T12:00:00.000Z",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/2018_Hyundai_i30_SE_Nav_T-GDi_1.3_Front.jpg/960px-2018_Hyundai_i30_SE_Nav_T-GDi_1.3_Front.jpg"
+}

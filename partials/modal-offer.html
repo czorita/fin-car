@@ -12,8 +12,24 @@
     <input type="hidden" id="offer-id" />
 
     <div class="form-group">
-      <label class="form-label" for="offer-title">Nombre / Modelo del Vehículo *</label>
-      <input type="text" id="offer-title" class="form-input" placeholder="Ej: Toyota Corolla 140H Style" required />
+      <label class="form-label" for="offer-vehicle">
+        Vehículo / Modelo *
+        <span class="helper-icon" title="Modelo de coche sobre el que se aplica la oferta">ⓘ</span>
+      </label>
+      <input type="text" id="offer-vehicle" list="vehicles-datalist" class="form-input" placeholder="Ej: Hyundai Tucson, Toyota RAV4" required autocomplete="off" />
+      <datalist id="vehicles-datalist"></datalist>
+    </div>
+
+    <!-- Vista Previa Automática del Modelo Detectado -->
+    <div class="vehicle-auto-preview-container" id="vehicle-auto-preview" style="display: none;">
+      <div class="vehicle-image-preview-box" id="vehicle-image-preview" title="Vista previa del modelo">
+        <div class="vehicle-image-placeholder" id="vehicle-image-placeholder">🚗</div>
+        <img id="vehicle-image-thumb" src="" alt="Vista previa del modelo" style="display: none;" />
+      </div>
+      <div class="vehicle-auto-preview-info">
+        <span class="vehicle-auto-preview-badge">✓ Foto oficial vinculada automáticamente</span>
+        <span class="form-helper" id="vehicle-image-status">Fotografía asignada desde el catálogo para las comparativas.</span>
+      </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -36,33 +52,37 @@
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-      <div class="form-group">
-        <label class="form-label" for="cash-ref-price">
-          PVP Catálogo / Contado
-          <span class="helper-icon" title="Precio oficial del coche sin descuentos por financiar">ⓘ</span>
+    <div id="price-fields-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div class="form-group" id="group-vehicle-price" style="margin-bottom: 0.5rem;">
+        <label class="form-label" for="offer-price">
+          Precio del Vehículo *
+          <span class="helper-icon" title="Precio base o presupuesto del vehículo sin descontar la financiación">ⓘ</span>
         </label>
         <div class="input-wrapper">
-          <input type="text" inputmode="decimal" id="cash-ref-price" class="form-input has-addon" placeholder="25000 o 25.000,00" required />
+          <input type="text" inputmode="decimal" id="offer-price" class="form-input has-addon" placeholder="Ej: 27500 o 27.500,00" required />
           <span class="input-addon">€</span>
         </div>
-        <span class="form-helper">Precio al contado oficial para comparar</span>
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="offer-price">
-          Precio Ofertado *
-          <span class="helper-icon" title="Precio que te prometen para esta modalidad">ⓘ</span>
+      <div class="form-group" id="group-finance-discount" style="margin-bottom: 0.5rem;">
+        <label class="form-label" for="finance-discount">
+          Descuento por Financiar
+          <span class="helper-icon" title="Descuento en el precio del coche que promete el concesionario a cambio de financiar">ⓘ</span>
         </label>
         <div class="input-wrapper">
-          <input type="text" inputmode="decimal" id="offer-price" class="form-input has-addon" placeholder="22500 o 22.500,00" required />
+          <input type="text" inputmode="decimal" id="finance-discount" class="form-input has-addon" placeholder="Ej: 3300 o 3.300,00" />
           <span class="input-addon">€</span>
         </div>
-        <span class="form-helper" id="discount-preview-text">Descuento aplicado: 0 €</span>
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+    <!-- Indicador dinámico del Precio Resultante para Cálculos -->
+    <div id="net-calc-price-indicator" class="calc-price-summary" style="margin-bottom: 1rem;">
+      <span class="calc-price-label">Precio base de cálculo (Precio - Descuento):</span>
+      <span class="calc-price-val" id="net-calc-price-val">24.200 €</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
       <div class="form-group" id="group-down-payment">
         <label class="form-label" for="down-payment">Entrada (€)</label>
         <div class="input-wrapper">
@@ -75,14 +95,6 @@
         <label class="form-label" for="trade-in-value">Tasación Coche Usado</label>
         <div class="input-wrapper">
           <input type="text" inputmode="decimal" id="trade-in-value" class="form-input has-addon" placeholder="0" />
-          <span class="input-addon">€</span>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="registration-fee">Gastos Matriculación</label>
-        <div class="input-wrapper">
-          <input type="text" inputmode="decimal" id="registration-fee" class="form-input has-addon" placeholder="450" />
           <span class="input-addon">€</span>
         </div>
       </div>
@@ -141,43 +153,15 @@
 
       <!-- Cuota Final (Multiopción) -->
       <div id="flexible-balloon-container" style="display: none; background: rgba(59, 130, 246, 0.07); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px dashed rgba(59, 130, 246, 0.3);">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" for="balloon-payment">
-              Cuota Final / Valor Futuro (VFG) *
-              <span class="helper-icon" title="Último pago balloon para quedarse el coche">ⓘ</span>
-            </label>
-            <div class="input-wrapper">
-              <input type="text" inputmode="decimal" id="balloon-payment" class="form-input has-addon" placeholder="13000 o 13.000,00" />
-              <span class="input-addon">€</span>
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" for="balloon-decision">Tu intención final</label>
-            <select id="balloon-decision" class="form-select">
-              <option value="keep" selected>Pagar cuota final (Quedarse el coche)</option>
-              <option value="return">Devolver el coche (Uso temporal / Renting)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Comisión de apertura -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center;">
-        <div class="form-group">
-          <label class="form-label" for="opening-pct">Comisión de Apertura (%)</label>
-          <div class="input-wrapper">
-            <input type="text" inputmode="decimal" id="opening-pct" class="form-input has-addon" placeholder="3,0" />
-            <span class="input-addon">%</span>
-          </div>
-        </div>
-
-        <div class="form-group" style="padding-top: 1.2rem;">
-          <label class="checkbox-label">
-            <input type="checkbox" id="opening-financed" checked />
-            ¿Comisión de apertura financiada? (se suma a las cuotas)
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="balloon-payment">
+            Cuota Final / Valor Futuro (VFG) *
+            <span class="helper-icon" title="Último pago balloon de la financiación flexible">ⓘ</span>
           </label>
+          <div class="input-wrapper">
+            <input type="text" inputmode="decimal" id="balloon-payment" class="form-input has-addon" placeholder="13000 o 13.000,00" />
+            <span class="input-addon">€</span>
+          </div>
         </div>
       </div>
 

@@ -5,6 +5,7 @@
 
 import { Chart, BarElement, BarController, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
 import { CHART_TITLE_MAX_LENGTH } from '../core/constants.js';
+import { getOfferDisplayTitle, getOfferFinanceSubtitle, getOfferVehicle } from '../core/types.js';
 
 Chart.register(BarElement, BarController, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -15,23 +16,35 @@ let chartInstance = null;
  * @param {HTMLCanvasElement} canvas 
  * @param {Array<import('../core/normalizer.js').NormalizedOffer>} offers 
  * @param {string} theme - 'dark' | 'light'
+ * @param {string} [activeTab='same_vehicle'] - 'same_vehicle' | 'cross_vehicle'
  */
-export function renderCostBreakdownChart(canvas, offers, theme = 'dark') {
+export function renderCostBreakdownChart(canvas, offers, theme = 'dark', activeTab = 'same_vehicle') {
   if (!canvas || !offers || offers.length === 0) return;
 
   const isDark = theme === 'dark';
   const textColor = isDark ? '#94a3b8' : '#475569';
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
 
+  // Si estamos en el desglose financiero del mismo vehículo (o todas las ofertas corresponden al mismo modelo),
+  // se elimina el nombre del modelo de cada línea para evitar ruido visual redundante.
+  const uniqueVehicles = new Set(offers.map(o => getOfferVehicle(o)).filter(Boolean));
+  const isSingleVehicle = activeTab === 'same_vehicle' || uniqueVehicles.size <= 1;
+
   const labels = offers.map(o => {
-    return o.title.length > CHART_TITLE_MAX_LENGTH
-      ? o.title.substring(0, CHART_TITLE_MAX_LENGTH - 2) + '...'
-      : o.title;
+    let rawLabel;
+    if (isSingleVehicle) {
+      rawLabel = getOfferFinanceSubtitle(o);
+    } else {
+      const uniqueModalities = new Set(offers.map(x => x.modality));
+      rawLabel = uniqueModalities.size <= 1 ? getOfferVehicle(o) : getOfferDisplayTitle(o);
+    }
+    return rawLabel.length > CHART_TITLE_MAX_LENGTH
+      ? rawLabel.substring(0, CHART_TITLE_MAX_LENGTH - 2) + '...'
+      : rawLabel;
   });
 
   const vehicleData = offers.map(o => o.costBreakdown.vehicleNet);
   const interestData = offers.map(o => o.costBreakdown.interests);
-  const feeData = offers.map(o => o.costBreakdown.openingFee);
   const productsData = offers.map(o => o.costBreakdown.linkedProducts);
 
   const datasets = [
@@ -45,12 +58,6 @@ export function renderCostBreakdownChart(canvas, offers, theme = 'dark') {
       label: 'Intereses Bancarios (€)',
       data: interestData,
       backgroundColor: '#f43f5e',
-      borderRadius: 4
-    },
-    {
-      label: 'Comisión de Apertura (€)',
-      data: feeData,
-      backgroundColor: '#8b5cf6',
       borderRadius: 4
     },
     {

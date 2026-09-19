@@ -13,9 +13,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 1.5rem;
+  padding-bottom: 1.15rem;
   border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -144,6 +144,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
   transition: all var(--transition-normal);
   box-shadow: var(--shadow-md);
 }
@@ -156,18 +157,7 @@
 
 .offer-card.is-winner {
   border-color: var(--badge-winner-border);
-  box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
-}
-
-.offer-card.is-winner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #10b981, #06b6d4);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.18), 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .offer-header {
@@ -181,6 +171,11 @@
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-bottom: 0.65rem;
+}
+
+.offer-badges:empty {
+  display: none;
+  margin-bottom: 0;
 }
 
 .offer-title {
@@ -267,6 +262,27 @@
   background: var(--bg-surface-elevated);
   border-color: var(--border-subtle);
   color: var(--text-secondary);
+}
+
+/* Link de guía de trampa dentro de la alerta de veredicto */
+.verdict-trap-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: inherit;
+  opacity: 0.8;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity var(--transition-fast);
+  font-family: var(--font-body);
+}
+.verdict-trap-link:hover {
+  opacity: 1;
 }
 
 /* Filas de Métricas */
@@ -433,7 +449,7 @@
   .mobile-fab {
     display: block;
   }
-  .segmented-control {
+  .segmented-control:not(.cross-modality-selector):not(.cross-view-switcher) {
     grid-template-columns: 1fr;
   }
 }
@@ -505,5 +521,15 @@
 
 .table-cell--muted {
   color: var(--text-muted);
+}
+
+.table-th--winner {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-left: 1px solid var(--accent-emerald);
+  border-right: 1px solid var(--accent-emerald);
+}
+
+.cross-vehicle-table td:nth-child(2) {
+  background: rgba(16, 185, 129, 0.03);
 }
 

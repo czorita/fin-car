@@ -1,22 +1,21 @@
 {
   "id": "ejemplo-1-contado",
+  "vehicle": "Toyota Corolla 140H Style",
   "title": "Toyota Corolla 140H Style - Al Contado",
   "dealer": "Concesionario Oficial Madrid",
   "notes": "Presupuesto oficial pagando todo al contado con transferencia.",
   "modality": "cash",
-  "cashPriceReference": 27500,
+  "cashPriceReference": 26800,
   "offerPrice": 26800,
   "downPayment": 0,
   "tradeInValue": 0,
-  "registrationFee": 450,
   "months": 0,
   "tin": 0,
   "manualMonthlyPayment": null,
   "balloonPayment": 0,
   "balloonDecision": "keep",
-  "openingFeePercentage": 0,
-  "openingFeeFinanced": false,
   "linkedProducts": [],
   "isExample": true,
-  "createdAt": "2026-09-01T10:00:00.000Z"
+  "createdAt": "2026-09-01T10:00:00.000Z",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/2018_Toyota_Corolla_%28MZEA12R%29_Ascent_Sport_hatchback_%282018-11-02%29_01.jpg/960px-2018_Toyota_Corolla_%28MZEA12R%29_Ascent_Sport_hatchback_%282018-11-02%29_01.jpg"
 }

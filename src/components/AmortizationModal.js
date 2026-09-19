@@ -3,6 +3,8 @@
  * Conecta con el diálogo en index.html y genera las filas de amortización usando DocumentFragment y nodos DOM puros.
  */
 
+import { getOfferDisplayTitle } from '../core/types.js';
+
 /**
  * Inicializa el modal de amortización.
  * @returns {{ open: (offer: import('../core/normalizer.js').NormalizedOffer) => void, close: () => void }}
@@ -24,7 +26,7 @@ export function initAmortizationModal() {
     open(offer) {
       if (!offer || !offer.amortizationSchedule) return;
 
-      carTitleEl.textContent = `Amortización: ${offer.title} (${offer.nominalTin}% TIN)`;
+      carTitleEl.textContent = `Amortización: ${getOfferDisplayTitle(offer)} (${offer.nominalTin}% TIN)`;
       principalEl.textContent = `${offer.principalFinanced.toLocaleString('es-ES')} €`;
       interestsEl.textContent = `+${offer.totalInterest.toLocaleString('es-ES')} €`;
       monthlyEl.textContent = `${offer.monthlyPayment.toLocaleString('es-ES')} €`;

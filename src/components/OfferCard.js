@@ -3,7 +3,7 @@
  * Utiliza la plantilla nativa <template id="tmpl-offer-card"> y crea nodos DOM seguros sin innerHTML.
  */
 
-import { MODALITY_LABELS, OFFER_MODALITIES } from '../core/types.js';
+import { MODALITY_LABELS, OFFER_MODALITIES, getOfferFinanceSubtitle } from '../core/types.js';
 
 /**
  * Crea una fila de especificación en el desglose de la tarjeta.
@@ -72,10 +72,9 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
   // 1. Badges
   const badgesContainer = card.querySelector('.offer-badges');
-  badgesContainer.appendChild(createBadge(MODALITY_LABELS[offer.modality] || 'Oferta', 'badge-neutral'));
 
   if (isWinner) {
-    badgesContainer.appendChild(createBadge('🏆 Mejor Opción Global', 'badge-winner'));
+    badgesContainer.appendChild(createBadge('🏆 Menor Coste', 'badge-winner'));
   }
 
   if (offer.highlights && offer.highlights.length) {
@@ -86,14 +85,14 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
     });
   }
 
-  // 2. Título y Concesionario
-  card.querySelector('.offer-title').textContent = offer.title;
+  // 2. Título (fórmula de financiación y meses) y Concesionario
+  card.querySelector('.offer-title').textContent = getOfferFinanceSubtitle(offer);
   card.querySelector('.dealer-text').textContent = offer.dealer || 'Concesionario sin especificar';
 
   // 3. Coste Hero
   card.querySelector('.cost-hero-amount').textContent = `${offer.totalOutOfPocketCost.toLocaleString('es-ES')} €`;
 
-  let paymentPlanSubtext = 'Pago único con transferencia bancaria directa';
+  let paymentPlanSubtext = '';
   if (!isCash) {
     if (isFlexible) {
       paymentPlanSubtext = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas de ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Cuota final de ${offer.balloonPayment.toLocaleString('es-ES')} €`;
@@ -101,27 +100,56 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
       paymentPlanSubtext = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas de ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`;
     }
   }
-  card.querySelector('.cost-hero-sub').textContent = paymentPlanSubtext;
+  const heroSubEl = card.querySelector('.cost-hero-sub');
+  if (heroSubEl) {
+    heroSubEl.textContent = paymentPlanSubtext;
+    heroSubEl.style.display = paymentPlanSubtext ? 'block' : 'none';
+  }
 
-  // 4. Alerta de Veredicto
+  // 4. Alerta de Veredicto (solo para trampas de financiación y costes asumibles)
   const alertEl = card.querySelector('.card-verdict-alert');
-  alertEl.className = 'card-verdict-alert';
-  if (offer.verdict.status === 'danger') alertEl.classList.add('danger');
-  else if (offer.verdict.status === 'success') alertEl.classList.add('success');
-  else if (offer.verdict.status === 'warning') alertEl.classList.add('warning');
-  else if (offer.verdict.status === 'info') alertEl.classList.add('info');
-  else alertEl.classList.add('neutral');
+  const isTrap = offer.verdict?.status === 'danger';
+  const isSuccess = offer.verdict?.status === 'success'; // "Ahorro Neto" — ocultado para reducir ruido
+  const isNeutralOrWarning = isCash || !offer.verdict || offer.verdict.status === 'neutral' || offer.verdict.status === 'warning' || offer.verdict.badge === 'Sin Ventajas';
 
-  card.querySelector('.verdict-badge-text').textContent = offer.verdict.badge;
-  card.querySelector('.verdict-msg-text').textContent = offer.verdict.message;
+  if (isNeutralOrWarning || isSuccess) {
+    if (alertEl) alertEl.style.display = 'none';
+  } else {
+    if (alertEl) {
+      alertEl.style.display = 'block';
+      alertEl.className = 'card-verdict-alert';
+      if (isTrap) alertEl.classList.add('danger');
+      else if (offer.verdict.status === 'info') alertEl.classList.add('info');
+
+      card.querySelector('.verdict-badge-text').textContent = offer.verdict.badge;
+      card.querySelector('.verdict-msg-text').textContent = offer.verdict.message;
+
+      // Mostrar link al modal de guía de trampa solo para veredictos de trampa
+      const trapLinkBtn = card.querySelector('.verdict-trap-link');
+      if (trapLinkBtn) {
+        if (isTrap) {
+          trapLinkBtn.style.display = 'inline-block';
+          trapLinkBtn.addEventListener('click', () => {
+            const modal = document.getElementById('modal-trap-guide');
+            if (modal && typeof modal.showModal === 'function') modal.showModal();
+          });
+        } else {
+          trapLinkBtn.style.display = 'none';
+        }
+      }
+    }
+  }
 
   // 5. Lista de especificaciones y métricas
   const specsList = card.querySelector('.offer-specs-list');
 
-  specsList.appendChild(createSpecRow('Precio vehículo ofertado:', `${offer.offerPrice.toLocaleString('es-ES')} €`));
+  const vPrice = offer.vehiclePrice || offer.cashPriceReference || offer.offerPrice;
+  specsList.appendChild(createSpecRow('Precio del vehículo:', `${vPrice.toLocaleString('es-ES')} €`));
 
-  if (offer.advertisedDiscount > 0) {
-    specsList.appendChild(createSpecRow('Descuento anunciado:', `-${offer.advertisedDiscount.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
+  const disc = offer.financeDiscount !== undefined ? offer.financeDiscount : (offer.advertisedDiscount || 0);
+  if (!isCash && disc > 0) {
+    specsList.appendChild(createSpecRow('Descuento por financiar:', `-${disc.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
+    specsList.appendChild(createSpecRow('Precio base de cálculo:', `${offer.offerPrice.toLocaleString('es-ES')} €`, { isEmphasized: true }));
   }
 
   if (!isCash && offer.downPayment > 0) {
@@ -136,20 +164,18 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
     specsList.appendChild(createSpecRow('Capital financiado:', `${offer.principalFinanced.toLocaleString('es-ES')} €`));
     specsList.appendChild(createSpecRow('TIN nominal / TAE real:', `${offer.nominalTin}% TIN / ${offer.effectiveApr}% TAE`));
     specsList.appendChild(createSpecRow('Total intereses banco:', `+${offer.totalInterest.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
-    specsList.appendChild(createSpecRow('Comisión de apertura:', `${offer.openingFeeAmount.toLocaleString('es-ES')} € (${offer.openingFeePercentage}%)`));
 
     if (offer.costBreakdown.linkedProducts > 0) {
       specsList.appendChild(createSpecRow('Seguros y extras obligatorios:', `+${offer.costBreakdown.linkedProducts.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
     }
 
-    if (isFlexible) {
-      const decisionLabel = offer.balloonDecision === 'keep' ? 'Quedárselo' : 'Devolverlo';
-      specsList.appendChild(createSpecRow('Cuota Final / VFG:', `${offer.balloonPayment.toLocaleString('es-ES')} € (${decisionLabel})`));
+    if (isFlexible && offer.balloonPayment > 0) {
+      specsList.appendChild(createSpecRow('Cuota final / VFG:', `${offer.balloonPayment.toLocaleString('es-ES')} €`));
     }
 
     const diffSign = offer.netDifferenceVsCashRef > 0 ? '+' : '';
     const diffClass = offer.netDifferenceVsCashRef > 0 ? 'highlight-trap' : 'highlight-save';
-    specsList.appendChild(createSpecRow('Diferencia neta vs Contado:', `${diffSign}${offer.netDifferenceVsCashRef.toLocaleString('es-ES')} €`, { highlightClass: diffClass, isEmphasized: true }));
+    specsList.appendChild(createSpecRow('Diferencia neta vs contado:', `${diffSign}${offer.netDifferenceVsCashRef.toLocaleString('es-ES')} €`, { highlightClass: diffClass, isEmphasized: true }));
   }
 
   // 6. Notas opcionales

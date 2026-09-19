@@ -3,7 +3,7 @@
   <head>
     <!-- @include partials/head-meta.html -->
     <meta name="description" content="Comparador y normalizador financiero de ofertas de coches: calcula costes totales reales, sobrecostes de financiación, precio contado equivalente y analiza si las ofertas de los concesionarios compensan o son una trampa." />
-    <title>AutoCompare PRO — Comparador y Normalizador de Ofertas de Coches</title>
+    <title>FinCar — Comparador y Normalizador de Ofertas de Coches</title>
   </head>
   <body>
     <div class="ambient-glow" aria-hidden="true"></div>
@@ -21,13 +21,22 @@
             </svg>
           </div>
           <div>
-            <h1 class="brand-title">
-              AutoCompare
-              <span class="badge badge-info" style="font-size: 0.65rem;">PRO</span>
-            </h1>
+            <h1 class="brand-title">FinCar</h1>
             <p class="brand-subtitle">Comparador y Normalizador Financiero de Ofertas de Coches</p>
           </div>
         </div>
+
+        <!-- Navegación por Pestañas Integrada en Cabecera -->
+        <nav class="main-tabs-nav" role="tablist" aria-label="Modo de comparación">
+          <button id="tab-btn-same-vehicle" class="main-tab-btn active" role="tab" aria-selected="true" aria-controls="tab-same-vehicle-panel" title="Comparar modalidades (Contado vs Financiación)">
+            <span class="tab-btn-icon">🚗</span>
+            <span class="tab-btn-title">Mismo vehículo</span>
+          </button>
+          <button id="tab-btn-cross-vehicle" class="main-tab-btn" role="tab" aria-selected="false" aria-controls="tab-cross-vehicle-panel" title="Comparar modelos bajo la misma modalidad">
+            <span class="tab-btn-icon">🏎️</span>
+            <span class="tab-btn-title">Coches diferentes</span>
+          </button>
+        </nav>
 
         <nav class="header-actions" aria-label="Acciones de la aplicación">
           <button id="btn-new-offer" class="btn btn-primary" type="button">
@@ -51,29 +60,90 @@
         </nav>
       </header>
 
-      <!-- Banner de alerta interactivo ante trampas de financiación -->
-      <!-- @include partials/trap-guide-banner.html -->
-
-      <!-- Barra de Control de Vistas -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
-        <div style="font-size: 0.92rem; color: var(--text-secondary);" id="offers-count-label">
-          Mostrando <strong>0</strong> ofertas
+      <!-- Panel Pestaña 1: Mismo vehículo -->
+      <section id="tab-same-vehicle-panel" role="tabpanel" aria-labelledby="tab-btn-same-vehicle">
+        <!-- Selector de Vehículo Activo en Carrusel -->
+        <div class="vehicle-carousel-container" id="vehicle-selector-bar">
+          <div class="vehicle-carousel-header">
+            <div class="vehicle-carousel-title-group">
+              <span class="vehicle-carousel-badge">🚗 Tus Modelos</span>
+              <span class="vehicle-carousel-hint">Selecciona un vehículo para comparar sus opciones:</span>
+            </div>
+            <div class="vehicle-carousel-actions">
+              <div class="carousel-nav-controls">
+                <button id="btn-vehicle-carousel-prev" class="carousel-nav-btn" type="button" aria-label="Vehículo anterior" title="Anterior">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <button id="btn-vehicle-carousel-next" class="carousel-nav-btn" type="button" aria-label="Vehículo siguiente" title="Siguiente">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+              </div>
+              <button id="btn-add-for-vehicle" class="btn btn-secondary btn-sm" type="button" title="Añadir otra modalidad u oferta para este coche">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                Añadir opción a este coche
+              </button>
+            </div>
+          </div>
+          <div class="vehicle-carousel-track-wrapper">
+            <div class="vehicle-chips-list vehicle-carousel-track" id="vehicle-chips-list" role="region" aria-label="Carrusel de vehículos">
+              <!-- Se inyectan las tarjetas de carrusel para cada coche -->
+            </div>
+          </div>
         </div>
 
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-          <div class="segmented-control" style="width: 220px;">
-            <button id="view-cards-btn" class="segmented-btn active" type="button">
+
+        <!-- Barra de Control de Vistas -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="font-size: 0.92rem; color: var(--text-secondary);" id="offers-count-label">
+            Mostrando <strong>0</strong> ofertas
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <div class="segmented-control" style="width: 220px;">
+              <button id="view-cards-btn" class="segmented-btn active" type="button">
+                🗂️ Tarjetas
+              </button>
+              <button id="view-table-btn" class="segmented-btn" type="button">
+                📊 Tabla
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenedor Principal de Ofertas del Vehículo (Tarjetas o Tabla) -->
+        <main id="offers-display-slot"></main>
+      </section>
+
+      <!-- Panel Pestaña 2: Coches Diferentes -->
+      <section id="tab-cross-vehicle-panel" role="tabpanel" aria-labelledby="tab-btn-cross-vehicle" hidden>
+        <!-- Barra de Filtro de Modalidad y Vista -->
+        <div class="cross-filter-bar">
+          <div class="cross-filter-group">
+            <span class="cross-filter-label">Comparar en modalidad:</span>
+            <div class="segmented-control cross-modality-selector" id="cross-modality-selector">
+              <button type="button" class="segmented-btn active" data-modality="cash">💵 Al Contado</button>
+              <button type="button" class="segmented-btn" data-modality="standard_finance">📆 Financiación Lineal</button>
+              <button type="button" class="segmented-btn" data-modality="flexible_finance">🔄 Compra Flexible</button>
+            </div>
+          </div>
+          <div class="segmented-control cross-view-switcher" style="width: 200px;">
+            <button id="cross-view-cards-btn" class="segmented-btn active" type="button">
               🗂️ Tarjetas
             </button>
-            <button id="view-table-btn" class="segmented-btn" type="button">
+            <button id="cross-view-table-btn" class="segmented-btn" type="button">
               📊 Tabla
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Contenedor Principal de Ofertas (Tarjetas o Tabla) -->
-      <main id="offers-display-slot"></main>
+
+        <div style="font-size: 0.92rem; color: var(--text-secondary); margin-bottom: 1.25rem;" id="cross-count-label">
+          Comparando <strong>0</strong> vehículos
+        </div>
+
+        <!-- Contenedor de la Comparativa entre Coches -->
+        <div id="cross-display-slot"></div>
+      </section>
 
       <!-- @include partials/analytics-section.html -->
 
@@ -108,7 +178,7 @@
         <form id="form-reverse-calc">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
-              <label class="form-label" for="rev-price">Precio Ofertado del Coche</label>
+              <label class="form-label" for="rev-price">Precio del vehículo</label>
               <div class="input-wrapper">
                 <input type="text" inputmode="decimal" id="rev-price" class="form-input has-addon" placeholder="24000 o 24.000,00" required />
                 <span class="input-addon">€</span>
@@ -116,7 +186,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="rev-down">Entrada Aportada</label>
+              <label class="form-label" for="rev-down">Entrada aportada</label>
               <div class="input-wrapper">
                 <input type="text" inputmode="decimal" id="rev-down" class="form-input has-addon" placeholder="4000" required />
                 <span class="input-addon">€</span>
@@ -126,7 +196,7 @@
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
-              <label class="form-label" for="rev-monthly">Cuota Mensual Prometida</label>
+              <label class="form-label" for="rev-monthly">Cuota mensual prometida</label>
               <div class="input-wrapper">
                 <input type="text" inputmode="decimal" id="rev-monthly" class="form-input has-addon" placeholder="320 o 320,50" required />
                 <span class="input-addon">€/mes</span>
@@ -135,7 +205,7 @@
 
             <div class="form-group">
               <label class="form-label" for="rev-months" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Número de Meses</span>
+                <span>Número de meses</span>
                 <span id="rev-months-badge" class="months-duration-badge">5 años</span>
               </label>
               <div class="input-wrapper">
@@ -155,7 +225,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="rev-balloon">Cuota Final / Balloon (opcional, solo multiopción)</label>
+            <label class="form-label" for="rev-balloon">Cuota final / Balloon (opcional, solo multiopción)</label>
             <div class="input-wrapper">
               <input type="text" inputmode="decimal" id="rev-balloon" class="form-input has-addon" placeholder="0" />
               <span class="input-addon">€</span>
@@ -163,28 +233,28 @@
           </div>
 
           <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
-            🔍 Descubrir Intereses Ocultos
+            🔍 Descubrir intereses ocultos
           </button>
         </form>
 
         <div id="reverse-results-container" style="display: none;">
           <div class="reverse-result-box">
-            <h4 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 0.5rem;">Resultado del Análisis Financiero:</h4>
+            <h4 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 0.5rem;">Resultado del análisis financiero:</h4>
             <div class="reverse-result-grid">
               <div>
-                <div class="kpi-label">TIN Anual Implícito</div>
+                <div class="kpi-label">TIN anual implícito</div>
                 <div class="kpi-value" id="rev-out-tin" style="font-size: 1.5rem; color: var(--accent-rose);">0%</div>
               </div>
               <div>
-                <div class="kpi-label">TAE Anual Estimada</div>
+                <div class="kpi-label">TAE anual estimada</div>
                 <div class="kpi-value" id="rev-out-apr" style="font-size: 1.5rem; color: var(--accent-amber);">0%</div>
               </div>
               <div>
-                <div class="kpi-label">Intereses Totales</div>
+                <div class="kpi-label">Intereses totales</div>
                 <div class="kpi-value" id="rev-out-interest" style="font-size: 1.5rem; color: var(--accent-rose);">0 €</div>
               </div>
               <div>
-                <div class="kpi-label">Coste Total Pagado</div>
+                <div class="kpi-label">Coste total pagado</div>
                 <div class="kpi-value" id="rev-out-total" style="font-size: 1.5rem;">0 €</div>
               </div>
             </div>
@@ -192,7 +262,7 @@
 
           <div style="margin-top: 1rem; text-align: right;">
             <button type="button" id="btn-apply-reverse-as-offer" class="btn btn-secondary">
-              ➕ Convertir en Oferta para Comparar
+              ➕ Convertir en oferta para comparar
             </button>
           </div>
         </div>
@@ -218,7 +288,7 @@
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
           <button class="btn btn-primary empty-add-btn" type="button" style="display: inline-flex; align-items: center; gap: 0.5rem;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-            + Nueva Oferta
+            Nueva Oferta
           </button>
           <a href="/ejemplos.html" class="btn btn-secondary empty-examples-link" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>

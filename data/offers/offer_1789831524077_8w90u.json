@@ -1,6 +1,6 @@
 {
   "id": "offer_1789831524077_8w90u",
-  "title": "RAV4 fin cancelando",
+  "title": "RAV4",
   "dealer": "Cumaca",
   "notes": "",
   "modality": "flexible_finance",
@@ -8,14 +8,12 @@
   "offerPrice": 45000,
   "downPayment": 20000,
   "tradeInValue": 0,
-  "registrationFee": 0,
   "months": 12,
   "tin": 8.5,
   "manualMonthlyPayment": 230,
   "balloonPayment": 24390.22,
   "balloonDecision": "keep",
-  "openingFeePercentage": 0,
-  "openingFeeFinanced": false,
   "linkedProducts": [],
-  "createdAt": "2026-09-19T15:25:24.077Z"
+  "createdAt": "2026-09-19T15:25:24.077Z",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/2024_Toyota_RAV4_Prime_XSE_Premium_in_Silver_Sky_with_Midnight_Black_roof%2C_front_left.jpg/960px-2024_Toyota_RAV4_Prime_XSE_Premium_in_Silver_Sky_with_Midnight_Black_roof%2C_front_left.jpg"
 }

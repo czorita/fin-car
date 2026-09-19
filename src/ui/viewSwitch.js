@@ -4,14 +4,21 @@
 
 /**
  * Inicializa los botones de selección de vista de ofertas.
- * @param {object} options
+ * @param {object} [options]
+ * @param {string} [options.cardsBtnId='view-cards-btn']
+ * @param {string} [options.tableBtnId='view-table-btn']
  * @param {'cards' | 'table'} [options.initialView='cards']
- * @param {Function} options.onViewChange Callback invocado con la nueva vista ('cards' | 'table')
+ * @param {Function} [options.onViewChange] Callback invocado con la nueva vista ('cards' | 'table')
  * @returns {{ getView: () => string, setView: (view: 'cards' | 'table') => void }}
  */
-export function initViewSwitcher({ initialView = 'cards', onViewChange } = {}) {
-  const viewCardsBtn = document.getElementById('view-cards-btn');
-  const viewTableBtn = document.getElementById('view-table-btn');
+export function initViewSwitcher({
+  cardsBtnId = 'view-cards-btn',
+  tableBtnId = 'view-table-btn',
+  initialView = 'cards',
+  onViewChange
+} = {}) {
+  const viewCardsBtn = document.getElementById(cardsBtnId);
+  const viewTableBtn = document.getElementById(tableBtnId);
   let currentView = initialView;
 
   function updateButtons() {

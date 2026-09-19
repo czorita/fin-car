@@ -137,7 +137,7 @@ export function calculateIRR(cashflows, guess = 0.01) {
  * @param {number} monthlyPayment - Cuota mensual que se paga
  * @param {number} months - Plazo en meses
  * @param {number} balloonPayment - Cuota final (si existe)
- * @param {number} upfrontFees - Gastos iniciales adicionales (comisión apertura no financiada, seguros obligatorios al contado)
+ * @param {number} upfrontFees - Gastos iniciales adicionales (seguros obligatorios al contado, etc.)
  * @returns {number} TAE en porcentaje (ej: 9.85)
  */
 export function calculateEffectiveApr(netFinancedCapital, monthlyPayment, months, balloonPayment = 0, upfrontFees = 0) {

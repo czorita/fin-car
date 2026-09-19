@@ -1,6 +1,6 @@
 {
   "id": "offer_1789830437251_l8tkg",
-  "title": "Tucson fin cancelando",
+  "title": "Tucson",
   "dealer": "Syrluz Fernando",
   "notes": "",
   "modality": "flexible_finance",
@@ -8,14 +8,12 @@
   "offerPrice": 35969.99,
   "downPayment": 19969.99,
   "tradeInValue": 0,
-  "registrationFee": 0,
   "months": 18,
   "tin": 0,
   "manualMonthlyPayment": 360.07,
   "balloonPayment": 12196.2,
   "balloonDecision": "keep",
-  "openingFeePercentage": 0,
-  "openingFeeFinanced": false,
   "linkedProducts": [],
-  "createdAt": "2026-09-19T15:07:56.181Z"
+  "createdAt": "2026-09-19T15:07:56.181Z",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/2022_Hyundai_Tucson_Preferred%2C_Front_Right%2C_05-24-2021.jpg/960px-2022_Hyundai_Tucson_Preferred%2C_Front_Right%2C_05-24-2021.jpg"
 }

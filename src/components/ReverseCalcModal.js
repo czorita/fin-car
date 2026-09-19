@@ -88,13 +88,10 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
       offerPrice: price,
       downPayment: down,
       tradeInValue: 0,
-      registrationFee: 0,
       months: months,
       tin: rev.tin,
       manualMonthlyPayment: monthly,
       balloonPayment: balloon,
-      openingFeePercentage: 0,
-      openingFeeFinanced: false,
       linkedProducts: []
     };
   });

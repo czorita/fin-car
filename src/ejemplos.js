@@ -1,7 +1,7 @@
 /**
- * AutoCompare PRO - Controlador de la Web de Ejemplos
- * Muestra las 3 ofertas de ejemplo precargadas desde el volumen (/app/data/examples)
- * y permite copiarlas a los presupuestos personales del usuario.
+ * FinCar - Controlador de la Web de Ejemplos
+ * Muestra las ofertas de ejemplo precargadas desde el volumen (/app/data/examples)
+ * y permite compararlas tanto por modelo de coche como entre coches diferentes.
  */
 
 import './styles/index.css';
@@ -16,26 +16,40 @@ import {
 import { initAmortizationModal } from './components/AmortizationModal.js';
 import { initOfferModal } from './components/OfferModal.js';
 import { createDefaultOffer } from './core/types.js';
+import { getUniqueVehicles } from './core/multiVehicle.js';
 import { initThemeManager } from './ui/theme.js';
 import { initViewSwitcher } from './ui/viewSwitch.js';
+import { initMainTabsNav, MAIN_TABS } from './components/MainTabsNav.js';
 import { showToast } from './ui/toast.js';
 import { createAppRenderer } from './ui/renderEngine.js';
 
 import confetti from 'canvas-confetti';
 
 let exampleOffers = [];
+let selectedVehicle = null;
+let selectedCrossModality = 'cash';
 
-// Elementos DOM
+// Elementos DOM Pestaña 1
+const vehicleChipsList = document.getElementById('vehicle-chips-list');
 const offersDisplaySlot = document.getElementById('offers-display-slot');
 const offersCountLabel = document.getElementById('offers-count-label');
+
+// Elementos DOM Pestaña 2
+const crossModalitySelector = document.getElementById('cross-modality-selector');
+const crossDisplaySlot = document.getElementById('cross-display-slot');
+const crossCountLabel = document.getElementById('cross-count-label');
+
+// Elementos Compartidos
 const analyticsSection = document.getElementById('analytics-section');
+const analyticsHeading = document.getElementById('analytics-heading');
+const analyticsSubtext = document.getElementById('analytics-subtext');
 const costBreakdownCanvas = document.getElementById('cost-breakdown-canvas');
 
 const amortizationModalCtrl = initAmortizationModal();
 
 const offerModalCtrl = initOfferModal({
+  getKnownVehicles: () => getUniqueVehicles(exampleOffers).map(v => v.name),
   onSave: async (offerData) => {
-    // Al guardar desde ejemplos, se copia como oferta personal
     const fullOffer = createDefaultOffer(offerData);
     try {
       await copyExampleToUser(fullOffer);
@@ -47,37 +61,63 @@ const offerModalCtrl = initOfferModal({
   }
 });
 
-// Funciones de renderizado (pre-declaradas para evitar Temporal Dead Zone en callbacks)
 let renderApp;
-let renderOfferList;
 
 // Gestor de Tema Global
 const themeManager = initThemeManager({
   onChange: () => renderApp?.()
 });
 
-// Gestor de Vistas (Tarjetas vs Tabla)
+// Gestor de Pestañas Principales
+const mainTabsNav = initMainTabsNav({
+  onTabChange: () => renderApp?.()
+});
+
+// Gestor de Vistas Pestaña 1 (Tarjetas vs Tabla)
 const viewSwitcher = initViewSwitcher({
+  cardsBtnId: 'view-cards-btn',
+  tableBtnId: 'view-table-btn',
   initialView: 'cards',
-  onViewChange: () => renderOfferList?.()
+  onViewChange: () => renderApp?.()
+});
+
+// Gestor de Vistas Pestaña 2 (Tarjetas vs Tabla)
+const crossViewSwitcher = initViewSwitcher({
+  cardsBtnId: 'cross-view-cards-btn',
+  tableBtnId: 'cross-view-table-btn',
+  initialView: 'cards',
+  onViewChange: () => renderApp?.()
 });
 
 // Motor de Renderizado Unificado
 const renderer = createAppRenderer({
   getOffers: () => exampleOffers,
   getTheme: () => themeManager.getTheme(),
+  getActiveTab: () => mainTabsNav.getActiveTab(),
   getView: () => viewSwitcher.getView(),
+  getCrossView: () => crossViewSwitcher.getView(),
+  getSelectedVehicle: () => selectedVehicle,
+  setSelectedVehicle: (v) => { selectedVehicle = v; },
+  getSelectedCrossModality: () => selectedCrossModality,
+  setSelectedCrossModality: (m) => { selectedCrossModality = m; },
+  // Pestaña 1
+  vehicleChipsList,
   offersDisplaySlot,
   offersCountLabel,
+  btnAddForVehicle: null,
+  // Pestaña 2
+  crossModalitySelector,
+  crossDisplaySlot,
+  crossCountLabel,
+  // Compartidos
   analyticsSection,
+  analyticsHeading,
+  analyticsSubtext,
   costBreakdownCanvas,
-  counterConfig: () => ({
-    label: ' ofertas de ejemplo precargadas'
-  }),
   getCardHandlers: () => ({
     onEdit: (targetOffer) => {
       const raw = exampleOffers.find(o => o.id === targetOffer.id);
-      offerModalCtrl.open(raw);
+      offerModalCtrl.open(raw, selectedVehicle);
     },
     onSchedule: (targetOffer) => {
       amortizationModalCtrl.open(targetOffer);
@@ -111,10 +151,14 @@ const renderer = createAppRenderer({
     });
 
     actionsFooter.insertBefore(copyBtn, actionsFooter.firstChild);
+  },
+  onInspectVehicle: (vName) => {
+    selectedVehicle = vName;
+    mainTabsNav.setActiveTab(MAIN_TABS.SAME_VEHICLE);
+    renderApp();
   }
 });
 renderApp = renderer.renderApp;
-renderOfferList = renderer.renderOfferList;
 
 // Cargar ejemplos del volumen / API
 fetchExampleOffers().then(offers => {

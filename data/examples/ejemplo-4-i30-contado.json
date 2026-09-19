@@ -1,0 +1,21 @@
+{
+  "id": "ejemplo-4-i30-contado",
+  "vehicle": "Hyundai i30 1.5 T-GDI",
+  "title": "Hyundai i30 1.5 T-GDI - Al Contado Promoción",
+  "dealer": "Hyundai Gamboa",
+  "notes": "Presupuesto oficial al contado con campaña mensual.",
+  "modality": "cash",
+  "cashPriceReference": 24800,
+  "offerPrice": 24800,
+  "downPayment": 0,
+  "tradeInValue": 0,
+  "months": 0,
+  "tin": 0,
+  "manualMonthlyPayment": null,
+  "balloonPayment": 0,
+  "balloonDecision": "keep",
+  "linkedProducts": [],
+  "isExample": true,
+  "createdAt": "2026-09-04T10:00:00.000Z",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/2018_Hyundai_i30_SE_Nav_T-GDi_1.3_Front.jpg/960px-2018_Hyundai_i30_SE_Nav_T-GDi_1.3_Front.jpg"
+}

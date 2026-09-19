@@ -223,6 +223,10 @@ dialog.app-modal {
   overflow: hidden;
 }
 
+#modal-offer {
+  max-width: 800px;
+}
+
 dialog.app-modal:not([open]) {
   display: none !important;
 }
@@ -278,6 +282,42 @@ dialog.app-modal[open] {
   justify-content: flex-end;
   gap: 0.75rem;
   background: var(--bg-surface);
+}
+
+/* Resumen dinámico del precio de cálculo */
+.calc-price-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  transition: all var(--transition-fast);
+}
+
+.calc-price-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.calc-price-val {
+  color: var(--accent-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  #price-fields-container {
+    grid-template-columns: 1fr !important;
+  }
+  .calc-price-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
 }
 
 /* KPI Cards */
@@ -518,5 +558,595 @@ dialog.app-modal[open] {
   color: var(--text-secondary);
   line-height: 1.5;
 }
+
+/* ==========================================================================
+   Navegación de Pestañas Integrada en Cabecera (Mismo vehículo vs Coches diferentes)
+   ========================================================================== */
+.main-tabs-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--bg-surface-elevated);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  margin: 0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.main-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+
+.main-tab-btn:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.main-tab-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35);
+}
+
+.tab-btn-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.tab-btn-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: inherit;
+  letter-spacing: -0.01em;
+}
+
+.tab-btn-desc {
+  display: none;
+}
+
+/* ==========================================================================
+   Carrusel de Vehículos Activo (Pestaña 1: Mismo Vehículo)
+   ========================================================================== */
+.vehicle-carousel-container,
+.vehicle-selector-bar {
+  background: var(--bg-surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl, 16px);
+  padding: 1.1rem 1.25rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+  position: relative;
+  overflow: hidden;
+}
+
+.vehicle-carousel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.vehicle-carousel-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.vehicle-carousel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  background: rgba(37, 99, 235, 0.08);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+}
+
+.vehicle-carousel-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.vehicle-carousel-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.carousel-nav-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--bg-surface-elevated);
+  padding: 0.2rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+}
+
+.carousel-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.carousel-nav-btn:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  transform: scale(1.06);
+}
+
+.carousel-nav-btn:active {
+  transform: scale(0.94);
+}
+
+/* Pista de desplazamiento horizontal */
+.vehicle-carousel-track-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.vehicle-carousel-track,
+.vehicle-chips-list {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0.25rem 0.65rem;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) transparent;
+}
+
+.vehicle-carousel-track::-webkit-scrollbar,
+.vehicle-chips-list::-webkit-scrollbar {
+  height: 6px;
+}
+
+.vehicle-carousel-track::-webkit-scrollbar-thumb,
+.vehicle-chips-list::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 999px;
+}
+
+.vehicle-carousel-track::-webkit-scrollbar-track,
+.vehicle-chips-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Tarjeta de Vehículo en Carrusel */
+.vehicle-carousel-card {
+  flex: 0 0 220px;
+  width: 220px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface-elevated);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+  position: relative;
+  font-family: var(--font-body);
+}
+
+.vehicle-carousel-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.vehicle-carousel-card.active {
+  border-color: var(--accent-primary);
+  background: var(--bg-surface-elevated);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.4), 0 8px 24px rgba(37, 99, 235, 0.22);
+}
+
+/* Área de Imagen Ampliada */
+.vehicle-card-media {
+  position: relative;
+  width: 100%;
+  height: 112px;
+  background: var(--bg-surface-inset, rgba(0, 0, 0, 0.12));
+  overflow: hidden;
+}
+
+.vehicle-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform var(--transition-normal);
+  display: block;
+}
+
+.vehicle-carousel-card:hover .vehicle-card-img {
+  transform: scale(1.05);
+}
+
+.vehicle-card-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05));
+  color: var(--text-muted);
+}
+
+.vehicle-card-fallback svg {
+  width: 44px;
+  height: 44px;
+  opacity: 0.6;
+}
+
+.vehicle-card-active-pill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--accent-primary);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  z-index: 2;
+  letter-spacing: 0.02em;
+}
+
+/* Datos de la tarjeta */
+.vehicle-card-info {
+  padding: 0.8rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.vehicle-card-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.vehicle-carousel-card.active .vehicle-card-name {
+  color: var(--accent-primary);
+}
+
+.vehicle-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vehicle-card-count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+}
+
+.vehicle-carousel-card.active .vehicle-card-count {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--accent-primary);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.vehicle-carousel-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-style: italic;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .vehicle-carousel-card {
+    flex: 0 0 175px;
+    width: 175px;
+  }
+  .vehicle-card-media {
+    height: 92px;
+  }
+  .vehicle-card-info {
+    padding: 0.65rem 0.75rem;
+  }
+  .vehicle-card-name {
+    font-size: 0.88rem;
+  }
+}
+
+/* ==========================================================================
+   Barra de Filtro y Veredicto (Pestaña 2: Coches Diferentes)
+   ========================================================================== */
+.cross-filter-bar {
+  background: var(--bg-surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.cross-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.cross-filter-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Selector de Modalidad Cruzada: Disposición horizontal ergonómica en píldoras */
+.cross-modality-selector {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-surface);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  max-width: 100%;
+}
+
+.cross-modality-selector::-webkit-scrollbar {
+  display: none;
+}
+
+.cross-modality-selector .segmented-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.95rem;
+  border-radius: var(--radius-full);
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.cross-modality-selector .segmented-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cross-modality-selector .segmented-btn.active {
+  background: var(--accent-primary);
+  color: #ffffff;
+  border-color: var(--accent-primary);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.cross-empty-banner {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--bg-surface-card);
+  border-radius: var(--radius-xl);
+  border: 1px dashed var(--border-medium);
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 860px) {
+  .main-tabs-nav {
+    width: 100%;
+    order: 3;
+    display: flex;
+    justify-content: center;
+  }
+  .main-tab-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .vehicle-selector-bar,
+  .cross-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+  .cross-filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .cross-modality-selector {
+    width: 100%;
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px;
+    box-sizing: border-box;
+  }
+}
+
+/* ==========================================================================
+   Fotografías y Medios de Vehículos (Chips, Tarjetas, Tablas y Modal)
+   ========================================================================== */
+.vehicle-chip-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: var(--bg-surface);
+}
+
+.cross-card-media {
+  position: relative;
+  width: calc(100% + 2.5rem);
+  margin: -1.25rem -1.25rem 1.15rem -1.25rem;
+  height: 165px;
+  overflow: hidden;
+  border-top-left-radius: calc(var(--radius-xl) - 1px);
+  border-top-right-radius: calc(var(--radius-xl) - 1px);
+  background: var(--bg-surface-elevated);
+}
+
+.cross-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cross-card-img.is-fallback {
+  object-fit: contain;
+  padding: 1.5rem;
+  opacity: 0.55;
+}
+
+.offer-card:hover .cross-card-img {
+  transform: scale(1.05);
+}
+
+.cross-card-media-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(15, 23, 42, 0.6) 100%);
+  pointer-events: none;
+}
+
+.table-th-thumb {
+  width: 64px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin: 0 auto 0.45rem auto;
+  display: block;
+  border: 1px solid var(--border-medium);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  background: var(--bg-surface);
+}
+
+/* Modal: Vista Previa Automática del Modelo Detectado */
+.vehicle-auto-preview-container {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.85rem;
+  margin-top: -0.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.vehicle-auto-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.vehicle-auto-preview-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-emerald, #10b981);
+  letter-spacing: 0.01em;
+}
+
+.vehicle-image-preview-box {
+  width: 72px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.vehicle-image-placeholder {
+  font-size: 1.5rem;
+  opacity: 0.65;
+}
+
+#vehicle-image-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 
 
