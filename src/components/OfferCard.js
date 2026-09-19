@@ -105,8 +105,10 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
   // 4. Alerta de Veredicto
   const alertEl = card.querySelector('.card-verdict-alert');
+  alertEl.className = 'card-verdict-alert';
   if (offer.verdict.status === 'danger') alertEl.classList.add('danger');
   else if (offer.verdict.status === 'success') alertEl.classList.add('success');
+  else if (offer.verdict.status === 'warning') alertEl.classList.add('warning');
   else if (offer.verdict.status === 'info') alertEl.classList.add('info');
   else alertEl.classList.add('neutral');
 
@@ -122,7 +124,7 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
     specsList.appendChild(createSpecRow('Descuento anunciado:', `-${offer.advertisedDiscount.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
   }
 
-  if (offer.downPayment > 0) {
+  if (!isCash && offer.downPayment > 0) {
     specsList.appendChild(createSpecRow('Entrada aportada:', `${offer.downPayment.toLocaleString('es-ES')} €`));
   }
 

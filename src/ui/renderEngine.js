@@ -7,6 +7,7 @@
 
 import { normalizeOffer, rankOffers } from '../core/normalizer.js';
 import { updateVerdictBanner } from '../components/VerdictBanner.js';
+import { initTrapGuideModal } from '../components/TrapGuideModal.js';
 import { createOfferCardElement } from '../components/OfferCard.js';
 import { createComparisonTableElement } from '../components/ComparisonTable.js';
 import { renderCostBreakdownChart } from '../components/CostBreakdownChart.js';
@@ -40,6 +41,8 @@ export function createAppRenderer({
   onCardCreated,
   renderEmptyState
 }) {
+  const trapGuideCtrl = initTrapGuideModal();
+
   /**
    * Renderiza la lista o tabla de ofertas a partir de las ofertas ya normalizadas y clasificadas.
    * Evita recalcular normalizeOffer() y rankOffers() por segunda vez.
@@ -117,8 +120,9 @@ export function createAppRenderer({
       offersCountLabel.appendChild(endTxt);
     }
 
-    // 2. Actualizar Banner de Veredicto
+    // 2. Actualizar Banner de Veredicto y Guía de Trampa
     updateVerdictBanner(rankedOffers);
+    trapGuideCtrl?.update(rankedOffers);
 
     // 3. Renderizar ofertas (Tarjetas o Tabla) reutilizando rankedOffers
     renderOfferList(rankedOffers);

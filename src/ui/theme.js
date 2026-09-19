@@ -44,20 +44,20 @@ export function initThemeManager({ buttonId = 'btn-theme-toggle', iconId = 'them
   const btnToggle = document.getElementById(buttonId);
   const iconEl = document.getElementById(iconId);
 
-  function applyTheme(theme) {
+  function applyTheme(theme, notify = true) {
     currentTheme = theme;
     document.documentElement.setAttribute('data-theme', theme);
     saveTheme(theme);
     if (iconEl) {
       iconEl.textContent = theme === 'dark' ? '☀️' : '🌙';
     }
-    if (typeof onChange === 'function') {
+    if (notify && typeof onChange === 'function') {
       onChange(theme);
     }
   }
 
-  // Aplicar tema inicial
-  applyTheme(currentTheme);
+  // Aplicar tema inicial en el DOM sin disparar onChange prematuramente
+  applyTheme(currentTheme, false);
 
   btnToggle?.addEventListener('click', () => {
     const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';

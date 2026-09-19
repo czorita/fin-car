@@ -39,11 +39,15 @@ export function updateVerdictBanner(offers) {
     savingsAmountEl.textContent = diffSavings > 0 ? `+${diffSavings.toLocaleString('es-ES')} €` : '0 €';
   }
 
-  // Comprobar si existe alguna oferta con trampa de financiación
+  // Comprobar si existe alguna oferta con trampa de financiación o sobrecoste elevado
   const trapOffer = offers.find(o => !o.isCash && o.netDifferenceVsCashRef > TRAP_THRESHOLD_EUROS);
   if (trapAlertEl && trapTextEl) {
     if (trapOffer) {
-      trapTextEl.textContent = `En la oferta "${trapOffer.title}", los intereses y comisiones superan el descuento inicial, encareciendo el coche en ${trapOffer.netDifferenceVsCashRef.toLocaleString('es-ES')} € respecto al precio contado de catálogo.`;
+      if (trapOffer.advertisedDiscount > 0) {
+        trapTextEl.textContent = `En la oferta "${trapOffer.title}", los intereses y comisiones superan el descuento inicial, encareciendo el coche en ${trapOffer.netDifferenceVsCashRef.toLocaleString('es-ES')} € respecto al precio contado de catálogo.`;
+      } else {
+        trapTextEl.textContent = `En la oferta "${trapOffer.title}", la financiación no tiene ventajas y encarece el coche en ${trapOffer.netDifferenceVsCashRef.toLocaleString('es-ES')} € respecto al precio al contado debido a intereses y comisiones.`;
+      }
       trapAlertEl.style.display = 'block';
     } else {
       trapAlertEl.style.display = 'none';

@@ -1,0 +1,21 @@
+{
+  "id": "offer_1789831524077_8w90u",
+  "title": "RAV4 fin cancelando",
+  "dealer": "Cumaca",
+  "notes": "",
+  "modality": "flexible_finance",
+  "cashPriceReference": 45000,
+  "offerPrice": 45000,
+  "downPayment": 20000,
+  "tradeInValue": 0,
+  "registrationFee": 0,
+  "months": 12,
+  "tin": 8.5,
+  "manualMonthlyPayment": 230,
+  "balloonPayment": 24390.22,
+  "balloonDecision": "keep",
+  "openingFeePercentage": 0,
+  "openingFeeFinanced": false,
+  "linkedProducts": [],
+  "createdAt": "2026-09-19T15:25:24.077Z"
+}

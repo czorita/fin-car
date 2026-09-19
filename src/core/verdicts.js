@@ -32,14 +32,32 @@ export function generateVerdict({ isCash, netDifferenceVsCashRef = 0, advertised
     };
   }
 
-  if (netDifferenceVsCashRef <= 0) {
+  if (netDifferenceVsCashRef < 0) {
     return {
       status: 'success',
-      badge: '¡Financiación Ventajosa!',
+      badge: 'Ahorro Neto',
       message: `Ahorras ${Math.abs(netDifferenceVsCashRef).toLocaleString('es-ES')} € respecto al precio contado de catálogo gracias a las promociones.`
     };
   }
 
+  if (netDifferenceVsCashRef === 0) {
+    return {
+      status: 'neutral',
+      badge: 'Mismo Coste que Contado',
+      message: 'El desembolso total de la financiación equivale exactamente al precio al contado.'
+    };
+  }
+
+  // Si el descuento inicial es 0 (no hay descuento)
+  if (advertisedDiscount <= 0) {
+    return {
+      status: 'warning',
+      badge: 'Sin Ventajas',
+      message: `La financiación no tiene ventajas: al no haber descuento inicial, terminas pagando ${netDifferenceVsCashRef.toLocaleString('es-ES')} € más que al contado debido a intereses y comisiones.`
+    };
+  }
+
+  // Si hay descuento inicial y el sobrecoste es asumible
   if (netDifferenceVsCashRef < advertisedDiscount * AFFORDABLE_SURCHARGE_FACTOR) {
     return {
       status: 'info',
@@ -48,6 +66,7 @@ export function generateVerdict({ isCash, netDifferenceVsCashRef = 0, advertised
     };
   }
 
+  // Si hay descuento inicial pero es ficticio (trampa de financiación)
   return {
     status: 'danger',
     badge: '⚠️ Trampa de Financiación',

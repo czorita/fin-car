@@ -1,0 +1,21 @@
+{
+  "id": "offer_1789830805000_2o08x",
+  "title": "RAV4",
+  "dealer": "Cumaca",
+  "notes": "",
+  "modality": "cash",
+  "cashPriceReference": 45000,
+  "offerPrice": 45000,
+  "downPayment": 0,
+  "tradeInValue": 0,
+  "registrationFee": 0,
+  "months": 60,
+  "tin": 8.5,
+  "manualMonthlyPayment": null,
+  "balloonPayment": 0,
+  "balloonDecision": "keep",
+  "openingFeePercentage": 3,
+  "openingFeeFinanced": true,
+  "linkedProducts": [],
+  "createdAt": "2026-09-19T15:13:25.000Z"
+}

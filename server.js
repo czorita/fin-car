@@ -38,14 +38,20 @@ await ensureDirs();
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
+  '.mjs': 'application/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.map': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
-  '.webp': 'image/webp'
+  '.webp': 'image/webp',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.txt': 'text/plain; charset=utf-8'
 };
 
 const COMPRESSIBLE_TYPES = new Set([
@@ -53,7 +59,8 @@ const COMPRESSIBLE_TYPES = new Set([
   'application/javascript; charset=utf-8',
   'text/css; charset=utf-8',
   'application/json; charset=utf-8',
-  'image/svg+xml'
+  'image/svg+xml',
+  'text/plain; charset=utf-8'
 ]);
 
 /**
@@ -110,18 +117,21 @@ const server = http.createServer(async (req, res) => {
   // Servicio de Archivos Estáticos (dist)
   // ==========================================
   if (req.method === 'GET' || req.method === 'HEAD') {
+    // Normalizar y eliminar barras iniciales para que sea una ruta relativa a DIST_DIR
     const cleanPath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
-    let targetRelative = cleanPath === '/' || cleanPath === '\\' ? 'index.html' : cleanPath;
+    const relativePath = cleanPath.replace(/^[/\\]+/, '');
+
+    let targetRelative = relativePath === '' ? 'index.html' : relativePath;
 
     if (pathname === '/ejemplos' || pathname === '/ejemplos/') {
       targetRelative = 'ejemplos.html';
     }
 
-    let filePath = path.resolve(DIST_DIR, targetRelative);
+    const filePath = path.resolve(DIST_DIR, targetRelative);
 
-    // Evitar cualquier escape del directorio dist
-    if (!filePath.startsWith(DIST_DIR)) {
-      res.writeHead(403, { 'Content-Type': 'text/plain' });
+    // Evitar cualquier escape del directorio dist (Path Traversal)
+    if (!filePath.startsWith(DIST_DIR + path.sep) && filePath !== DIST_DIR) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Forbidden');
       return;
     }
@@ -163,7 +173,15 @@ const server = http.createServer(async (req, res) => {
       sendStreamResponse(req, res, 200, headers, filePath);
       return;
     } catch {
-      // Fallback SPA a index.html
+      // Si el archivo solicitado tiene una extensión estática que no es .html y falló, devolver 404 directamente
+      const ext = path.extname(filePath).toLowerCase();
+      if (ext && ext !== '.html') {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('404 Not Found');
+        return;
+      }
+
+      // Fallback SPA a index.html para rutas de navegación cliente
       const fallbackPath = path.resolve(DIST_DIR, 'index.html');
       try {
         const stat = await fsp.stat(fallbackPath);
@@ -223,3 +241,6 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Fin-Car corriendo en http://0.0.0.0:${PORT}`);
   console.log(`📁 Directorio de datos: ${DATA_DIR}`);
 });
+
+export { server };
+

@@ -51,20 +51,8 @@
         </nav>
       </header>
 
-      <!-- Guía de Consejos de Negociación -->
-      <details id="negotiation-guide" style="background: var(--bg-surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; cursor: pointer;">
-        <summary style="font-weight: 600; font-size: 0.9rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 0.5rem;">
-          <span>💡 ¿Cómo detectar la "trampa del descuento" en el concesionario?</span>
-          <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: auto;">(Click para desplegar consejos)</span>
-        </summary>
-        <div style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.85rem; line-height: 1.6; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
-          <p><strong>1. El descuento financiado no siempre es ahorro:</strong> Los concesionarios ofrecen 2.000 € a 4.000 € de rebaja si financias, pero al aplicar un TIN del 8% al 10% y comisiones de apertura del 3% al 4%, los intereses generados suelen superar los 5.000 €, pagando más que al contado.</p>
-          <p style="margin-top: 0.4rem;"><strong>2. Ojo a los seguros vinculados:</strong> Muchas financieras exigen seguro de pagos protegidos o paquetes de mantenimiento de 800-1.200 € financiados dentro de la cuota (lo que genera aún más intereses).</p>
-          <p style="margin-top: 0.4rem;"><strong>3. Compara siempre el Coste Total Real:</strong> Esta herramienta suma Entrada + Todas las Cuotas + Cuota Final + Comisiones + Seguros para que sepas el precio real neto antes de firmar nada.</p>
-        </div>
-      </details>
-
-      <!-- @include partials/verdict-banner.html -->
+      <!-- Banner de alerta interactivo ante trampas de financiación -->
+      <!-- @include partials/trap-guide-banner.html -->
 
       <!-- Barra de Control de Vistas -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
@@ -100,6 +88,7 @@
     <!-- Modales Nativos -->
     <!-- @include partials/modal-offer.html -->
     <!-- @include partials/modal-amortization.html -->
+    <!-- @include partials/modal-trap-guide.html -->
 
     <!-- Modal Calculadora Inversa -->
     <dialog id="modal-reverse-calc" class="app-modal">
@@ -145,16 +134,23 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="rev-months">Número de Meses</label>
-              <select id="rev-months" class="form-select">
-                <option value="24">24 meses (2 años)</option>
-                <option value="36">36 meses (3 años)</option>
-                <option value="48">48 meses (4 años)</option>
-                <option value="60" selected>60 meses (5 años)</option>
-                <option value="72">72 meses (6 años)</option>
-                <option value="84">84 meses (7 años)</option>
-                <option value="96">96 meses (8 años)</option>
-              </select>
+              <label class="form-label" for="rev-months" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Número de Meses</span>
+                <span id="rev-months-badge" class="months-duration-badge">5 años</span>
+              </label>
+              <div class="input-wrapper">
+                <input type="number" id="rev-months" class="form-input has-addon" min="1" max="240" step="1" placeholder="60" value="60" required />
+                <span class="input-addon">meses</span>
+              </div>
+              <div class="months-quick-pills" id="rev-months-pills">
+                <button type="button" class="months-pill-btn" data-months="24">24m</button>
+                <button type="button" class="months-pill-btn" data-months="36">36m</button>
+                <button type="button" class="months-pill-btn" data-months="48">48m</button>
+                <button type="button" class="months-pill-btn active" data-months="60">60m</button>
+                <button type="button" class="months-pill-btn" data-months="72">72m</button>
+                <button type="button" class="months-pill-btn" data-months="84">84m</button>
+                <button type="button" class="months-pill-btn" data-months="96">96m</button>
+              </div>
             </div>
           </div>
 

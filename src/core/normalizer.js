@@ -38,6 +38,7 @@ export function normalizeOffer(offer) {
     return {
       ...offer,
       isCash: true,
+      downPayment: 0,
       principalFinanced: 0,
       monthlyPayment: 0,
       totalMonths: 0,
@@ -190,9 +191,6 @@ export function rankOffers(normalizedOffers) {
 
   // Mínimo coste total
   const minTotalCost = Math.min(...normalizedOffers.map(o => o.totalOutOfPocketCost));
-  // Mínima cuota mensual (excluyendo contado)
-  const financedOffers = normalizedOffers.filter(o => !o.isCash && o.monthlyPayment > 0);
-  const minMonthly = financedOffers.length ? Math.min(...financedOffers.map(o => o.monthlyPayment)) : null;
   // Menor sobrecoste de intereses
   const minInterest = Math.min(...normalizedOffers.map(o => o.totalInterest));
 
@@ -200,9 +198,6 @@ export function rankOffers(normalizedOffers) {
     const badges = [];
     if (offer.totalOutOfPocketCost === minTotalCost) {
       badges.push('🏆 Menor Coste Total');
-    }
-    if (minMonthly !== null && offer.monthlyPayment === minMonthly) {
-      badges.push('💰 Cuota Mensual Más Baja');
     }
     if (offer.totalInterest === minInterest && offer.totalInterest > 0) {
       badges.push('📉 Menos Intereses Pagados');

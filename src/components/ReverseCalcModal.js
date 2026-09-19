@@ -6,7 +6,7 @@
 
 import { reverseEngineerInterestRate } from '../core/finance.js';
 import { OFFER_MODALITIES } from '../core/types.js';
-import { parseLocaleNumber } from '../core/formatters.js';
+import { parseLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
 
 /**
  * Inicializa el modal de ingeniería inversa.
@@ -26,6 +26,8 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
   const downInput = document.getElementById('rev-down');
   const monthlyInput = document.getElementById('rev-monthly');
   const monthsInput = document.getElementById('rev-months');
+  const monthsBadge = document.getElementById('rev-months-badge');
+  const monthsPills = document.getElementById('rev-months-pills');
   const balloonInput = document.getElementById('rev-balloon');
 
   const outTinEl = document.getElementById('rev-out-tin');
@@ -35,12 +37,36 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
 
   let currentComputedOffer = null;
 
+  function updateMonthsUI(val) {
+    const months = Math.max(1, Math.round(Number(val) || 60));
+    if (monthsBadge) {
+      monthsBadge.textContent = formatMonthsDuration(months);
+    }
+    if (monthsPills) {
+      monthsPills.querySelectorAll('.months-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.months) === months);
+      });
+    }
+  }
+
+  monthsInput?.addEventListener('input', () => {
+    updateMonthsUI(monthsInput.value);
+  });
+
+  monthsPills?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.months-pill-btn');
+    if (btn && btn.dataset.months) {
+      monthsInput.value = btn.dataset.months;
+      updateMonthsUI(btn.dataset.months);
+    }
+  });
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const price = parseLocaleNumber(priceInput.value);
     const down = parseLocaleNumber(downInput.value);
     const monthly = parseLocaleNumber(monthlyInput.value);
-    const months = Number(monthsInput.value) || 60;
+    const months = Math.max(1, Math.round(Number(monthsInput.value) || 60));
     const balloon = parseLocaleNumber(balloonInput.value);
 
     const principal = Math.max(0, price - down);
@@ -88,6 +114,10 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
       form.reset();
       resultsContainer.style.display = 'none';
       currentComputedOffer = null;
+      if (monthsInput) {
+        monthsInput.value = '60';
+        updateMonthsUI(60);
+      }
       dialog.showModal();
     },
     close() {

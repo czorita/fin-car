@@ -4,6 +4,7 @@
  */
 
 import { MODALITY_LABELS } from '../core/types.js';
+import { formatMonthsDuration } from '../core/formatters.js';
 
 /**
  * Añade una fila a la tabla comparativa.
@@ -93,8 +94,8 @@ export function createComparisonTableElement(offers) {
   appendTableRow(tbody, 'Precio Catálogo', offers.map(o => `${(o.cashPriceReference || o.offerPrice).toLocaleString('es-ES')} €`));
   appendTableRow(tbody, 'Precio Ofertado', offers.map(o => `${o.offerPrice.toLocaleString('es-ES')} €`), { isBold: true });
   appendTableRow(tbody, 'Descuento Anunciado', offers.map(o => o.advertisedDiscount > 0 ? `-${o.advertisedDiscount.toLocaleString('es-ES')} €` : '0 €'), { isBold: true, highlightClass: 'highlight-save' });
-  appendTableRow(tbody, 'Entrada Inicial', offers.map(o => o.downPayment > 0 ? `${o.downPayment.toLocaleString('es-ES')} €` : '0 €'));
-  appendTableRow(tbody, 'Plazo', offers.map(o => o.isCash ? 'Contado' : `${o.totalMonths} meses`));
+  appendTableRow(tbody, 'Entrada Inicial', offers.map(o => o.isCash ? '—' : (o.downPayment > 0 ? `${o.downPayment.toLocaleString('es-ES')} €` : '0 €')));
+  appendTableRow(tbody, 'Plazo', offers.map(o => o.isCash ? 'Contado' : `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`));
   appendTableRow(tbody, 'Cuota Mensual', offers.map(o => o.isCash ? '—' : `${o.monthlyPayment.toLocaleString('es-ES')} €/mes`), { isBold: true });
   appendTableRow(tbody, 'Cuota Final (VFG)', offers.map(o => o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—'));
   appendTableRow(tbody, 'TIN / TAE', offers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${o.effectiveApr}% TAE`));

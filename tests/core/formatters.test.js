@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseLocaleNumber, formatLocaleNumber } from '../../src/core/formatters.js';
+import { parseLocaleNumber, formatLocaleNumber, formatMonthsDuration } from '../../src/core/formatters.js';
 
 describe('Soporte de Comas y Puntos Decimales (Formatters)', () => {
   test('Parsea enteros estándar', () => {
@@ -37,5 +37,18 @@ describe('Soporte de Comas y Puntos Decimales (Formatters)', () => {
     assert.equal(formatLocaleNumber(8.5), '8,5');
     assert.equal(formatLocaleNumber(23500.5), '23500,5');
     assert.equal(formatLocaleNumber(25000), '25000');
+  });
+
+  test('Formatea plazos en meses a descripciones legibles de años y meses (formatMonthsDuration)', () => {
+    assert.equal(formatMonthsDuration(60), '5 años');
+    assert.equal(formatMonthsDuration(12), '1 año');
+    assert.equal(formatMonthsDuration(24), '2 años');
+    assert.equal(formatMonthsDuration(42), '3 años y 6 meses');
+    assert.equal(formatMonthsDuration(50), '4 años y 2 meses');
+    assert.equal(formatMonthsDuration(13), '1 año y 1 mes');
+    assert.equal(formatMonthsDuration(6), '6 meses');
+    assert.equal(formatMonthsDuration(1), '1 mes');
+    assert.equal(formatMonthsDuration(0), '0 meses');
+    assert.equal(formatMonthsDuration('48'), '4 años');
   });
 });

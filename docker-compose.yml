@@ -1,11 +1,10 @@
 services:
   fin-car:
     # Imagen publicada en GitHub Container Registry (o la que se defina en DOCKER_IMAGE)
-    image: ${DOCKER_IMAGE:-ghcr.io/tu-usuario-o-org/fin-car:latest}
-    # Descomenta 'build' si deseas compilar localmente en desarrollo en vez de usar la imagen publicada:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    image: ${DOCKER_IMAGE:-ghcr.io/czorita/fin-car:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: fin-car-app
     restart: unless-stopped
     ports:

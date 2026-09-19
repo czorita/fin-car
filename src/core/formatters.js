@@ -59,3 +59,35 @@ export function formatLocaleNumber(value, maxDecimals = 2) {
     useGrouping: false
   }).format(num);
 }
+
+/**
+ * Formatea un número de meses en una descripción legible de años y meses.
+ * Ej: 60 -> "5 años"
+ * Ej: 42 -> "3 años y 6 meses"
+ * Ej: 12 -> "1 año"
+ * Ej: 13 -> "1 año y 1 mes"
+ * Ej: 6  -> "6 meses"
+ * Ej: 1  -> "1 mes"
+ * @param {number|string} months
+ * @returns {string}
+ */
+export function formatMonthsDuration(months) {
+  const m = Math.round(Number(months) || 0);
+  if (m <= 0) return '0 meses';
+  
+  const years = Math.floor(m / 12);
+  const remainingMonths = m % 12;
+
+  if (years === 0) {
+    return `${remainingMonths} ${remainingMonths === 1 ? 'mes' : 'meses'}`;
+  }
+
+  const yearStr = `${years} ${years === 1 ? 'año' : 'años'}`;
+  if (remainingMonths === 0) {
+    return yearStr;
+  }
+
+  const monthStr = `${remainingMonths} ${remainingMonths === 1 ? 'mes' : 'meses'}`;
+  return `${yearStr} y ${monthStr}`;
+}
+

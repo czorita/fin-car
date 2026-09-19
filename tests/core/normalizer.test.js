@@ -17,11 +17,16 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
 
     const normalized = normalizeOffer(cashOffer);
     assert.equal(normalized.isCash, true);
+    assert.equal(normalized.downPayment, 0, 'La entrada de una oferta al contado debe ser 0');
     assert.equal(normalized.monthlyPayment, 0);
     assert.equal(normalized.totalInterest, 0);
     assert.equal(normalized.totalOutOfPocketCost, 18400); // 20000 - 2000 + 400
     assert.equal(normalized.verdict.status, 'neutral');
     assert.equal(normalized.verdict.badge, 'Pago al Contado');
+
+    // Comprobar que incluso con downPayment residual, se normaliza a 0
+    const cashWithResidualDown = normalizeOffer({ ...cashOffer, downPayment: 4000 });
+    assert.equal(cashWithResidualDown.downPayment, 0, 'Incluso con residuo, debe ser 0 al contado');
   });
 
   test('Test 2: Veredicto de trampa de financiación (intereses superan con creces el descuento)', () => {
@@ -37,7 +42,21 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.ok(trapVerdict.message.includes('MÁS que al contado'));
   });
 
-  test('Test 3: Veredicto de financiación ventajosa (ahorro neto real)', () => {
+  test('Test 2b: Financiación sin descuento inicial indica que la financiación no tiene ventajas', () => {
+    const verdict = generateVerdict({
+      isCash: false,
+      netDifferenceVsCashRef: 2400,
+      advertisedDiscount: 0,
+      monthlyPayment: 380
+    });
+
+    assert.equal(verdict.status, 'warning');
+    assert.equal(verdict.badge, 'Sin Ventajas');
+    assert.ok(verdict.message.includes('La financiación no tiene ventajas'));
+    assert.ok(!verdict.message.includes('ficticio'));
+  });
+
+  test('Test 3: Veredicto de ahorro neto real frente al contado', () => {
     const savingVerdict = generateVerdict({
       isCash: false,
       netDifferenceVsCashRef: -500,
@@ -46,7 +65,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     });
 
     assert.equal(savingVerdict.status, 'success');
-    assert.equal(savingVerdict.badge, '¡Financiación Ventajosa!');
+    assert.equal(savingVerdict.badge, 'Ahorro Neto');
     assert.ok(savingVerdict.message.includes('Ahorras'));
   });
 
@@ -62,7 +81,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.equal(affordableVerdict.badge, 'Coste Asumible');
   });
 
-  test('Test 5: Ranking de ofertas identifica al ganador y cuota más baja', () => {
+  test('Test 5: Ranking de ofertas identifica al ganador y no premia cuotas engañosas', () => {
     const o1 = normalizeOffer(createDefaultOffer({
       id: 'o1',
       title: 'Barata',
@@ -83,9 +102,11 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
 
     const ranked = rankOffers([o1, o2]);
     const winner = ranked.find(o => o.highlights.includes('🏆 Menor Coste Total'));
-    const lowestMonthly = ranked.find(o => o.highlights.includes('💰 Cuota Mensual Más Baja'));
 
     assert.equal(winner.id, 'o1', 'La oferta más barata debe ser la ganadora');
-    assert.equal(lowestMonthly.id, 'o2', 'La oferta financiada a más meses debe tener la cuota más baja');
+    assert.ok(
+      !ranked.some(o => o.highlights.some(h => h.includes('Cuota Mensual Más Baja'))),
+      'No debe incluirse la insignia de cuota mensual más baja'
+    );
   });
 });

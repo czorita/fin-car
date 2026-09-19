@@ -1,0 +1,21 @@
+{
+  "id": "offer_1789830437251_l8tkg",
+  "title": "Tucson fin cancelando",
+  "dealer": "Syrluz Fernando",
+  "notes": "",
+  "modality": "flexible_finance",
+  "cashPriceReference": 38969.99,
+  "offerPrice": 35969.99,
+  "downPayment": 19969.99,
+  "tradeInValue": 0,
+  "registrationFee": 0,
+  "months": 18,
+  "tin": 0,
+  "manualMonthlyPayment": 360.07,
+  "balloonPayment": 12196.2,
+  "balloonDecision": "keep",
+  "openingFeePercentage": 0,
+  "openingFeeFinanced": false,
+  "linkedProducts": [],
+  "createdAt": "2026-09-19T15:07:56.181Z"
+}

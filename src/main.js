@@ -72,19 +72,23 @@ const reverseCalcModalCtrl = initReverseCalcModal({
   }
 });
 
+// Funciones de renderizado (pre-declaradas para evitar Temporal Dead Zone en callbacks)
+let renderApp;
+let renderOfferList;
+
 // Gestor de Tema Global
 const themeManager = initThemeManager({
-  onChange: () => renderApp()
+  onChange: () => renderApp?.()
 });
 
 // Gestor de Vistas (Tarjetas vs Tabla)
 const viewSwitcher = initViewSwitcher({
   initialView: 'cards',
-  onViewChange: () => renderOfferList()
+  onViewChange: () => renderOfferList?.()
 });
 
 // Motor de Renderizado Unificado
-const { renderApp, renderOfferList } = createAppRenderer({
+const renderer = createAppRenderer({
   getOffers: () => rawOffers,
   getTheme: () => themeManager.getTheme(),
   getView: () => viewSwitcher.getView(),
@@ -124,6 +128,8 @@ const { renderApp, renderOfferList } = createAppRenderer({
     return clone;
   }
 });
+renderApp = renderer.renderApp;
+renderOfferList = renderer.renderOfferList;
 
 // Acciones del Header
 initHeader({

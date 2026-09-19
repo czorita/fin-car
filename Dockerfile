@@ -18,7 +18,9 @@ WORKDIR /app
 
 # Copy build artifacts and native HTTP server
 COPY --from=build /app/dist ./dist
+COPY package.json ./
 COPY server.js ./
+COPY src/server ./src/server
 COPY data ./data
 
 # Expose port 80

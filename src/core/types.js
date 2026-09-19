@@ -42,7 +42,7 @@ export function createDefaultOffer(overrides = {}) {
       : DEFAULTS.offerPrice,
     downPayment: overrides.downPayment !== undefined 
       ? Number(overrides.downPayment) 
-      : DEFAULTS.downPayment,
+      : (overrides.modality === OFFER_MODALITIES.CASH ? 0 : DEFAULTS.downPayment),
     tradeInValue: overrides.tradeInValue !== undefined 
       ? Number(overrides.tradeInValue) 
       : 0,

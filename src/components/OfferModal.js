@@ -5,7 +5,7 @@
  */
 
 import { OFFER_MODALITIES } from '../core/types.js';
-import { parseLocaleNumber, formatLocaleNumber } from '../core/formatters.js';
+import { parseLocaleNumber, formatLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
 import { generateId, ID_PREFIX_PRODUCT } from '../core/constants.js';
 
 /**
@@ -40,6 +40,8 @@ export function initOfferModal({ onSave }) {
   const tradeInValueInput = document.getElementById('trade-in-value');
   const registrationFeeInput = document.getElementById('registration-fee');
   const loanMonthsInput = document.getElementById('loan-months');
+  const loanMonthsBadge = document.getElementById('loan-months-badge');
+  const loanMonthsPills = document.getElementById('loan-months-pills');
   const loanTinInput = document.getElementById('loan-tin');
   const manualMonthlyInput = document.getElementById('manual-monthly');
   const balloonPaymentInput = document.getElementById('balloon-payment');
@@ -50,6 +52,18 @@ export function initOfferModal({ onSave }) {
   let currentModality = OFFER_MODALITIES.STANDARD_FINANCE;
   let linkedProductsState = [];
 
+  function updateMonthsUI(val) {
+    const months = Math.max(1, Math.round(Number(val) || 60));
+    if (loanMonthsBadge) {
+      loanMonthsBadge.textContent = formatMonthsDuration(months);
+    }
+    if (loanMonthsPills) {
+      loanMonthsPills.querySelectorAll('.months-pill-btn').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.months) === months);
+      });
+    }
+  }
+
   function updateModalityUI(modality) {
     currentModality = modality;
     modalitySelector.querySelectorAll('.segmented-btn').forEach(btn => {
@@ -59,9 +73,13 @@ export function initOfferModal({ onSave }) {
     if (modality === OFFER_MODALITIES.CASH) {
       if (financeFieldsContainer) financeFieldsContainer.style.display = 'none';
       if (groupDownPayment) groupDownPayment.style.display = 'none';
+      downPaymentInput.value = '0';
     } else {
       if (financeFieldsContainer) financeFieldsContainer.style.display = 'block';
       if (groupDownPayment) groupDownPayment.style.display = 'block';
+      if (downPaymentInput.value === '0' || !downPaymentInput.value) {
+        downPaymentInput.value = '4000';
+      }
 
       if (flexibleBalloonContainer) {
         flexibleBalloonContainer.style.display = modality === OFFER_MODALITIES.FLEXIBLE_FINANCE ? 'block' : 'none';
@@ -88,6 +106,18 @@ export function initOfferModal({ onSave }) {
 
   cashRefPriceInput.addEventListener('input', updateDiscountPreview);
   offerPriceInput.addEventListener('input', updateDiscountPreview);
+
+  loanMonthsInput.addEventListener('input', () => {
+    updateMonthsUI(loanMonthsInput.value);
+  });
+
+  loanMonthsPills?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.months-pill-btn');
+    if (btn && btn.dataset.months) {
+      loanMonthsInput.value = btn.dataset.months;
+      updateMonthsUI(btn.dataset.months);
+    }
+  });
 
   modalitySelector.addEventListener('click', (e) => {
     const btn = e.target.closest('.segmented-btn');
@@ -159,10 +189,10 @@ export function initOfferModal({ onSave }) {
       modality: currentModality,
       cashPriceReference: parseLocaleNumber(cashRefPriceInput.value),
       offerPrice: parseLocaleNumber(offerPriceInput.value),
-      downPayment: parseLocaleNumber(downPaymentInput.value),
+      downPayment: currentModality === OFFER_MODALITIES.CASH ? 0 : parseLocaleNumber(downPaymentInput.value),
       tradeInValue: parseLocaleNumber(tradeInValueInput.value),
       registrationFee: parseLocaleNumber(registrationFeeInput.value),
-      months: Number(loanMonthsInput.value) || 60,
+      months: Math.max(1, Math.round(Number(loanMonthsInput.value) || 60)),
       tin: parseLocaleNumber(loanTinInput.value),
       manualMonthlyPayment: manualMonthlyInput.value ? parseLocaleNumber(manualMonthlyInput.value) : null,
       balloonPayment: parseLocaleNumber(balloonPaymentInput.value),
@@ -193,10 +223,11 @@ export function initOfferModal({ onSave }) {
         notesInput.value = offer.notes || '';
         cashRefPriceInput.value = formatLocaleNumber(offer.cashPriceReference || offer.offerPrice || '');
         offerPriceInput.value = formatLocaleNumber(offer.offerPrice || '');
-        downPaymentInput.value = formatLocaleNumber(offer.downPayment || '');
+        downPaymentInput.value = offer.modality === OFFER_MODALITIES.CASH ? '0' : formatLocaleNumber(offer.downPayment || '');
         tradeInValueInput.value = formatLocaleNumber(offer.tradeInValue || '');
         registrationFeeInput.value = formatLocaleNumber(offer.registrationFee || '');
         loanMonthsInput.value = String(offer.months || 60);
+        updateMonthsUI(offer.months || 60);
         loanTinInput.value = offer.tin !== undefined ? formatLocaleNumber(offer.tin) : '8,5';
         manualMonthlyInput.value = offer.manualMonthlyPayment ? formatLocaleNumber(offer.manualMonthlyPayment) : '';
         balloonPaymentInput.value = offer.balloonPayment ? formatLocaleNumber(offer.balloonPayment) : '';
@@ -218,6 +249,7 @@ export function initOfferModal({ onSave }) {
         downPaymentInput.value = '4000';
         registrationFeeInput.value = '450';
         loanMonthsInput.value = '60';
+        updateMonthsUI(60);
         loanTinInput.value = '8,5';
         openingPctInput.value = '3,0';
         openingFinancedInput.checked = true;

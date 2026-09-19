@@ -1,0 +1,28 @@
+{
+  "id": "offer_1789830935390_lkuqe",
+  "title": "RAV4 fin",
+  "dealer": "Cumaca",
+  "notes": "",
+  "modality": "flexible_finance",
+  "cashPriceReference": 45000,
+  "offerPrice": 45000,
+  "downPayment": 20000,
+  "tradeInValue": 0,
+  "registrationFee": 0,
+  "months": 36,
+  "tin": 0,
+  "manualMonthlyPayment": 230,
+  "balloonPayment": 23000,
+  "balloonDecision": "keep",
+  "openingFeePercentage": 0,
+  "openingFeeFinanced": false,
+  "linkedProducts": [
+    {
+      "id": "p_1789830913021_rt6aj",
+      "name": "Mantenimiento",
+      "cost": 0,
+      "financed": false
+    }
+  ],
+  "createdAt": "2026-09-19T15:15:35.390Z"
+}

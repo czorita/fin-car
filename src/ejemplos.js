@@ -47,19 +47,23 @@ const offerModalCtrl = initOfferModal({
   }
 });
 
+// Funciones de renderizado (pre-declaradas para evitar Temporal Dead Zone en callbacks)
+let renderApp;
+let renderOfferList;
+
 // Gestor de Tema Global
 const themeManager = initThemeManager({
-  onChange: () => renderApp()
+  onChange: () => renderApp?.()
 });
 
 // Gestor de Vistas (Tarjetas vs Tabla)
 const viewSwitcher = initViewSwitcher({
   initialView: 'cards',
-  onViewChange: () => renderOfferList()
+  onViewChange: () => renderOfferList?.()
 });
 
 // Motor de Renderizado Unificado
-const { renderApp, renderOfferList } = createAppRenderer({
+const renderer = createAppRenderer({
   getOffers: () => exampleOffers,
   getTheme: () => themeManager.getTheme(),
   getView: () => viewSwitcher.getView(),
@@ -109,6 +113,8 @@ const { renderApp, renderOfferList } = createAppRenderer({
     actionsFooter.insertBefore(copyBtn, actionsFooter.firstChild);
   }
 });
+renderApp = renderer.renderApp;
+renderOfferList = renderer.renderOfferList;
 
 // Cargar ejemplos del volumen / API
 fetchExampleOffers().then(offers => {

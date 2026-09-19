@@ -40,4 +40,20 @@ describe('Cálculos Financieros y Normalización de Ofertas', () => {
     assert.ok(sched[0].interestPayment > 0, 'El interés del primer periodo debe ser mayor a 0');
     assert.ok(sched[0].principalPayment > 0, 'La amortización de capital debe ser mayor a 0');
   });
+
+  test('Test 5: Soporte para plazos arbitrarios en meses (ej. 42 meses)', () => {
+    // 42 meses
+    const payment42 = calculateMonthlyPayment(18000, 6.5, 42, 0);
+    assert.ok(payment42 > 0, 'La cuota para 42 meses debe calcularse correctamente');
+    
+    // Cuadro de amortización con 42 meses
+    const sched42 = generateAmortizationSchedule(18000, 6.5, 42, 0);
+    assert.equal(sched42.length, 42, 'El cuadro debe tener exactamente 42 filas');
+    assert.equal(sched42[41].month, 42, 'El último periodo debe ser el mes 42');
+    assert.ok(sched42[41].remainingBalance < 0.05, 'El saldo final debe quedar saldado a 0');
+
+    // Deducción inversa con 42 meses
+    const rev42 = reverseEngineerInterestRate(18000, payment42, 42, 0);
+    assert.ok(Math.abs(rev42.tin - 6.5) < 0.05, `TIN deducido (~6.5%) obtenido: ${rev42.tin}%`);
+  });
 });

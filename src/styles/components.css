@@ -336,3 +336,187 @@ dialog.app-modal[open] {
   accent-color: var(--accent-primary);
   cursor: pointer;
 }
+
+/* Selector flexible de meses */
+.months-duration-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--bg-surface-elevated);
+  color: var(--accent-cyan);
+  border: 1px solid var(--border-subtle);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.months-quick-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.45rem;
+}
+
+.months-pill-btn {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.22rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  line-height: 1;
+}
+
+.months-pill-btn:hover {
+  background: var(--border-medium);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+
+.months-pill-btn.active {
+  background: var(--accent-primary);
+  color: #ffffff;
+  border-color: var(--accent-primary);
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.35);
+}
+
+/* Banner de alerta interactivo para Trampa de Financiación */
+.trap-guide-banner {
+  margin-bottom: 1.5rem;
+}
+
+.trap-guide-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(245, 158, 11, 0.08) 100%);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 0.9rem 1.25rem;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  transition: all var(--transition-fast);
+  color: var(--text-primary);
+}
+
+.trap-guide-btn:hover {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.14) 0%, rgba(245, 158, 11, 0.14) 100%);
+  border-color: rgba(244, 63, 94, 0.55);
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.15);
+  transform: translateY(-1px);
+}
+
+.trap-guide-btn-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.trap-guide-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(244, 63, 94, 0.2);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.trap-guide-question {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.trap-guide-btn-action {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Modal de Consejos y Trampa de Financiación */
+.trap-detected-box {
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+}
+
+.trap-detected-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #fb7185;
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+}
+
+.trap-detected-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+}
+
+.trap-tip-card {
+  display: flex;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.85rem;
+}
+
+.trap-tip-card:last-child {
+  margin-bottom: 0;
+}
+
+.trap-tip-num {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.trap-tip-body h4 {
+  margin: 0 0 0.3rem 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.trap-tip-body p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+
