@@ -1,6 +1,6 @@
 /**
  * AutoCompare PRO - Punto de Entrada Principal
- * Arquitectura limpia basada en controladores DOM nativos y plantillas HTML5.
+ * Arquitectura limpia basada en controladores DOM nativos y motor de renderizado compartido.
  */
 
 import './styles/index.css';
@@ -9,74 +9,130 @@ import './styles/comparison.css';
 
 import { 
   getStoredOffers, 
+  fetchUserOffers,
   upsertOffer, 
-  deleteOffer, 
-  resetToSamples, 
-  exportOffersAsJson, 
-  importOffersFromJson, 
-  getSavedTheme, 
-  saveTheme 
+  deleteOffer 
 } from './services/storage.js';
 
-import { normalizeOffer, rankOffers } from './core/normalizer.js';
 import { createDefaultOffer } from './core/types.js';
+import { initThemeManager } from './ui/theme.js';
+import { initViewSwitcher } from './ui/viewSwitch.js';
+import { showToast } from './ui/toast.js';
+import { createAppRenderer } from './ui/renderEngine.js';
 
 import { initHeader } from './components/Header.js';
-import { updateVerdictBanner } from './components/VerdictBanner.js';
-import { createOfferCardElement } from './components/OfferCard.js';
-import { createComparisonTableElement } from './components/ComparisonTable.js';
-import { renderCostBreakdownChart } from './components/CostBreakdownChart.js';
 import { initOfferModal } from './components/OfferModal.js';
 import { initAmortizationModal } from './components/AmortizationModal.js';
 import { initReverseCalcModal } from './components/ReverseCalcModal.js';
 
 import confetti from 'canvas-confetti';
 
-// Estado de la aplicación
-let currentTheme = getSavedTheme();
+// Estado de ofertas
 let rawOffers = getStoredOffers();
-let currentView = 'cards'; // 'cards' | 'table'
 
-// Inicializar tema en el DOM
-document.documentElement.setAttribute('data-theme', currentTheme);
-
-// Referencias a contenedores del layout
+// Contenedores del layout
 const offersDisplaySlot = document.getElementById('offers-display-slot');
 const offersCountLabel = document.getElementById('offers-count-label');
 const analyticsSection = document.getElementById('analytics-section');
 const costBreakdownCanvas = document.getElementById('cost-breakdown-canvas');
-const viewCardsBtn = document.getElementById('view-cards-btn');
-const viewTableBtn = document.getElementById('view-table-btn');
 const fabNewOffer = document.getElementById('fab-new-offer');
 const tmplEmptyState = document.getElementById('tmpl-empty-state');
 
-// Inicializar Modales
+// Modales
+const amortizationModalCtrl = initAmortizationModal();
+
 const offerModalCtrl = initOfferModal({
-  onSave: (offerData) => {
+  onSave: async (offerData) => {
     const isNew = !offerData.id;
     const fullOffer = createDefaultOffer(offerData);
-    rawOffers = upsertOffer(fullOffer);
-    renderApp();
-    if (isNew) {
-      triggerConfetti();
+    try {
+      rawOffers = await upsertOffer(fullOffer);
+      renderApp();
+      showToast(isNew ? '¡Nueva oferta guardada correctamente!' : 'Oferta actualizada con éxito.', { type: 'success' });
+      if (isNew) {
+        triggerConfetti();
+      }
+    } catch {
+      showToast('Guardado localmente. Error al sincronizar con el servidor.', { type: 'danger' });
     }
   }
 });
 
-const amortizationModalCtrl = initAmortizationModal();
-
 const reverseCalcModalCtrl = initReverseCalcModal({
-  onApplyAsOffer: (computedOffer) => {
+  onApplyAsOffer: async (computedOffer) => {
     const fullOffer = createDefaultOffer(computedOffer);
-    rawOffers = upsertOffer(fullOffer);
-    renderApp();
-    triggerConfetti();
+    try {
+      rawOffers = await upsertOffer(fullOffer);
+      renderApp();
+      showToast('Presupuesto inverso añadido a tus ofertas.', { type: 'success' });
+      triggerConfetti();
+    } catch {
+      showToast('Guardado localmente. Error al sincronizar con el servidor.', { type: 'danger' });
+    }
   }
 });
 
-/**
- * Efecto de celebración con confetti
- */
+// Gestor de Tema Global
+const themeManager = initThemeManager({
+  onChange: () => renderApp()
+});
+
+// Gestor de Vistas (Tarjetas vs Tabla)
+const viewSwitcher = initViewSwitcher({
+  initialView: 'cards',
+  onViewChange: () => renderOfferList()
+});
+
+// Motor de Renderizado Unificado
+const { renderApp, renderOfferList } = createAppRenderer({
+  getOffers: () => rawOffers,
+  getTheme: () => themeManager.getTheme(),
+  getView: () => viewSwitcher.getView(),
+  offersDisplaySlot,
+  offersCountLabel,
+  analyticsSection,
+  costBreakdownCanvas,
+  counterConfig: (count) => ({
+    count,
+    label: count === 1 ? ' oferta registrada' : ' ofertas registradas'
+  }),
+  getCardHandlers: () => ({
+    onEdit: (targetOffer) => {
+      const raw = rawOffers.find(o => o.id === targetOffer.id);
+      offerModalCtrl.open(raw);
+    },
+    onSchedule: (targetOffer) => {
+      amortizationModalCtrl.open(targetOffer);
+    },
+    onDelete: async (targetOffer) => {
+      if (confirm(`¿Eliminar la oferta "${targetOffer.title}"?`)) {
+        try {
+          rawOffers = await deleteOffer(targetOffer.id);
+          renderApp();
+          showToast(`Oferta "${targetOffer.title}" eliminada.`, { type: 'info' });
+        } catch {
+          showToast('Eliminada localmente. Error al sincronizar con el servidor.', { type: 'danger' });
+        }
+      }
+    }
+  }),
+  renderEmptyState: () => {
+    if (!tmplEmptyState) return null;
+    const clone = tmplEmptyState.content.cloneNode(true);
+    const emptyBtn = clone.querySelector('.empty-add-btn');
+    emptyBtn?.addEventListener('click', () => offerModalCtrl.open(null));
+    return clone;
+  }
+});
+
+// Acciones del Header
+initHeader({
+  onNewOffer: () => offerModalCtrl.open(null),
+  onReverseCalc: () => reverseCalcModalCtrl.open()
+});
+
+fabNewOffer?.addEventListener('click', () => offerModalCtrl.open(null));
+
 function triggerConfetti() {
   confetti({
     particleCount: 50,
@@ -85,144 +141,16 @@ function triggerConfetti() {
   });
 }
 
-/**
- * Conmutador de tema de la aplicación
- */
-function handleToggleTheme() {
-  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  saveTheme(currentTheme);
-  document.documentElement.setAttribute('data-theme', currentTheme);
-  headerCtrl.updateTheme(currentTheme);
+// Carga de inicio limpia: sincroniza primero con la API para evitar doble render
+if (rawOffers.length > 0) {
   renderApp();
+} else if (offersDisplaySlot) {
+  offersDisplaySlot.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando presupuestos...</div>';
 }
 
-// Inicializar Header
-const headerCtrl = initHeader({
-  onNewOffer: () => offerModalCtrl.open(null),
-  onReverseCalc: () => reverseCalcModalCtrl.open(),
-  onExport: () => exportOffersAsJson(),
-  onImport: async (file) => {
-    try {
-      const imported = await importOffersFromJson(file);
-      rawOffers = imported;
-      renderApp();
-      triggerConfetti();
-    } catch (err) {
-      alert(err.message);
-    }
-  },
-  onResetSamples: () => {
-    if (confirm('¿Deseas restaurar las 3 ofertas de ejemplo predeterminadas? Se sobreescribirán las actuales.')) {
-      rawOffers = resetToSamples();
-      renderApp();
-    }
-  },
-  onToggleTheme: handleToggleTheme,
-  currentTheme
+fetchUserOffers().then(offers => {
+  rawOffers = offers;
+  renderApp();
+}).catch(() => {
+  renderApp();
 });
-
-// Control de Vistas (Tarjetas vs Tabla)
-viewCardsBtn?.addEventListener('click', () => {
-  currentView = 'cards';
-  updateViewButtons();
-  renderOfferList();
-});
-
-viewTableBtn?.addEventListener('click', () => {
-  currentView = 'table';
-  updateViewButtons();
-  renderOfferList();
-});
-
-function updateViewButtons() {
-  viewCardsBtn?.classList.toggle('active', currentView === 'cards');
-  viewTableBtn?.classList.toggle('active', currentView === 'table');
-}
-
-fabNewOffer?.addEventListener('click', () => offerModalCtrl.open(null));
-
-/**
- * Renderiza la lista o tabla de ofertas
- */
-function renderOfferList() {
-  const normalizedList = rawOffers.map(o => normalizeOffer(o));
-  const rankedOffers = rankOffers(normalizedList);
-  const bestOffer = rankedOffers.find(o => o.highlights && o.highlights.includes('🏆 Menor Coste Total'));
-
-  if (rankedOffers.length === 0) {
-    const clone = tmplEmptyState.content.cloneNode(true);
-    const emptyBtn = clone.querySelector('.empty-add-btn');
-    emptyBtn?.addEventListener('click', () => offerModalCtrl.open(null));
-    offersDisplaySlot.replaceChildren(clone);
-    return;
-  }
-
-  if (currentView === 'cards') {
-    const grid = document.createElement('div');
-    grid.className = 'offers-grid';
-
-    rankedOffers.forEach(offer => {
-      const isWinner = bestOffer && offer.id === bestOffer.id;
-      const card = createOfferCardElement(offer, isWinner, {
-        onEdit: (targetOffer) => {
-          const raw = rawOffers.find(o => o.id === targetOffer.id);
-          offerModalCtrl.open(raw);
-        },
-        onSchedule: (targetOffer) => {
-          amortizationModalCtrl.open(targetOffer);
-        },
-        onDelete: (targetOffer) => {
-          if (confirm(`¿Eliminar la oferta "${targetOffer.title}"?`)) {
-            rawOffers = deleteOffer(targetOffer.id);
-            renderApp();
-          }
-        }
-      });
-      grid.appendChild(card);
-    });
-
-    offersDisplaySlot.replaceChildren(grid);
-  } else {
-    const tableElement = createComparisonTableElement(rankedOffers);
-    offersDisplaySlot.replaceChildren(tableElement);
-  }
-}
-
-/**
- * Renderizado y orquestación general
- */
-function renderApp() {
-  const normalizedList = rawOffers.map(o => normalizeOffer(o));
-  const rankedOffers = rankOffers(normalizedList);
-
-  // 1. Actualizar contador
-  if (offersCountLabel) {
-    offersCountLabel.replaceChildren();
-    const txtNode = document.createTextNode('Mostrando ');
-    const countStrong = document.createElement('strong');
-    countStrong.textContent = String(rankedOffers.length);
-    const endTxt = document.createTextNode(rankedOffers.length === 1 ? ' oferta registrada' : ' ofertas registradas');
-    offersCountLabel.appendChild(txtNode);
-    offersCountLabel.appendChild(countStrong);
-    offersCountLabel.appendChild(endTxt);
-  }
-
-  // 2. Actualizar Banner de Veredicto
-  updateVerdictBanner(rankedOffers);
-
-  // 3. Renderizar vista de ofertas (Tarjetas o Tabla)
-  renderOfferList();
-
-  // 4. Actualizar Analítica y Gráficos
-  if (rankedOffers.length > 0) {
-    if (analyticsSection) analyticsSection.style.display = 'block';
-    if (costBreakdownCanvas) {
-      renderCostBreakdownChart(costBreakdownCanvas, rankedOffers, currentTheme);
-    }
-  } else {
-    if (analyticsSection) analyticsSection.style.display = 'none';
-  }
-}
-
-// Iniciar aplicación
-renderApp();

@@ -431,3 +431,73 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Utilidades para Matriz y Tarjetas Comparativas (eliminación de inline styles) */
+.spec-row--emphasized {
+  border-top: 1px solid var(--border-medium);
+  padding-top: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.spec-row--emphasized .spec-label {
+  font-weight: 600;
+}
+
+.spec-row--emphasized .spec-val {
+  font-size: 0.95rem;
+}
+
+.comparison-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface-card);
+  box-shadow: var(--shadow-md);
+}
+
+.comparison-matrix-table {
+  width: 100%;
+}
+
+.table-th--label {
+  text-align: left !important;
+  min-width: 180px;
+}
+
+.table-th--offer {
+  min-width: 200px;
+  text-align: center;
+}
+
+.table-th-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.badge--small {
+  font-size: 0.7rem;
+}
+
+.table-cell--label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: left !important;
+}
+
+.table-cell--data {
+  text-align: center;
+}
+
+.table-cell--bold {
+  font-weight: 700;
+}
+
+.table-cell--large {
+  font-size: 1.15rem;
+}
+
+.table-cell--muted {
+  color: var(--text-muted);
+}
+

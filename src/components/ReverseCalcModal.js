@@ -1,10 +1,12 @@
 /**
  * Controlador del Modal de Ingeniería Inversa.
- * Conecta con el formulario de index.html y actualiza los indicadores financieros usando DOM nativo.
+ * Conecta con el formulario de index.html y deduce el tipo de interés a partir de cuotas.
+ * Soporta comas decimales con parseLocaleNumber.
  */
 
 import { reverseEngineerInterestRate } from '../core/finance.js';
 import { OFFER_MODALITIES } from '../core/types.js';
+import { parseLocaleNumber } from '../core/formatters.js';
 
 /**
  * Inicializa el modal de ingeniería inversa.
@@ -35,25 +37,25 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const price = Number(priceInput.value) || 0;
-    const down = Number(downInput.value) || 0;
-    const monthly = Number(monthlyInput.value) || 0;
+    const price = parseLocaleNumber(priceInput.value);
+    const down = parseLocaleNumber(downInput.value);
+    const monthly = parseLocaleNumber(monthlyInput.value);
     const months = Number(monthsInput.value) || 60;
-    const balloon = Number(balloonInput.value) || 0;
+    const balloon = parseLocaleNumber(balloonInput.value);
 
     const principal = Math.max(0, price - down);
     const rev = reverseEngineerInterestRate(principal, monthly, months, balloon);
     const totalOutOfPocket = down + rev.totalPaid;
 
-    outTinEl.textContent = `${rev.tin}%`;
-    outAprEl.textContent = `${rev.apr}%`;
+    outTinEl.textContent = `${rev.tin.toLocaleString('es-ES')}%`;
+    outAprEl.textContent = `${rev.apr.toLocaleString('es-ES')}%`;
     outInterestEl.textContent = `+${rev.totalInterest.toLocaleString('es-ES')} €`;
     outTotalEl.textContent = `${totalOutOfPocket.toLocaleString('es-ES')} €`;
 
     resultsContainer.style.display = 'block';
 
     currentComputedOffer = {
-      title: `Cálculo Inverso (${months} meses a ${monthly}€/mes)`,
+      title: `Cálculo Inverso (${months} meses a ${monthly.toLocaleString('es-ES')}€/mes)`,
       dealer: 'Presupuesto Deducido',
       modality: balloon > 0 ? OFFER_MODALITIES.FLEXIBLE_FINANCE : OFFER_MODALITIES.STANDARD_FINANCE,
       cashPriceReference: price,

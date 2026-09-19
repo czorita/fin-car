@@ -1,8 +1,10 @@
 /**
  * Gráfico interactivo de barras apiladas con Chart.js para comparar el desglose de costes.
+ * Reutiliza la instancia existente mediante .update() para maximizar el rendimiento.
  */
 
 import { Chart, BarElement, BarController, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
+import { CHART_TITLE_MAX_LENGTH } from '../core/constants.js';
 
 Chart.register(BarElement, BarController, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -22,8 +24,9 @@ export function renderCostBreakdownChart(canvas, offers, theme = 'dark') {
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
 
   const labels = offers.map(o => {
-    // Abreviar el título si es largo
-    return o.title.length > 28 ? o.title.substring(0, 26) + '...' : o.title;
+    return o.title.length > CHART_TITLE_MAX_LENGTH
+      ? o.title.substring(0, CHART_TITLE_MAX_LENGTH - 2) + '...'
+      : o.title;
   });
 
   const vehicleData = offers.map(o => o.costBreakdown.vehicleNet);
@@ -57,6 +60,18 @@ export function renderCostBreakdownChart(canvas, offers, theme = 'dark') {
       borderRadius: 4
     }
   ];
+
+  // Si ya existe instancia activa sobre el mismo canvas, actualizar in-place
+  if (chartInstance && chartInstance.ctx && chartInstance.canvas === canvas) {
+    chartInstance.data.labels = labels;
+    chartInstance.data.datasets = datasets;
+    chartInstance.options.scales.x.grid.color = gridColor;
+    chartInstance.options.scales.x.ticks.color = textColor;
+    chartInstance.options.scales.y.ticks.color = textColor;
+    chartInstance.options.plugins.legend.labels.color = textColor;
+    chartInstance.update();
+    return;
+  }
 
   if (chartInstance) {
     chartInstance.destroy();

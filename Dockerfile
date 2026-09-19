@@ -11,17 +11,20 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Stage 2: Production runtime stage
-FROM nginx:alpine
+# Stage 2: Production runtime stage con Node.js y soporte de volúmenes para JSONs
+FROM node:20-alpine
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy build artifacts from builder stage
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy build artifacts and native HTTP server
+COPY --from=build /app/dist ./dist
+COPY server.js ./
+COPY data ./data
 
 # Expose port 80
 EXPOSE 80
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+ENV PORT=80
+ENV DATA_DIR=/app/data
+
+CMD ["node", "server.js"]

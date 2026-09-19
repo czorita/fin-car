@@ -1,126 +1,155 @@
 /**
- * Servicio de almacenamiento local y exportación/importación de presupuestos.
+ * Servicio de almacenamiento local y sincronización con archivos JSON (Volumen Docker).
+ * Responsabilidad única: persistencia y sincronización de ofertas.
  */
 
 import { SAMPLE_OFFERS } from '../core/presets.js';
-
-const STORAGE_KEY = 'car_compare_offers_v1';
-const THEME_KEY = 'car_compare_theme_v1';
+import { STORAGE_KEY_OFFERS, generateId, ID_PREFIX_OFFER } from '../core/constants.js';
+export { getSavedTheme, saveTheme } from '../ui/theme.js';
 
 /**
- * Obtiene todas las ofertas guardadas o inicializa con los ejemplos predeterminados.
+ * Obtiene las ofertas guardadas por el usuario desde localStorage de forma síncrona.
+ * Si no hay ninguna oferta guardada, devuelve un array vacío [].
  * @returns {Array<import('../core/types.js').Offer>}
  */
 export function getStoredOffers() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY_OFFERS);
     if (!raw) {
-      saveOffers(SAMPLE_OFFERS);
-      return SAMPLE_OFFERS;
+      return [];
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : SAMPLE_OFFERS;
+    return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     console.error('Error al leer ofertas de localStorage:', err);
-    return SAMPLE_OFFERS;
+    return [];
   }
 }
 
 /**
- * Guarda las ofertas en localStorage.
+ * Guarda las ofertas en localStorage (caché local rápida).
  * @param {Array<import('../core/types.js').Offer>} offers 
  */
 export function saveOffers(offers) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(offers));
+    localStorage.setItem(STORAGE_KEY_OFFERS, JSON.stringify(offers));
   } catch (err) {
     console.error('Error al guardar en localStorage:', err);
   }
 }
 
 /**
- * Añade o actualiza una oferta.
- * @param {import('../core/types.js').Offer} offer 
+ * Consulta la API del servidor (volumen Docker /app/data/offers) para obtener
+ * los presupuestos estructurados guardados por el usuario.
+ * @returns {Promise<Array<import('../core/types.js').Offer>>}
  */
-export function upsertOffer(offer) {
+export async function fetchUserOffers() {
+  try {
+    const res = await fetch('/api/offers');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        saveOffers(data);
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn('API no disponible, usando almacenamiento local:', err.message);
+  }
+  return getStoredOffers();
+}
+
+/**
+ * Consulta la API del servidor para obtener las ofertas de ejemplo de /app/data/examples.
+ * @returns {Promise<Array<import('../core/types.js').Offer>>}
+ */
+export async function fetchExampleOffers() {
+  try {
+    const res = await fetch('/api/examples');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn('API de ejemplos no disponible, usando predeterminados:', err.message);
+  }
+  return SAMPLE_OFFERS;
+}
+
+/**
+ * Añade o actualiza una oferta en la caché local y en el volumen JSON de Docker.
+ * @param {import('../core/types.js').Offer} offer 
+ * @returns {Promise<Array<import('../core/types.js').Offer>>}
+ */
+export async function upsertOffer(offer) {
   const current = getStoredOffers();
   const index = current.findIndex(o => o.id === offer.id);
   if (index >= 0) {
     current[index] = offer;
   } else {
-    current.push(offer);
+    current.unshift(offer);
   }
   saveOffers(current);
+
+  // Persistir en archivo JSON en el servidor/volumen
+  try {
+    const res = await fetch('/api/offers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(offer)
+    });
+    if (!res.ok) {
+      console.warn(`Sincronización con servidor devolvió status ${res.status}`);
+    }
+  } catch (err) {
+    console.error('Error sincronizando oferta con volumen JSON:', err);
+    throw err;
+  }
+
   return current;
 }
 
 /**
- * Elimina una oferta por id.
+ * Elimina una oferta por id de la caché local y del volumen JSON de Docker.
  * @param {string} id 
+ * @returns {Promise<Array<import('../core/types.js').Offer>>}
  */
-export function deleteOffer(id) {
+export async function deleteOffer(id) {
   const current = getStoredOffers();
   const filtered = current.filter(o => o.id !== id);
   saveOffers(filtered);
+
+  // Eliminar archivo JSON del volumen
+  try {
+    const res = await fetch(`/api/offers/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok && res.status !== 404) {
+      console.warn(`Borrado en servidor devolvió status ${res.status}`);
+    }
+  } catch (err) {
+    console.error('Error eliminando oferta del volumen JSON:', err);
+    throw err;
+  }
+
   return filtered;
 }
 
 /**
- * Restaura los ejemplos iniciales.
+ * Copia una oferta de ejemplo a los presupuestos personales del usuario.
+ * @param {import('../core/types.js').Offer} exampleOffer
+ * @returns {Promise<import('../core/types.js').Offer>}
  */
-export function resetToSamples() {
-  saveOffers(SAMPLE_OFFERS);
-  return SAMPLE_OFFERS;
-}
-
-/**
- * Exporta las ofertas actuales en un archivo JSON descargable.
- */
-export function exportOffersAsJson() {
-  const offers = getStoredOffers();
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(offers, null, 2));
-  const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  const dateStr = new Date().toISOString().split('T')[0];
-  downloadAnchor.setAttribute("download", `comparativa-ofertas-coches-${dateStr}.json`);
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
-}
-
-/**
- * Importa ofertas desde un archivo JSON.
- * @param {File} file 
- * @returns {Promise<Array<import('../core/types.js').Offer>>}
- */
-export function importOffersFromJson(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const json = JSON.parse(e.target.result);
-        if (Array.isArray(json) && json.length > 0) {
-          saveOffers(json);
-          resolve(json);
-        } else {
-          reject(new Error('El archivo no contiene un listado válido de ofertas.'));
-        }
-      } catch (err) {
-        reject(new Error('Error al parsear el archivo JSON.'));
-      }
-    };
-    reader.onerror = () => reject(new Error('Error al leer el archivo.'));
-    reader.readAsText(file);
-  });
-}
-
-/**
- * Guarda y recupera el tema (dark/light)
- */
-export function getSavedTheme() {
-  return localStorage.getItem(THEME_KEY) || 'dark';
-}
-
-export function saveTheme(theme) {
-  localStorage.setItem(THEME_KEY, theme);
+export async function copyExampleToUser(exampleOffer) {
+  const copy = {
+    ...exampleOffer,
+    id: generateId(ID_PREFIX_OFFER),
+    title: `${exampleOffer.title} (Mi Presupuesto)`,
+    isExample: false,
+    createdAt: new Date().toISOString()
+  };
+  await upsertOffer(copy);
+  return copy;
 }

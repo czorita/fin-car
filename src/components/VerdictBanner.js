@@ -3,6 +3,8 @@
  * Actualiza los nodos semánticos existentes en index.html de forma segura y tipada.
  */
 
+import { TRAP_THRESHOLD_EUROS } from '../core/constants.js';
+
 /**
  * Actualiza el banner de veredicto con los resultados calculados.
  * @param {Array<import('../core/normalizer.js').NormalizedOffer>} offers 
@@ -38,7 +40,7 @@ export function updateVerdictBanner(offers) {
   }
 
   // Comprobar si existe alguna oferta con trampa de financiación
-  const trapOffer = offers.find(o => !o.isCash && o.netDifferenceVsCashRef > 1000);
+  const trapOffer = offers.find(o => !o.isCash && o.netDifferenceVsCashRef > TRAP_THRESHOLD_EUROS);
   if (trapAlertEl && trapTextEl) {
     if (trapOffer) {
       trapTextEl.textContent = `En la oferta "${trapOffer.title}", los intereses y comisiones superan el descuento inicial, encareciendo el coche en ${trapOffer.netDifferenceVsCashRef.toLocaleString('es-ES')} € respecto al precio contado de catálogo.`;

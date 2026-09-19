@@ -10,3 +10,6 @@ services:
     restart: unless-stopped
     ports:
       - "8080:80"
+    volumes:
+      # Montaje del volumen de datos para persistencia de ofertas y ejemplos en JSON
+      - ./data:/app/data

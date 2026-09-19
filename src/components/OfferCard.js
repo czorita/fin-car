@@ -16,26 +16,15 @@ import { MODALITY_LABELS, OFFER_MODALITIES } from '../core/types.js';
  */
 function createSpecRow(label, value, options = {}) {
   const row = document.createElement('div');
-  row.className = 'spec-row';
-  if (options.isEmphasized) {
-    row.style.borderTop = '1px solid var(--border-medium)';
-    row.style.paddingTop = '0.5rem';
-    row.style.marginTop = '0.2rem';
-  }
+  row.className = options.isEmphasized ? 'spec-row spec-row--emphasized' : 'spec-row';
 
   const lblSpan = document.createElement('span');
   lblSpan.className = 'spec-label';
   lblSpan.textContent = label;
-  if (options.isEmphasized) {
-    lblSpan.style.fontWeight = '600';
-  }
 
   const valSpan = document.createElement('span');
-  valSpan.className = `spec-val ${options.highlightClass || ''}`;
+  valSpan.className = `spec-val ${options.highlightClass || ''}`.trim();
   valSpan.textContent = value;
-  if (options.isEmphasized) {
-    valSpan.style.fontSize = '0.95rem';
-  }
 
   row.appendChild(lblSpan);
   row.appendChild(valSpan);
@@ -65,10 +54,10 @@ function createBadge(text, className) {
  * @param {Function} handlers.onDelete
  * @returns {HTMLElement} Elemento article listo para insertar en el DOM
  */
-export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, onDelete }) {
+export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, onDelete } = {}) {
   const template = document.getElementById('tmpl-offer-card');
   if (!template) {
-    throw new Error('Plantilla #tmpl-offer-card no encontrada en index.html');
+    throw new Error('Plantilla #tmpl-offer-card no encontrada en el DOM');
   }
 
   const clone = template.content.cloneNode(true);
@@ -173,12 +162,23 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   const btnSchedule = card.querySelector('.btn-schedule');
   const btnDelete = card.querySelector('.btn-delete');
 
-  btnEdit.addEventListener('click', () => onEdit(offer));
-  btnDelete.addEventListener('click', () => onDelete(offer));
+  if (typeof onEdit === 'function' && btnEdit) {
+    btnEdit.addEventListener('click', () => onEdit(offer));
+  } else if (btnEdit) {
+    btnEdit.style.display = 'none';
+  }
+
+  if (typeof onDelete === 'function' && btnDelete) {
+    btnDelete.addEventListener('click', () => onDelete(offer));
+  } else if (btnDelete) {
+    btnDelete.style.display = 'none';
+  }
 
   if (!isCash && btnSchedule) {
     btnSchedule.style.display = 'inline-flex';
-    btnSchedule.addEventListener('click', () => onSchedule(offer));
+    if (typeof onSchedule === 'function') {
+      btnSchedule.addEventListener('click', () => onSchedule(offer));
+    }
   }
 
   return card;

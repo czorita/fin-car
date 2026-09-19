@@ -1,6 +1,6 @@
 /**
  * Vista de Matriz Tabla Comparativa Detallada.
- * Genera la estructura DOM completa usando la API nativa de DOM sin inyección de innerHTML.
+ * Genera la estructura DOM completa usando la API nativa de DOM y clases CSS sin estilos inline.
  */
 
 import { MODALITY_LABELS } from '../core/types.js';
@@ -20,25 +20,18 @@ function appendTableRow(tbody, labelText, values, options = {}) {
 
   const thLabel = document.createElement('td');
   thLabel.textContent = labelText;
-  thLabel.style.fontWeight = '600';
-  thLabel.style.color = 'var(--text-secondary)';
-  thLabel.style.textAlign = 'left';
+  thLabel.className = 'table-cell--label';
   tr.appendChild(thLabel);
 
   values.forEach(val => {
     const td = document.createElement('td');
-    td.style.textAlign = 'center';
     td.textContent = String(val);
 
-    if (options.isBold) {
-      td.style.fontWeight = '700';
-    }
-    if (options.isLargeText) {
-      td.style.fontSize = '1.15rem';
-    }
-    if (options.highlightClass) {
-      td.className = options.highlightClass;
-    }
+    const classes = ['table-cell--data'];
+    if (options.isBold) classes.push('table-cell--bold');
+    if (options.isLargeText) classes.push('table-cell--large');
+    if (options.highlightClass) classes.push(options.highlightClass);
+    td.className = classes.join(' ');
 
     tr.appendChild(td);
   });
@@ -53,19 +46,14 @@ function appendTableRow(tbody, labelText, values, options = {}) {
  */
 export function createComparisonTableElement(offers) {
   const wrapper = document.createElement('div');
-  wrapper.style.overflowX = 'auto';
-  wrapper.style.border = '1px solid var(--border-subtle)';
-  wrapper.style.borderRadius = 'var(--radius-xl)';
-  wrapper.style.background = 'var(--bg-surface-card)';
-  wrapper.style.boxShadow = 'var(--shadow-md)';
+  wrapper.className = 'comparison-table-wrapper';
 
   if (!offers || offers.length === 0) {
     return wrapper;
   }
 
   const table = document.createElement('table');
-  table.className = 'data-table';
-  table.style.width = '100%';
+  table.className = 'data-table comparison-matrix-table';
 
   // Thead
   const thead = document.createElement('thead');
@@ -73,25 +61,20 @@ export function createComparisonTableElement(offers) {
 
   const firstTh = document.createElement('th');
   firstTh.textContent = 'Concepto / Métrica';
-  firstTh.style.textAlign = 'left';
-  firstTh.style.minWidth = '180px';
+  firstTh.className = 'table-th--label';
   headerTr.appendChild(firstTh);
 
   offers.forEach(o => {
     const th = document.createElement('th');
-    th.style.minWidth = '200px';
-    th.style.textAlign = 'center';
+    th.className = 'table-th--offer';
 
     const titleDiv = document.createElement('div');
-    titleDiv.style.fontSize = '1rem';
-    titleDiv.style.fontWeight = '700';
-    titleDiv.style.marginBottom = '0.25rem';
+    titleDiv.className = 'table-th-title';
     titleDiv.textContent = o.title;
 
     const badgeSpan = document.createElement('span');
     const isWinner = o.highlights && o.highlights.length > 0;
-    badgeSpan.className = `badge ${isWinner ? 'badge-winner' : 'badge-neutral'}`;
-    badgeSpan.style.fontSize = '0.7rem';
+    badgeSpan.className = `badge ${isWinner ? 'badge-winner' : 'badge-neutral'} badge--small`;
     badgeSpan.textContent = isWinner ? o.highlights[0] : (MODALITY_LABELS[o.modality] || o.modality);
 
     th.appendChild(titleDiv);
@@ -124,22 +107,18 @@ export function createComparisonTableElement(offers) {
   const diffTr = document.createElement('tr');
   const diffLabelTd = document.createElement('td');
   diffLabelTd.textContent = 'Diferencia vs Contado';
-  diffLabelTd.style.fontWeight = '600';
-  diffLabelTd.style.color = 'var(--text-secondary)';
-  diffLabelTd.style.textAlign = 'left';
+  diffLabelTd.className = 'table-cell--label';
   diffTr.appendChild(diffLabelTd);
 
   offers.forEach(o => {
     const td = document.createElement('td');
-    td.style.textAlign = 'center';
-    td.style.fontWeight = '700';
     if (o.isCash) {
       td.textContent = 'Referencia';
-      td.style.color = 'var(--text-muted)';
+      td.className = 'table-cell--data table-cell--bold table-cell--muted';
     } else {
       const sign = o.netDifferenceVsCashRef > 0 ? '+' : '';
       td.textContent = `${sign}${o.netDifferenceVsCashRef.toLocaleString('es-ES')} €`;
-      td.className = o.netDifferenceVsCashRef > 0 ? 'highlight-trap' : 'highlight-save';
+      td.className = `table-cell--data table-cell--bold ${o.netDifferenceVsCashRef > 0 ? 'highlight-trap' : 'highlight-save'}`;
     }
     diffTr.appendChild(td);
   });
@@ -149,14 +128,12 @@ export function createComparisonTableElement(offers) {
   const verdictTr = document.createElement('tr');
   const verdictLabelTd = document.createElement('td');
   verdictLabelTd.textContent = 'Veredicto';
-  verdictLabelTd.style.fontWeight = '600';
-  verdictLabelTd.style.color = 'var(--text-secondary)';
-  verdictLabelTd.style.textAlign = 'left';
+  verdictLabelTd.className = 'table-cell--label';
   verdictTr.appendChild(verdictLabelTd);
 
   offers.forEach(o => {
     const td = document.createElement('td');
-    td.style.textAlign = 'center';
+    td.className = 'table-cell--data';
     const badge = document.createElement('span');
     badge.className = `badge ${o.verdict.status === 'danger' ? 'badge-trap' : (o.verdict.status === 'success' ? 'badge-winner' : 'badge-neutral')}`;
     badge.textContent = o.verdict.badge;

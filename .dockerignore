@@ -2,6 +2,7 @@ node_modules
 dist
 dist-ssr
 .git
+.github
 .gitignore
 .dockerignore
 npm-debug.log*
@@ -13,3 +14,6 @@ pnpm-debug.log*
 *.local
 README.md
 tests
+nginx.conf
+data/offers/*
+!data/offers/.gitkeep

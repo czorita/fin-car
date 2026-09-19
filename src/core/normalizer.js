@@ -6,6 +6,7 @@
 
 import { OFFER_MODALITIES } from './types.js';
 import { calculateMonthlyPayment, calculateEffectiveApr, reverseEngineerInterestRate, generateAmortizationSchedule } from './finance.js';
+import { generateVerdict } from './verdicts.js';
 
 /**
  * Normaliza una oferta y genera su análisis financiero detallado.
@@ -59,12 +60,7 @@ export function normalizeOffer(offer) {
       },
       advertisedDiscount: Math.max(0, cashPriceRef - offerPrice),
       netDifferenceVsCashRef: totalOutofPocket - (cashPriceRef - tradeInValue + registrationFee),
-      verdict: {
-        status: 'neutral',
-        badge: 'Pago al Contado',
-        message: 'Sin intereses ni comisiones de financiación.',
-        isWinnerCandidate: true
-      },
+      verdict: generateVerdict({ isCash: true }),
       amortizationSchedule: []
     };
   }
@@ -150,23 +146,12 @@ export function normalizeOffer(offer) {
   const netDifferenceVsCashRef = Number((totalOutOfPocketCost - baseCashReferenceTotal).toFixed(2));
 
   // Veredicto
-  let verdictStatus = 'warning';
-  let verdictBadge = 'Sobrecoste Significativo';
-  let verdictMessage = '';
-
-  if (netDifferenceVsCashRef <= 0) {
-    verdictStatus = 'success';
-    verdictBadge = '¡Financiación Ventajosa!';
-    verdictMessage = `Ahorras ${Math.abs(netDifferenceVsCashRef).toLocaleString('es-ES')} € respecto al precio contado de catálogo gracias a las promociones.`;
-  } else if (netDifferenceVsCashRef < advertisedDiscount * 0.5) {
-    verdictStatus = 'info';
-    verdictBadge = 'Coste Asumible';
-    verdictMessage = `Pagas ${netDifferenceVsCashRef.toLocaleString('es-ES')} € de más respecto al contado, pero conservas liquidez con una cuota de ${monthlyPayment.toLocaleString('es-ES')} €/mes.`;
-  } else {
-    verdictStatus = 'danger';
-    verdictBadge = '⚠️ Trampa de Financiación';
-    verdictMessage = `El descuento inicial de ${advertisedDiscount.toLocaleString('es-ES')} € es ficticio: terminas pagando ${netDifferenceVsCashRef.toLocaleString('es-ES')} € MÁS que al contado debido a intereses y comisiones.`;
-  }
+  const verdict = generateVerdict({
+    isCash: false,
+    netDifferenceVsCashRef,
+    advertisedDiscount,
+    monthlyPayment
+  });
 
   // Cuadro de amortización
   const amortizationSchedule = generateAmortizationSchedule(financedPrincipal, effectiveTin, months, balloon);
@@ -190,11 +175,7 @@ export function normalizeOffer(offer) {
     financialSurcharge,
     netDifferenceVsCashRef,
     baseCashReferenceTotal,
-    verdict: {
-      status: verdictStatus,
-      badge: verdictBadge,
-      message: verdictMessage
-    },
+    verdict,
     amortizationSchedule
   };
 }

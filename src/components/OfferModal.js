@@ -1,9 +1,12 @@
 /**
  * Controlador del Modal de Oferta (Creación y Edición).
  * Conecta con el formulario semántico declarado en index.html y usa plantillas para productos vinculados.
+ * Admite comas decimales en todos los campos numéricos mediante parseLocaleNumber.
  */
 
 import { OFFER_MODALITIES } from '../core/types.js';
+import { parseLocaleNumber, formatLocaleNumber } from '../core/formatters.js';
+import { generateId, ID_PREFIX_PRODUCT } from '../core/constants.js';
 
 /**
  * Inicializa el modal de formulario de oferta.
@@ -67,8 +70,8 @@ export function initOfferModal({ onSave }) {
   }
 
   function updateDiscountPreview() {
-    const cashRef = Number(cashRefPriceInput.value) || 0;
-    const offerPrice = Number(offerPriceInput.value) || 0;
+    const cashRef = parseLocaleNumber(cashRefPriceInput.value);
+    const offerPrice = parseLocaleNumber(offerPriceInput.value);
     const diff = cashRef - offerPrice;
 
     if (diff > 0) {
@@ -106,7 +109,7 @@ export function initOfferModal({ onSave }) {
       return;
     }
 
-    linkedProductsState.forEach((prod, index) => {
+    linkedProductsState.forEach(prod => {
       const clone = tmplProduct.content.cloneNode(true);
       const row = clone.querySelector('.linked-product-row');
       const nameInput = row.querySelector('.prod-name');
@@ -114,21 +117,21 @@ export function initOfferModal({ onSave }) {
       const financedInput = row.querySelector('.prod-financed');
       const btnRemove = row.querySelector('.btn-remove-prod');
 
-      nameInput.value = prod.name;
-      costInput.value = prod.cost;
+      nameInput.value = prod.name || '';
+      costInput.value = formatLocaleNumber(prod.cost);
       financedInput.checked = Boolean(prod.financed);
 
       nameInput.addEventListener('input', (e) => {
-        linkedProductsState[index].name = e.target.value;
+        prod.name = e.target.value;
       });
       costInput.addEventListener('input', (e) => {
-        linkedProductsState[index].cost = Number(e.target.value) || 0;
+        prod.cost = parseLocaleNumber(e.target.value);
       });
       financedInput.addEventListener('change', (e) => {
-        linkedProductsState[index].financed = e.target.checked;
+        prod.financed = e.target.checked;
       });
       btnRemove.addEventListener('click', () => {
-        linkedProductsState.splice(index, 1);
+        linkedProductsState = linkedProductsState.filter(p => p.id !== prod.id);
         renderProductsList();
       });
 
@@ -138,7 +141,7 @@ export function initOfferModal({ onSave }) {
 
   btnAddProduct?.addEventListener('click', () => {
     linkedProductsState.push({
-      id: `p_${Date.now()}`,
+      id: generateId(ID_PREFIX_PRODUCT),
       name: 'Seguro Vinculado',
       cost: 650,
       financed: true
@@ -154,19 +157,22 @@ export function initOfferModal({ onSave }) {
       dealer: dealerInput.value.trim(),
       notes: notesInput.value.trim(),
       modality: currentModality,
-      cashPriceReference: Number(cashRefPriceInput.value) || 0,
-      offerPrice: Number(offerPriceInput.value) || 0,
-      downPayment: Number(downPaymentInput.value) || 0,
-      tradeInValue: Number(tradeInValueInput.value) || 0,
-      registrationFee: Number(registrationFeeInput.value) || 0,
+      cashPriceReference: parseLocaleNumber(cashRefPriceInput.value),
+      offerPrice: parseLocaleNumber(offerPriceInput.value),
+      downPayment: parseLocaleNumber(downPaymentInput.value),
+      tradeInValue: parseLocaleNumber(tradeInValueInput.value),
+      registrationFee: parseLocaleNumber(registrationFeeInput.value),
       months: Number(loanMonthsInput.value) || 60,
-      tin: Number(loanTinInput.value) || 0,
-      manualMonthlyPayment: manualMonthlyInput.value ? Number(manualMonthlyInput.value) : null,
-      balloonPayment: Number(balloonPaymentInput.value) || 0,
+      tin: parseLocaleNumber(loanTinInput.value),
+      manualMonthlyPayment: manualMonthlyInput.value ? parseLocaleNumber(manualMonthlyInput.value) : null,
+      balloonPayment: parseLocaleNumber(balloonPaymentInput.value),
       balloonDecision: balloonDecisionInput.value,
-      openingFeePercentage: Number(openingPctInput.value) || 0,
+      openingFeePercentage: parseLocaleNumber(openingPctInput.value),
       openingFeeFinanced: openingFinancedInput.checked,
-      linkedProducts: linkedProductsState
+      linkedProducts: linkedProductsState.map(p => ({
+        ...p,
+        cost: parseLocaleNumber(p.cost)
+      }))
     };
 
     onSave(offerData);
@@ -185,19 +191,24 @@ export function initOfferModal({ onSave }) {
         titleInput.value = offer.title || '';
         dealerInput.value = offer.dealer || '';
         notesInput.value = offer.notes || '';
-        cashRefPriceInput.value = offer.cashPriceReference || offer.offerPrice || '';
-        offerPriceInput.value = offer.offerPrice || '';
-        downPaymentInput.value = offer.downPayment || '';
-        tradeInValueInput.value = offer.tradeInValue || '';
-        registrationFeeInput.value = offer.registrationFee || '';
+        cashRefPriceInput.value = formatLocaleNumber(offer.cashPriceReference || offer.offerPrice || '');
+        offerPriceInput.value = formatLocaleNumber(offer.offerPrice || '');
+        downPaymentInput.value = formatLocaleNumber(offer.downPayment || '');
+        tradeInValueInput.value = formatLocaleNumber(offer.tradeInValue || '');
+        registrationFeeInput.value = formatLocaleNumber(offer.registrationFee || '');
         loanMonthsInput.value = String(offer.months || 60);
-        loanTinInput.value = offer.tin !== undefined ? offer.tin : 8.5;
-        manualMonthlyInput.value = offer.manualMonthlyPayment || '';
-        balloonPaymentInput.value = offer.balloonPayment || '';
+        loanTinInput.value = offer.tin !== undefined ? formatLocaleNumber(offer.tin) : '8,5';
+        manualMonthlyInput.value = offer.manualMonthlyPayment ? formatLocaleNumber(offer.manualMonthlyPayment) : '';
+        balloonPaymentInput.value = offer.balloonPayment ? formatLocaleNumber(offer.balloonPayment) : '';
         balloonDecisionInput.value = offer.balloonDecision || 'keep';
-        openingPctInput.value = offer.openingFeePercentage !== undefined ? offer.openingFeePercentage : 3.0;
+        openingPctInput.value = offer.openingFeePercentage !== undefined ? formatLocaleNumber(offer.openingFeePercentage) : '3,0';
         openingFinancedInput.checked = offer.openingFeeFinanced !== undefined ? offer.openingFeeFinanced : true;
-        linkedProductsState = offer.linkedProducts ? JSON.parse(JSON.stringify(offer.linkedProducts)) : [];
+        linkedProductsState = offer.linkedProducts
+          ? offer.linkedProducts.map(p => ({
+              id: p.id || `p_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+              ...p
+            }))
+          : [];
         updateModalityUI(offer.modality || OFFER_MODALITIES.STANDARD_FINANCE);
       } else {
         modalTitle.textContent = 'Nueva Oferta de Concesionario';
@@ -207,8 +218,8 @@ export function initOfferModal({ onSave }) {
         downPaymentInput.value = '4000';
         registrationFeeInput.value = '450';
         loanMonthsInput.value = '60';
-        loanTinInput.value = '8.5';
-        openingPctInput.value = '3.0';
+        loanTinInput.value = '8,5';
+        openingPctInput.value = '3,0';
         openingFinancedInput.checked = true;
         linkedProductsState = [];
         updateModalityUI(OFFER_MODALITIES.STANDARD_FINANCE);
