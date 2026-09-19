@@ -1,12 +1,12 @@
 services:
-  car-compare:
+  fin-car:
     # Imagen publicada en GitHub Container Registry (o la que se defina en DOCKER_IMAGE)
-    image: ${DOCKER_IMAGE:-ghcr.io/tu-usuario-o-org/car-compare:latest}
+    image: ${DOCKER_IMAGE:-ghcr.io/tu-usuario-o-org/fin-car:latest}
     # Descomenta 'build' si deseas compilar localmente en desarrollo en vez de usar la imagen publicada:
     # build:
     #   context: .
     #   dockerfile: Dockerfile
-    container_name: car-compare-app
+    container_name: fin-car-app
     restart: unless-stopped
     ports:
       - "8080:80"

@@ -37,10 +37,10 @@ Acceso: [http://localhost:8080](http://localhost:8080)
 
 ```bash
 # 1. Construir la imagen
-docker build -t car-compare:latest .
+docker build -t fin-car:latest .
 
 # 2. Arrancar el contenedor
-docker run -d -p 8080:80 --name car-compare-app car-compare:latest
+docker run -d -p 8080:80 --name fin-car-app fin-car:latest
 ```
 
 ---
@@ -50,7 +50,7 @@ docker run -d -p 8080:80 --name car-compare-app car-compare:latest
 Para ejecutar la imagen preconstruida sin compilar código:
 
 ```bash
-DOCKER_IMAGE=ghcr.io/<usuario>/car-compare:latest docker compose up -d
+DOCKER_IMAGE=ghcr.io/<usuario>/fin-car:latest docker compose up -d
 ```
 
 ---
@@ -67,6 +67,6 @@ Desde la pestaña **Actions** de GitHub, selecciona el workflow y pulsa **Run wo
 ### ¿Qué hace el workflow automáticamente?
 1. Pasa los tests unitarios (`npm test`).
 2. Genera el tag de Git (sin prefijo `v`, ej: `1.0.0`).
-3. Crea la **GitHub Release** oficial con notas de cambios generadas automáticamente.
-4. Construye y publica la imagen Docker en GHCR etiquetada con la versión y `latest`.
+3. Construye y publica la imagen Docker en GHCR etiquetada con la versión y `latest`.
+4. Crea la **GitHub Release** oficial incluyendo en su descripción la versión y la ruta de la imagen Docker generada (con comandos rápidos para Docker CLI y Compose), además de las notas de cambios automáticas.
 5. **Incrementa automáticamente el *minor*** en `package.json` (`npm version minor`) y realiza un commit en la rama con la nueva versión para el siguiente ciclo de desarrollo.

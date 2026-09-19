@@ -79,9 +79,7 @@ jobs:
       - name: Run automated tests
         run: npm test
 
-      - name: Create Git Tag and GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create and push Git Tag
         run: |
           TAG_NAME="${{ steps.versioning.outputs.release_version }}"
           git config user.name "github-actions[bot]"
@@ -94,16 +92,6 @@ jobs:
             git push origin "$TAG_NAME"
           else
             echo "Tag $TAG_NAME ya existe o ya fue creado."
-          fi
-
-          # Crear GitHub Release oficial si no existe
-          if ! gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            echo "Creando GitHub Release para $TAG_NAME..."
-            gh release create "$TAG_NAME" \
-              --title "Release $TAG_NAME" \
-              --generate-notes
-          else
-            echo "GitHub Release para $TAG_NAME ya existe."
           fi
 
       - name: Set up QEMU
@@ -139,6 +127,47 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${{ steps.versioning.outputs.release_version }}"
+          IMAGE_NAME_LOWER=$(echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+
+          cat <<EOF > release_notes.md
+## 📦 Información de la Versión
+
+- **Versión:** \`${TAG_NAME}\`
+- **Imagen Docker:** \`${IMAGE_NAME_LOWER}:${TAG_NAME}\`
+- **Tag latest:** \`${IMAGE_NAME_LOWER}:latest\`
+
+### 🐳 Despliegue rápido con Docker
+\`\`\`bash
+# Descargar y arrancar la versión ${TAG_NAME}
+docker pull ${IMAGE_NAME_LOWER}:${TAG_NAME}
+docker run -d -p 8080:80 --name fin-car-app ${IMAGE_NAME_LOWER}:${TAG_NAME}
+\`\`\`
+
+### 📦 Arranque con Docker Compose
+\`\`\`bash
+DOCKER_IMAGE=${IMAGE_NAME_LOWER}:${TAG_NAME} docker compose up -d
+\`\`\`
+
+---
+EOF
+
+          # Crear o actualizar GitHub Release
+          if ! gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Creando GitHub Release para $TAG_NAME..."
+            gh release create "$TAG_NAME" \
+              --title "Release $TAG_NAME" \
+              --notes-file release_notes.md \
+              --generate-notes
+          else
+            echo "GitHub Release para $TAG_NAME ya existe. Actualizando notas..."
+            gh release edit "$TAG_NAME" --notes-file release_notes.md
+          fi
 
       - name: Bump minor version and commit
         run: |
