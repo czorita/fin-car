@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Comparador y normalizador financiero de ofertas de coches: calcula costes totales reales, sobrecostes de financiación, precio contado equivalente y analiza si las ofertas de los concesionarios compensan o son una trampa." />
+    <title>AutoCompare PRO — Comparador y Normalizador de Ofertas de Coches</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'><path d='M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 11 2 11.5 2 12v4c0 .6.4 1 1 1h2'/><circle cx='7' cy='17' r='2'/><circle cx='17' cy='17' r='2'/></svg>" />
+  </head>
+  <body>
+    <div class="ambient-glow" aria-hidden="true"></div>
+
+    <div class="app-layout">
+      <!-- Header Semántico -->
+      <header class="app-header">
+        <div class="brand-wrapper">
+          <div class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 11 2 11.5 2 12v4c0 .6.4 1 1 1h2" />
+              <circle cx="7" cy="17" r="2" />
+              <path d="M9 17h6" />
+              <circle cx="17" cy="17" r="2" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="brand-title">
+              AutoCompare
+              <span class="badge badge-info" style="font-size: 0.65rem;">PRO</span>
+            </h1>
+            <p class="brand-subtitle">Comparador y Normalizador Financiero de Ofertas de Coches</p>
+          </div>
+        </div>
+
+        <nav class="header-actions" aria-label="Acciones de la aplicación">
+          <button id="btn-new-offer" class="btn btn-primary" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Nueva Oferta
+          </button>
+
+          <button id="btn-reverse-calc" class="btn btn-secondary" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Ingeniería Inversa
+          </button>
+
+          <button id="btn-export-json" class="btn btn-ghost btn-sm" title="Exportar ofertas en formato JSON" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar
+          </button>
+
+          <label class="btn btn-ghost btn-sm" title="Importar archivo JSON de ofertas" style="cursor: pointer;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Importar
+            <input type="file" id="input-import-json" accept=".json" style="display: none;" />
+          </label>
+
+          <button id="btn-reset-samples" class="btn btn-ghost btn-sm" title="Restaurar ejemplos de prueba" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Ejemplos
+          </button>
+
+          <button id="btn-theme-toggle" class="btn btn-ghost btn-icon" title="Cambiar tema claro/oscuro" type="button">
+            <span id="theme-toggle-icon">☀️</span>
+          </button>
+        </nav>
+      </header>
+
+      <!-- Guía de Consejos de Negociación -->
+      <details id="negotiation-guide" style="background: var(--bg-surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; cursor: pointer;">
+        <summary style="font-weight: 600; font-size: 0.9rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 0.5rem;">
+          <span>💡 ¿Cómo detectar la "trampa del descuento" en el concesionario?</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: auto;">(Click para desplegar consejos)</span>
+        </summary>
+        <div style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.85rem; line-height: 1.6; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+          <p><strong>1. El descuento financiado no siempre es ahorro:</strong> Los concesionarios ofrecen 2.000 € a 4.000 € de rebaja si financias, pero al aplicar un TIN del 8% al 10% y comisiones de apertura del 3% al 4%, los intereses generados suelen superar los 5.000 €, pagando más que al contado.</p>
+          <p style="margin-top: 0.4rem;"><strong>2. Ojo a los seguros vinculados:</strong> Muchas financieras exigen seguro de pagos protegidos o paquetes de mantenimiento de 800-1.200 € financiados dentro de la cuota (lo que genera aún más intereses).</p>
+          <p style="margin-top: 0.4rem;"><strong>3. Compara siempre el Coste Total Real:</strong> Esta herramienta suma Entrada + Todas las Cuotas + Cuota Final + Comisiones + Seguros para que sepas el precio real neto antes de firmar nada.</p>
+        </div>
+      </details>
+
+      <!-- Banner de Veredicto Global -->
+      <section id="verdict-banner" class="verdict-banner" style="display: none;">
+        <div class="verdict-info">
+          <div class="verdict-trophy" aria-hidden="true">🏆</div>
+          <div class="verdict-text">
+            <h3>La opción más inteligente es <strong id="verdict-best-title">—</strong></h3>
+            <p id="verdict-best-subtext">—</p>
+            <div id="verdict-trap-alert" style="display: none; margin-top: 0.6rem; padding: 0.45rem 0.75rem; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: var(--radius-sm); font-size: 0.8rem; color: #fb7185;">
+              ⚠️ <strong>Alerta:</strong> <span id="verdict-trap-text"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="verdict-savings">
+          <div class="savings-amount" id="verdict-savings-amount">0 €</div>
+          <div class="savings-label">Ahorro frente a la opción más cara</div>
+        </div>
+      </section>
+
+      <!-- Barra de Control de Vistas -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div style="font-size: 0.92rem; color: var(--text-secondary);" id="offers-count-label">
+          Mostrando <strong>0</strong> ofertas
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <div class="segmented-control" style="width: 220px;">
+            <button id="view-cards-btn" class="segmented-btn active" type="button">
+              🗂️ Tarjetas
+            </button>
+            <button id="view-table-btn" class="segmented-btn" type="button">
+              📊 Matriz Tabla
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenedor Principal de Ofertas (Tarjetas o Tabla) -->
+      <main id="offers-display-slot"></main>
+
+      <!-- Sección de Analítica y Gráfico de Barras -->
+      <section id="analytics-section" class="analytics-section" style="display: none;">
+        <div class="analytics-header">
+          <div class="analytics-title">
+            <h2>Desglose Visual de Costes</h2>
+            <p>Compara qué parte de tu dinero es realmente el valor del coche frente a intereses bancarios y comisiones.</p>
+          </div>
+        </div>
+        <div class="chart-canvas-container">
+          <canvas id="cost-breakdown-canvas"></canvas>
+        </div>
+      </section>
+
+      <!-- Botón Flotante para Móvil -->
+      <div class="mobile-fab">
+        <button id="fab-new-offer" class="btn btn-primary btn-icon" style="width: 52px; height: 52px; border-radius: 50%; box-shadow: var(--shadow-xl);" title="Añadir Oferta" type="button">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         MODALES NATIVOS (<dialog>)
+         ========================================== -->
+
+    <!-- Modal Formulario de Oferta -->
+    <dialog id="modal-offer" class="app-modal">
+      <div class="modal-header">
+        <h2 id="modal-offer-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Configurar Oferta
+        </h2>
+        <button id="btn-close-offer-modal" class="btn btn-ghost btn-icon" type="button">&times;</button>
+      </div>
+
+      <form id="form-offer" class="modal-body">
+        <input type="hidden" id="offer-id" />
+
+        <div class="form-group">
+          <label class="form-label" for="offer-title">Nombre / Modelo del Vehículo *</label>
+          <input type="text" id="offer-title" class="form-input" placeholder="Ej: Toyota Corolla 140H Style" required />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="offer-dealer">Concesionario / Vendedor</label>
+            <input type="text" id="offer-dealer" class="form-input" placeholder="Ej: Concesionario Oficial Madrid" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="offer-notes">Notas / Acabado</label>
+            <input type="text" id="offer-notes" class="form-input" placeholder="Ej: Pintura bi-tono, entrega 15 días" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Modalidad de Oferta</label>
+          <div class="segmented-control" id="modality-selector">
+            <button type="button" class="segmented-btn" data-val="cash">Al Contado</button>
+            <button type="button" class="segmented-btn active" data-val="standard_finance">Financiación Lineal</button>
+            <button type="button" class="segmented-btn" data-val="flexible_finance">Flexible / Multiopción</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="cash-ref-price">
+              PVP Catálogo / Contado
+              <span class="helper-icon" title="Precio oficial del coche sin descuentos por financiar">ⓘ</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="number" id="cash-ref-price" class="form-input has-addon" placeholder="25000" min="0" step="100" required />
+              <span class="input-addon">€</span>
+            </div>
+            <span class="form-helper">Precio al contado oficial para comparar</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="offer-price">
+              Precio Ofertado *
+              <span class="helper-icon" title="Precio que te prometen para esta modalidad">ⓘ</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="number" id="offer-price" class="form-input has-addon" placeholder="22500" min="0" step="100" required />
+              <span class="input-addon">€</span>
+            </div>
+            <span class="form-helper" id="discount-preview-text">Descuento aplicado: 0 €</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+          <div class="form-group" id="group-down-payment">
+            <label class="form-label" for="down-payment">Entrada (€)</label>
+            <div class="input-wrapper">
+              <input type="number" id="down-payment" class="form-input has-addon" placeholder="4000" min="0" step="100" />
+              <span class="input-addon">€</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="trade-in-value">Tasación Coche Usado</label>
+            <div class="input-wrapper">
+              <input type="number" id="trade-in-value" class="form-input has-addon" placeholder="0" min="0" step="100" />
+              <span class="input-addon">€</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="registration-fee">Gastos Matriculación</label>
+            <div class="input-wrapper">
+              <input type="number" id="registration-fee" class="form-input has-addon" placeholder="450" min="0" step="50" />
+              <span class="input-addon">€</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campos Específicos de Financiación -->
+        <div id="finance-fields-container">
+          <div style="border-top: 1px solid var(--border-subtle); padding-top: 1rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+            <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--accent-cyan);">Parámetros de Financiación</h4>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="loan-months">Plazo (Meses)</label>
+              <select id="loan-months" class="form-select">
+                <option value="24">24 meses (2 años)</option>
+                <option value="36">36 meses (3 años)</option>
+                <option value="48">48 meses (4 años)</option>
+                <option value="60" selected>60 meses (5 años)</option>
+                <option value="72">72 meses (6 años)</option>
+                <option value="84">84 meses (7 años)</option>
+                <option value="96">96 meses (8 años)</option>
+                <option value="120">120 meses (10 años)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="loan-tin">
+                TIN Anual (%)
+                <span class="helper-icon" title="Tipo de Interés Nominal fijado en el contrato">ⓘ</span>
+              </label>
+              <div class="input-wrapper">
+                <input type="number" id="loan-tin" class="form-input has-addon" placeholder="8.5" min="0" max="40" step="0.05" />
+                <span class="input-addon">%</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="manual-monthly">
+                O Cuota Ofertada (€)
+                <span class="helper-icon" title="Opcional: Si el comercial te fijó la cuota mensual exacta">ⓘ</span>
+              </label>
+              <div class="input-wrapper">
+                <input type="number" id="manual-monthly" class="form-input has-addon" placeholder="Autocalcular" min="0" step="1" />
+                <span class="input-addon">€/mes</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cuota Final (Multiopción) -->
+          <div id="flexible-balloon-container" style="display: none; background: rgba(59, 130, 246, 0.07); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px dashed rgba(59, 130, 246, 0.3);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="balloon-payment">
+                  Cuota Final / Valor Futuro (VFG) *
+                  <span class="helper-icon" title="Último pago balloon para quedarse el coche">ⓘ</span>
+                </label>
+                <div class="input-wrapper">
+                  <input type="number" id="balloon-payment" class="form-input has-addon" placeholder="13000" min="0" step="100" />
+                  <span class="input-addon">€</span>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="balloon-decision">Tu intención final</label>
+                <select id="balloon-decision" class="form-select">
+                  <option value="keep" selected>Pagar cuota final (Quedarse el coche)</option>
+                  <option value="return">Devolver el coche (Uso temporal / Renting)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comisión de apertura -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center;">
+            <div class="form-group">
+              <label class="form-label" for="opening-pct">Comisión de Apertura (%)</label>
+              <div class="input-wrapper">
+                <input type="number" id="opening-pct" class="form-input has-addon" placeholder="3.0" min="0" max="10" step="0.1" />
+                <span class="input-addon">%</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="padding-top: 1.2rem;">
+              <label class="checkbox-label">
+                <input type="checkbox" id="opening-financed" checked />
+                ¿Comisión de apertura financiada? (se suma a las cuotas)
+              </label>
+            </div>
+          </div>
+
+          <!-- Productos Vinculados -->
+          <div style="margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <label class="form-label" style="margin: 0;">
+                Productos Obligatorios Vinculados
+                <span class="helper-icon" title="Seguros de vida, packs de mantenimiento, etc. exigidos para obtener el descuento">ⓘ</span>
+              </label>
+              <button type="button" id="btn-add-product" class="btn btn-secondary btn-sm">+ Añadir Seguro/Pack</button>
+            </div>
+            <div id="linked-products-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <!-- Se inyectan filas con tmpl-linked-product -->
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="margin: 1.5rem -1.5rem -1.5rem -1.5rem;">
+          <button type="button" id="btn-cancel-offer" class="btn btn-ghost">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Oferta</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Modal Cuadro de Amortización Francés -->
+    <dialog id="modal-amortization" class="app-modal" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 id="amortization-car-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Cuadro de Amortización Francés
+        </h2>
+        <button id="btn-close-amortization" class="btn btn-ghost btn-icon" type="button">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="kpi-card" style="padding: 0.85rem;">
+            <div class="kpi-label">Capital Prestado</div>
+            <div class="kpi-value" id="amort-principal" style="font-size: 1.35rem;">0 €</div>
+          </div>
+          <div class="kpi-card" style="padding: 0.85rem;">
+            <div class="kpi-label">Total Intereses</div>
+            <div class="kpi-value" id="amort-interests" style="font-size: 1.35rem; color: var(--accent-rose);">0 €</div>
+          </div>
+          <div class="kpi-card" style="padding: 0.85rem;">
+            <div class="kpi-label">Cuota Mensual</div>
+            <div class="kpi-value" id="amort-monthly" style="font-size: 1.35rem; color: var(--accent-cyan);">0 €/mes</div>
+          </div>
+        </div>
+
+        <div class="amortization-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>Cuota</th>
+                <th>Capital Amortizado</th>
+                <th>Intereses Pagados</th>
+                <th>Saldo Pendiente</th>
+              </tr>
+            </thead>
+            <tbody id="amortization-tbody">
+              <!-- Filas de meses -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-done-amortization" class="btn btn-secondary">Cerrar</button>
+      </div>
+    </dialog>
+
+    <!-- Modal Calculadora Inversa -->
+    <dialog id="modal-reverse-calc" class="app-modal">
+      <div class="modal-header">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Calculadora de Ingeniería Inversa
+        </h2>
+        <button id="btn-close-reverse" class="btn btn-ghost btn-icon" type="button">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+          ¿El comercial solo te ha dicho cuánto pagarías al mes sin detallarte el interés? Introduce aquí las cifras del presupuesto y el sistema deducirá el <strong>TIN real, la TAE y los intereses ocultos</strong>.
+        </p>
+
+        <form id="form-reverse-calc">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="rev-price">Precio Ofertado del Coche</label>
+              <div class="input-wrapper">
+                <input type="number" id="rev-price" class="form-input has-addon" placeholder="24000" min="1000" required />
+                <span class="input-addon">€</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="rev-down">Entrada Aportada</label>
+              <div class="input-wrapper">
+                <input type="number" id="rev-down" class="form-input has-addon" placeholder="4000" min="0" required />
+                <span class="input-addon">€</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="rev-monthly">Cuota Mensual Prometida</label>
+              <div class="input-wrapper">
+                <input type="number" id="rev-monthly" class="form-input has-addon" placeholder="320" min="1" step="0.5" required />
+                <span class="input-addon">€/mes</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="rev-months">Número de Meses</label>
+              <select id="rev-months" class="form-select">
+                <option value="24">24 meses (2 años)</option>
+                <option value="36">36 meses (3 años)</option>
+                <option value="48">48 meses (4 años)</option>
+                <option value="60" selected>60 meses (5 años)</option>
+                <option value="72">72 meses (6 años)</option>
+                <option value="84">84 meses (7 años)</option>
+                <option value="96">96 meses (8 años)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rev-balloon">Cuota Final / Balloon (opcional, solo multiopción)</label>
+            <div class="input-wrapper">
+              <input type="number" id="rev-balloon" class="form-input has-addon" placeholder="0" min="0" />
+              <span class="input-addon">€</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+            🔍 Descubrir Intereses Ocultos
+          </button>
+        </form>
+
+        <div id="reverse-results-container" style="display: none;">
+          <div class="reverse-result-box">
+            <h4 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 0.5rem;">Resultado del Análisis Financiero:</h4>
+            <div class="reverse-result-grid">
+              <div>
+                <div class="kpi-label">TIN Anual Implícito</div>
+                <div class="kpi-value" id="rev-out-tin" style="font-size: 1.5rem; color: var(--accent-rose);">0%</div>
+              </div>
+              <div>
+                <div class="kpi-label">TAE Anual Estimada</div>
+                <div class="kpi-value" id="rev-out-apr" style="font-size: 1.5rem; color: var(--accent-amber);">0%</div>
+              </div>
+              <div>
+                <div class="kpi-label">Intereses Totales</div>
+                <div class="kpi-value" id="rev-out-interest" style="font-size: 1.5rem; color: var(--accent-rose);">0 €</div>
+              </div>
+              <div>
+                <div class="kpi-label">Coste Total Pagado</div>
+                <div class="kpi-value" id="rev-out-total" style="font-size: 1.5rem;">0 €</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 1rem; text-align: right;">
+            <button type="button" id="btn-apply-reverse-as-offer" class="btn btn-secondary">
+              ➕ Convertir en Oferta para Comparar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-close-reverse-footer" class="btn btn-ghost">Cerrar</button>
+      </div>
+    </dialog>
+
+    <!-- ==========================================
+         PLANTILLAS HTML5 (<template>)
+         ========================================== -->
+
+    <!-- Plantilla de Tarjeta de Oferta -->
+    <template id="tmpl-offer-card">
+      <article class="offer-card">
+        <header class="offer-header">
+          <div class="offer-badges"></div>
+          <h2 class="offer-title"></h2>
+          <div class="offer-dealer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="dealer-text"></span>
+          </div>
+        </header>
+
+        <div class="offer-cost-hero">
+          <div class="cost-hero-label">Coste Total Real</div>
+          <div class="cost-hero-amount">0 €</div>
+          <div class="cost-hero-sub"></div>
+        </div>
+
+        <div class="card-verdict-alert">
+          <strong class="verdict-badge-text"></strong>: <span class="verdict-msg-text"></span>
+        </div>
+
+        <div class="offer-specs-list"></div>
+
+        <div class="offer-notes-box" style="display: none; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; font-style: italic; background: var(--bg-surface); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm);">
+          <span class="notes-text"></span>
+        </div>
+
+        <footer class="card-actions">
+          <button class="btn btn-secondary btn-sm btn-edit" style="flex: 1;" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Editar
+          </button>
+          <button class="btn btn-ghost btn-sm btn-schedule" title="Ver tabla de amortización mes a mes" type="button" style="display: none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Amortización
+          </button>
+          <button class="btn btn-danger-ghost btn-sm btn-delete" title="Eliminar oferta" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </footer>
+      </article>
+    </template>
+
+    <!-- Plantilla de Producto Vinculado en Formulario -->
+    <template id="tmpl-linked-product">
+      <div class="linked-product-row" style="display: grid; grid-template-columns: 2fr 1fr auto auto; gap: 0.5rem; align-items: center; background: var(--bg-surface); padding: 0.45rem 0.65rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+        <input type="text" class="form-input btn-sm prod-name" placeholder="Nombre (ej. Seguro Vida)" style="padding: 0.35rem 0.5rem;" />
+        <div class="input-wrapper">
+          <input type="number" class="form-input btn-sm prod-cost has-addon" placeholder="Coste" style="padding: 0.35rem 0.5rem;" />
+          <span class="input-addon">€</span>
+        </div>
+        <label class="checkbox-label" style="font-size: 0.75rem;">
+          <input type="checkbox" class="prod-financed" checked />
+          ¿Financiado?
+        </label>
+        <button type="button" class="btn btn-ghost btn-sm btn-remove-prod" style="padding: 0.25rem 0.5rem; color: var(--accent-rose);">&times;</button>
+      </div>
+    </template>
+
+    <!-- Plantilla de Estado Vacío -->
+    <template id="tmpl-empty-state">
+      <div style="text-align: center; padding: 4rem 1rem; background: var(--bg-surface-card); border-radius: var(--radius-xl); border: 1px dashed var(--border-medium);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;" aria-hidden="true">🚗</div>
+        <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem;">No tienes ninguna oferta guardada</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Añade tu primera oferta para empezar a comparar y calcular valores normalizados.</p>
+        <button class="btn btn-primary empty-add-btn" type="button">+ Añadir Primera Oferta</button>
+      </div>
+    </template>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
