@@ -57,9 +57,16 @@ DOCKER_IMAGE=ghcr.io/<usuario>/car-compare:latest docker compose up -d
 
 ## 🏷️ Publicar Nueva Versión (CI/CD)
 
-Crear y subir un tag dispara automáticamente la GitHub Action que actualiza `package.json`, pasa los tests y publica la imagen en GHCR con la etiqueta de la versión y `latest`:
+El workflow de GitHub Actions (`Release & Publish Docker Image`) automatiza todo el ciclo de entrega:
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
+### Ejecución manual (Recomendado)
+Desde la pestaña **Actions** de GitHub, selecciona el workflow y pulsa **Run workflow**:
+- **Versión automática:** Si dejas el campo de versión vacío, el workflow leerá la versión actual definida en `package.json`.
+- **Versión manual:** Si indicas una versión (ej: `1.0.0`), el workflow sincronizará `package.json` con dicho valor.
+
+### ¿Qué hace el workflow automáticamente?
+1. Pasa los tests unitarios (`npm test`).
+2. Genera el tag de Git (sin prefijo `v`, ej: `1.0.0`).
+3. Crea la **GitHub Release** oficial con notas de cambios generadas automáticamente.
+4. Construye y publica la imagen Docker en GHCR etiquetada con la versión y `latest`.
+5. **Incrementa automáticamente el *minor*** en `package.json` (`npm version minor`) y realiza un commit en la rama con la nueva versión para el siguiente ciclo de desarrollo.

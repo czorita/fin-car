@@ -1,15 +1,16 @@
-name: Build and Publish Docker Image
+name: Release & Publish Docker Image
 
 on:
   push:
     tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
       - 'v*'
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       version:
-        description: 'Tag de versión manual (ej: v1.0.0)'
+        description: 'Versión para la release (opcional, ej: 1.0.0. Si se omite, lee la de package.json)'
         required: false
         default: ''
 
@@ -18,8 +19,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
-    name: Build & Push Docker Image
+  release-and-publish:
+    name: Release, Docker Publish & Version Bump
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -36,36 +37,74 @@ jobs:
         with:
           node-version: 20
 
-      - name: Update package.json version
+      - name: Resolve release version
         id: versioning
         run: |
           RAW_VERSION="${{ inputs.version }}"
-          if [ -z "$RAW_VERSION" ]; then
-            RAW_VERSION="${GITHUB_REF_NAME}"
+          if [ -n "$RAW_VERSION" ]; then
+            # Usuario proporcionó versión manual (se elimina prefijo 'v' si existiera)
+            CLEAN_VERSION="${RAW_VERSION#v}"
+            echo "Usando versión manual indicada por el usuario: $CLEAN_VERSION"
+            # Actualizar package.json y package-lock.json sin generar tag de git aún
+            npm version "$CLEAN_VERSION" --no-git-tag-version --allow-same-version
+            echo "is_custom=true" >> $GITHUB_OUTPUT
+          else
+            # Leer versión actual del proyecto
+            if [ "${{ github.ref_type }}" = "tag" ]; then
+              CLEAN_VERSION="${GITHUB_REF_NAME#v}"
+            else
+              CLEAN_VERSION=$(node -p "require('./package.json').version")
+            fi
+            echo "Leyendo versión actual del proyecto: $CLEAN_VERSION"
+            echo "is_custom=false" >> $GITHUB_OUTPUT
           fi
-          # Eliminar prefijo 'v' si existe (ej: v1.2.3 -> 1.2.3)
-          CLEAN_VERSION="${RAW_VERSION#v}"
-          echo "Sincronizando version a: $CLEAN_VERSION"
-          
-          # Actualizar package.json y package-lock.json sin generar otro tag
-          npm version "$CLEAN_VERSION" --no-git-tag-version --allow-same-version
-          echo "clean_version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Commit and push updated package.json
+          echo "release_version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit release version if specified by user
+        if: steps.versioning.outputs.is_custom == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json package-lock.json
           if ! git diff --cached --quiet; then
-            git commit -m "chore(release): bump package.json to ${{ steps.versioning.outputs.clean_version }} [skip ci]"
-            # Intentar persistir el cambio en la rama main
-            git push origin HEAD:main || echo "Aviso: No se pudo hacer push directo a main (posible protección de rama); la imagen Docker sí contendrá la versión actualizada."
-          else
-            echo "package.json ya está sincronizado con esta versión."
+            TARGET_BRANCH="${{ github.ref_name }}"
+            if [ "${{ github.ref_type }}" = "tag" ]; then
+              TARGET_BRANCH="${{ github.event.repository.default_branch || 'master' }}"
+            fi
+            git commit -m "chore(release): prepare release ${{ steps.versioning.outputs.release_version }} [skip ci]"
+            git push origin HEAD:$TARGET_BRANCH || echo "Aviso: No se pudo hacer push a $TARGET_BRANCH."
           fi
 
       - name: Run automated tests
         run: npm test
+
+      - name: Create Git Tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${{ steps.versioning.outputs.release_version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Crear y publicar tag sin prefijo 'v' si no existe
+          if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1 && ! git ls-remote --tags origin "refs/tags/$TAG_NAME" | grep -q "refs/tags/$TAG_NAME"; then
+            echo "Creando tag $TAG_NAME..."
+            git tag "$TAG_NAME"
+            git push origin "$TAG_NAME"
+          else
+            echo "Tag $TAG_NAME ya existe o ya fue creado."
+          fi
+
+          # Crear GitHub Release oficial si no existe
+          if ! gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Creando GitHub Release para $TAG_NAME..."
+            gh release create "$TAG_NAME" \
+              --title "Release $TAG_NAME" \
+              --generate-notes
+          else
+            echo "GitHub Release para $TAG_NAME ya existe."
+          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -86,11 +125,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=raw,value=${{ steps.versioning.outputs.release_version }}
+            type=raw,value=latest
             type=ref,event=tag
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v') }}
-            type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -102,3 +139,31 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Bump minor version and commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          TARGET_BRANCH="${{ github.ref_name }}"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TARGET_BRANCH="${{ github.event.repository.default_branch || 'master' }}"
+          fi
+
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            git checkout "$TARGET_BRANCH"
+            git pull origin "$TARGET_BRANCH"
+          fi
+
+          # Incrementar el minor en package.json y package-lock.json
+          npm version minor --no-git-tag-version
+          NEXT_VERSION=$(node -p "require('./package.json').version")
+          echo "Nueva versión incrementada (minor): $NEXT_VERSION"
+
+          git add package.json package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: bump version to $NEXT_VERSION [skip ci]"
+            git push origin HEAD:$TARGET_BRANCH || echo "Aviso: No se pudo hacer push directo a $TARGET_BRANCH (posible protección de rama)."
+          else
+            echo "No se detectaron cambios para commitear."
+          fi
