@@ -30,6 +30,30 @@ describe('Servidor HTTP y Entrega de Archivos Estáticos', () => {
 
   before(async () => {
     process.env.PORT = String(TEST_PORT);
+
+    // Asegurar existencia de dist y de archivos mínimos requeridos para tests estáticos
+    const fs = await import('node:fs');
+    const distDir = path.resolve(__dirname, '../dist');
+    const distAssetsDir = path.resolve(distDir, 'assets');
+    if (!fs.existsSync(distAssetsDir)) {
+      fs.mkdirSync(distAssetsDir, { recursive: true });
+    }
+    const indexPath = path.resolve(distDir, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      fs.writeFileSync(indexPath, '<!doctype html><html><head><title>Fin-Car</title></head><body><h1>Fin-Car</h1></body></html>');
+    }
+    const ejemplosPath = path.resolve(distDir, 'ejemplos.html');
+    if (!fs.existsSync(ejemplosPath)) {
+      fs.writeFileSync(ejemplosPath, '<!doctype html><html><head><title>Ejemplos</title></head><body><h1>Ejemplos</h1></body></html>');
+    }
+    const existingFiles = fs.readdirSync(distAssetsDir);
+    if (!existingFiles.some(f => f.endsWith('.js'))) {
+      fs.writeFileSync(path.resolve(distAssetsDir, 'main-bundle.js'), 'console.log("fin-car");');
+    }
+    if (!existingFiles.some(f => f.endsWith('.css'))) {
+      fs.writeFileSync(path.resolve(distAssetsDir, 'style-bundle.css'), 'body { margin: 0; }');
+    }
+
     // Importación dinámica para inicializar el servidor en el puerto de prueba
     const mod = await import('../server.js');
     serverInstance = mod.server;
