@@ -63,11 +63,15 @@ docker run -d -p 8080:80 -v $(pwd)/data:/app/data --name fin-car-app fin-car:lat
 
 ## 📦 Arranque desde GitHub Packages (GHCR)
 
+Las imágenes publicadas en GitHub Packages son multi-arquitectura (**`linux/amd64`** y **`linux/arm64`**), compatibles de forma nativa con Intel/AMD, Apple Silicon (M1/M2/M3/M4) y Raspberry Pi / ARM64.
+
 Para ejecutar la imagen preconstruida sin compilar código:
 
 ```bash
 DOCKER_IMAGE=ghcr.io/<usuario>/fin-car:latest docker compose up -d
 ```
+
+> **Nota para versiones antiguas solo-amd64 en máquinas ARM64:** Si necesitas ejecutar una versión antigua publicada previamente que no dispusiera de manifiesto ARM64, puedes forzar la emulación x86 añadiendo `--platform linux/amd64` en el comando `docker run` o `platform: linux/amd64` en tu servicio de Docker Compose.
 
 ---
 
@@ -83,6 +87,6 @@ Desde la pestaña **Actions** de GitHub, selecciona el workflow y pulsa **Run wo
 ### ¿Qué hace el workflow automáticamente?
 1. Pasa los tests unitarios (`npm test`).
 2. Genera el tag de Git (sin prefijo `v`, ej: `1.0.0`).
-3. Construye y publica la imagen Docker en GHCR etiquetada con la versión y `latest`.
+3. Construye y publica la imagen Docker multi-arquitectura (`linux/amd64,linux/arm64` mediante Docker Buildx y QEMU) en GHCR etiquetada con la versión y `latest`.
 4. Crea la **GitHub Release** oficial incluyendo en su descripción la versión y la ruta de la imagen Docker generada (con comandos rápidos para Docker CLI y Compose), además de las notas de cambios automáticas.
 5. **Incrementa automáticamente el *patch*** en `package.json` (`npm version patch`) y realiza un commit en la rama con la nueva versión para el siguiente ciclo de desarrollo.

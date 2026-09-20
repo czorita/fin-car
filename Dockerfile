@@ -1,5 +1,5 @@
-# Stage 1: Build stage
-FROM node:20-alpine AS build
+# Stage 1: Build stage (ejecutado en la plataforma del host de compilación para máxima velocidad)
+FROM --platform=$BUILDPLATFORM node:20-alpine AS build
 
 WORKDIR /app
 
