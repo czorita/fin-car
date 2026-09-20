@@ -161,6 +161,9 @@ export function createDefaultOffer(overrides = {}) {
     // Productos obligatorios vinculados a la financiación
     linkedProducts: Array.isArray(overrides.linkedProducts) ? overrides.linkedProducts : [],
 
+    // Servicios adicionales incluidos de serie o bonificados (ej. mantenimiento, seguro, garantía)
+    includedServices: Array.isArray(overrides.includedServices) ? overrides.includedServices : [],
+
     createdAt: overrides.createdAt || new Date().toISOString()
   };
 }

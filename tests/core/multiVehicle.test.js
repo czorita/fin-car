@@ -123,4 +123,47 @@ describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
     assert.equal(result.maxDiff, 0);
     assert.ok(result.summaryMessage.includes('Solo hay 1 vehículo disponible'));
   });
+
+  test('rankCrossVehicleOffers detecta ganador TCO equiparado con servicios incluidos entre RAV4 y Tucson', () => {
+    // Tucson: financiado cuesta 30.000 € (sin servicios incluidos, TCO = 30.000 €)
+    const tucson = normalizeOffer(createDefaultOffer({
+      id: 'tucson_1',
+      vehicle: 'Hyundai Tucson',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      vehiclePrice: 30000,
+      offerPrice: 30000,
+      downPayment: 30000, // para fijar totalOutOfPocketCost = 30.000
+      months: 60,
+      tin: 0,
+      includedServices: []
+    }));
+
+    // RAV4: financiado cuesta 31.000 € (1.000 € más en desembolso financiero), pero incluye 1.950 € en servicios
+    // TCO RAV4 = 31.000 - 1.950 = 29.050 € (¡más barato a igualdad de condiciones!)
+    const rav4 = normalizeOffer(createDefaultOffer({
+      id: 'rav4_1',
+      vehicle: 'Toyota RAV4',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      vehiclePrice: 31000,
+      offerPrice: 31000,
+      downPayment: 31000,
+      months: 60,
+      tin: 0,
+      includedServices: [
+        { id: 's1', name: 'Mantenimiento 4 años', marketValue: 1200 },
+        { id: 's2', name: 'Seguro todo riesgo', marketValue: 750 }
+      ]
+    }));
+
+    const result = rankCrossVehicleOffers([tucson, rav4]);
+    // Ganador financiero en caja: Tucson (30.000 € < 31.000 €)
+    assert.equal(result.winnerOffer.id, 'tucson_1');
+    // Ganador TCO equiparado: RAV4 (29.050 € < 30.000 €)
+    assert.equal(result.winnerTcoOffer.id, 'rav4_1');
+
+    const rav4Ranked = result.rankedOffers.find(o => o.id === 'rav4_1');
+    assert.equal(rav4Ranked.isTcoWinner, true, 'El RAV4 debe marcarse como ganador de TCO');
+    assert.ok(result.summaryMessage.includes('TCO equiparado'), 'El resumen debe explicar que el RAV4 resulta más rentable en TCO');
+  });
 });
+

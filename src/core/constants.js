@@ -8,6 +8,36 @@
 export const ID_PREFIX_OFFER = 'offer';
 /** Prefijo para IDs de productos vinculados */
 export const ID_PREFIX_PRODUCT = 'p';
+/** Prefijo para IDs de servicios incluidos bonificados */
+export const ID_PREFIX_SERVICE = 'srv';
+
+// --- Servicios Incluidos Sugeridos (Criterio conservador calibrado para SUVs C/D: RAV4 / Tucson) ---
+export const SUGGESTED_INCLUDED_SERVICES = [
+  {
+    id: 'maint_suv',
+    name: 'Mantenimiento oficial (4-5 años / 60-75k km)',
+    marketValue: 1200,
+    category: 'maintenance'
+  },
+  {
+    id: 'insurance_suv',
+    name: 'Seguro a todo riesgo (1er año)',
+    marketValue: 750,
+    category: 'insurance'
+  },
+  {
+    id: 'warranty_suv',
+    name: 'Extensión de garantía oficial (+2-3 años)',
+    marketValue: 600,
+    category: 'warranty'
+  },
+  {
+    id: 'tyres_roadside',
+    name: 'Neumáticos / Asistencia premium',
+    marketValue: 450,
+    category: 'other'
+  }
+];
 
 /**
  * Genera un identificador único con prefijo y marca temporal.

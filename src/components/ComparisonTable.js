@@ -109,13 +109,24 @@ export function createComparisonTableElement(offers) {
   appendTableRow(tbody, 'Cuota final (VFG)', offers.map(o => o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—'));
   appendTableRow(tbody, 'TIN / TAE', offers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${o.effectiveApr}% TAE`));
   appendTableRow(tbody, 'Intereses bancarios', offers.map(o => o.totalInterest > 0 ? `+${o.totalInterest.toLocaleString('es-ES')} €` : '0 €'), { isBold: true, highlightClass: 'highlight-trap' });
-  appendTableRow(tbody, 'Seguros / extras', offers.map(o => o.costBreakdown.linkedProducts > 0 ? `+${o.costBreakdown.linkedProducts.toLocaleString('es-ES')} €` : '0 €'));
-  appendTableRow(tbody, 'Coste total real', offers.map(o => `${o.totalOutOfPocketCost.toLocaleString('es-ES')} €`), { isBold: true, isLargeText: true });
+  appendTableRow(tbody, 'Seguros / extras cobrados', offers.map(o => o.costBreakdown.linkedProducts > 0 ? `+${o.costBreakdown.linkedProducts.toLocaleString('es-ES')} €` : '0 €'));
+  appendTableRow(tbody, 'Coste financiero compra', offers.map(o => `${o.totalOutOfPocketCost.toLocaleString('es-ES')} €`), { isBold: true, isLargeText: true });
   
-  // Fila especial de diferencia
+  const hasIncludedServices = offers.some(o => (o.includedServicesValue || 0) > 0);
+  if (hasIncludedServices) {
+    appendTableRow(tbody, 'Servicios bonificados (valor)', offers.map(o => {
+      if (!o.includedServicesValue) return '—';
+      const srvNames = (o.includedServices || []).map(s => s.name).join(', ');
+      return `🎁 +${o.includedServicesValue.toLocaleString('es-ES')} €${srvNames ? ` (${srvNames})` : ''}`;
+    }), { highlightClass: 'highlight-save' });
+
+    appendTableRow(tbody, 'Coste equiparado (TCO)', offers.map(o => `${(o.adjustedTcoCost ?? o.totalOutOfPocketCost).toLocaleString('es-ES')} €`), { isBold: true, highlightClass: 'highlight-save' });
+  }
+
+  // Fila de diferencia financiera
   const diffTr = document.createElement('tr');
   const diffLabelTd = document.createElement('td');
-  diffLabelTd.textContent = 'Diferencia vs contado';
+  diffLabelTd.textContent = hasIncludedServices ? 'Diferencia financiera vs contado' : 'Diferencia vs contado';
   diffLabelTd.className = 'table-cell--label';
   diffTr.appendChild(diffLabelTd);
 
@@ -132,6 +143,30 @@ export function createComparisonTableElement(offers) {
     diffTr.appendChild(td);
   });
   tbody.appendChild(diffTr);
+
+  // Fila de diferencia real equiparada (si hay servicios incluidos)
+  if (hasIncludedServices) {
+    const eqTr = document.createElement('tr');
+    const eqLabelTd = document.createElement('td');
+    eqLabelTd.textContent = 'Diferencia real equiparada (TCO)';
+    eqLabelTd.className = 'table-cell--label table-cell--bold';
+    eqTr.appendChild(eqLabelTd);
+
+    offers.forEach(o => {
+      const td = document.createElement('td');
+      if (o.isCash) {
+        td.textContent = 'Referencia';
+        td.className = 'table-cell--data table-cell--bold table-cell--muted';
+      } else {
+        const eqDiff = o.netEquatedDifferenceVsCashRef !== undefined ? o.netEquatedDifferenceVsCashRef : o.netDifferenceVsCashRef;
+        const sign = eqDiff > 0 ? '+' : '';
+        td.textContent = `${sign}${eqDiff.toLocaleString('es-ES')} €`;
+        td.className = `table-cell--data table-cell--bold ${eqDiff > 0 ? 'highlight-trap' : 'highlight-save'}`;
+      }
+      eqTr.appendChild(td);
+    });
+    tbody.appendChild(eqTr);
+  }
 
   // Fila de veredicto
   const verdictTr = document.createElement('tr');

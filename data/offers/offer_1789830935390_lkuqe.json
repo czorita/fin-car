@@ -1,10 +1,13 @@
 {
   "id": "offer_1789830935390_lkuqe",
   "vehicle": "RAV4",
-  "title": "RAV4",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/2024_Toyota_RAV4_Prime_XSE_Premium_in_Silver_Sky_with_Midnight_Black_roof%2C_front_left.jpg/960px-2024_Toyota_RAV4_Prime_XSE_Premium_in_Silver_Sky_with_Midnight_Black_roof%2C_front_left.jpg",
+  "title": "RAV4 - Compra flexible (36m)",
   "dealer": "Cumaca",
   "notes": "",
   "modality": "flexible_finance",
+  "vehiclePrice": 45000,
+  "financeDiscount": 0,
   "cashPriceReference": 45000,
   "offerPrice": 45000,
   "downPayment": 20000,
@@ -13,7 +16,6 @@
   "tin": 0,
   "manualMonthlyPayment": 230,
   "balloonPayment": 23000,
-  "balloonDecision": "keep",
   "linkedProducts": [
     {
       "id": "p_1789830913021_rt6aj",
@@ -22,6 +24,22 @@
       "financed": false
     }
   ],
-  "createdAt": "2026-09-19T20:10:19.338Z",
-  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/2024_Toyota_RAV4_Prime_XSE_Premium_in_Silver_Sky_with_Midnight_Black_roof%2C_front_left.jpg/960px-2024_Toyota_RAV4_Prime_XSE_Premium_in_Silver_Sky_with_Midnight_Black_roof%2C_front_left.jpg"
+  "includedServices": [
+    {
+      "id": "srv_1789896728069_gsze7",
+      "name": "Seguro a todo riesgo (1er año)",
+      "marketValue": 750
+    },
+    {
+      "id": "srv_1789896729560_srgxb",
+      "name": "Extensión de garantía oficial (+1 años)",
+      "marketValue": 600
+    },
+    {
+      "id": "srv_1789896754270_1vltr",
+      "name": "Mantenimiento oficial (4 años)",
+      "marketValue": 1200
+    }
+  ],
+  "createdAt": "2026-09-20T09:32:37.423Z"
 }

@@ -116,9 +116,17 @@ export function rankCrossVehicleOffers(crossOffers) {
     ? Number((sorted[sorted.length - 1].totalOutOfPocketCost - winner.totalOutOfPocketCost).toFixed(2))
     : 0;
 
+  // Análisis por coste equiparado (TCO) considerando servicios incluidos
+  const sortedByTco = [...crossOffers].sort((a, b) => (a.adjustedTcoCost ?? a.totalOutOfPocketCost) - (b.adjustedTcoCost ?? b.totalOutOfPocketCost));
+  const winnerTco = sortedByTco[0];
+  const hasIncludedServices = crossOffers.some(o => (o.includedServicesValue || 0) > 0);
+
   const rankedOffers = sorted.map((offer, index) => {
     const diffVsWinner = Number((offer.totalOutOfPocketCost - winner.totalOutOfPocketCost).toFixed(2));
     const vehicleName = getOfferVehicle(offer);
+    const offerTco = offer.adjustedTcoCost !== undefined ? offer.adjustedTcoCost : offer.totalOutOfPocketCost;
+    const winnerTcoVal = winnerTco.adjustedTcoCost !== undefined ? winnerTco.adjustedTcoCost : winnerTco.totalOutOfPocketCost;
+    const crossTcoDiffVsWinner = Number((offerTco - winnerTcoVal).toFixed(2));
 
     let crossHighlight = '';
     if (index === 0) {
@@ -133,7 +141,9 @@ export function rankCrossVehicleOffers(crossOffers) {
       ...offer,
       vehicleName,
       crossDiffVsWinner: diffVsWinner,
-      crossHighlight
+      crossHighlight,
+      crossTcoDiffVsWinner,
+      isTcoWinner: hasIncludedServices && offer.id === winnerTco.id
     };
   });
 
@@ -141,12 +151,16 @@ export function rankCrossVehicleOffers(crossOffers) {
   if (sorted.length === 1) {
     summaryMessage = `Solo hay 1 vehículo disponible con esta modalidad (${getOfferVehicle(winner)}: ${winner.totalOutOfPocketCost.toLocaleString('es-ES')} €). Añade ofertas de otros coches para ver la comparativa.`;
   } else {
-    summaryMessage = `🏆 ${getOfferVehicle(winner)} es el coche más económico con un desembolso total de ${winner.totalOutOfPocketCost.toLocaleString('es-ES')} €, ahorrando ${maxDiff.toLocaleString('es-ES')} € frente a ${getOfferVehicle(sorted[sorted.length - 1])}.`;
+    summaryMessage = `🏆 ${getOfferVehicle(winner)} es el coche más económico con un desembolso financiero de ${winner.totalOutOfPocketCost.toLocaleString('es-ES')} €, ahorrando ${maxDiff.toLocaleString('es-ES')} € frente a ${getOfferVehicle(sorted[sorted.length - 1])}.`;
+    if (hasIncludedServices && winnerTco.id !== winner.id) {
+      summaryMessage += ` No obstante, a igualdad de condiciones (TCO equiparado con servicios incluidos), ${getOfferVehicle(winnerTco)} resulta más rentable (${(winnerTco.adjustedTcoCost || winnerTco.totalOutOfPocketCost).toLocaleString('es-ES')} €).`;
+    }
   }
 
   return {
     rankedOffers,
     winnerOffer: winner,
+    winnerTcoOffer: hasIncludedServices ? winnerTco : null,
     maxDiff,
     summaryMessage
   };

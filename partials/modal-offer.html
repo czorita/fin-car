@@ -180,6 +180,42 @@
       </div>
     </div>
 
+    <!-- Servicios y ventajas incluidas de serie / bonificadas (TCO Equiparado) -->
+    <div style="margin-top: 1.25rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <label class="form-label" style="margin: 0; display: flex; align-items: center; gap: 0.35rem;">
+            <span>🎁 Servicios y ventajas incluidas (bonificados / de serie)</span>
+            <span class="helper-icon" title="Mantenimiento, seguro, extensión de garantía, etc. incluidos en la oferta a coste 0 € en factura. Permite comparar a igualdad de condiciones frente al contado u otros coches.">ⓘ</span>
+          </label>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0.2rem 0 0 0;">
+            Coste estimado si tuvieras que pagarlo por tu cuenta (a mano). Se deduce del coste total para comparar en igualdad de condiciones (TCO).
+          </p>
+        </div>
+        <span id="included-services-total-badge" class="badge badge-info" style="display: none;">0 € en servicios</span>
+      </div>
+
+      <!-- Presets rápidos calibrados con RAV4 / Tucson -->
+      <div class="service-quick-presets" style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+        <button type="button" class="btn btn-secondary btn-sm btn-add-preset-service" data-name="Mantenimiento oficial (4-5 años)" data-value="1200" title="Coste conservador de 4-5 revisiones oficiales para SUV (RAV4/Tucson)">
+          + Mantenimiento (1.200 €)
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm btn-add-preset-service" data-name="Seguro a todo riesgo (1er año)" data-value="750" title="Póliza todo riesgo estimada para SUV de 35k-45k€">
+          + Seguro 1 año (750 €)
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm btn-add-preset-service" data-name="Extensión de garantía oficial (+2-3 años)" data-value="600" title="Extensión de garantía oficial">
+          + Garantía (+600 €)
+        </button>
+        <button type="button" id="btn-add-custom-service" class="btn btn-ghost btn-sm" style="border: 1px dashed var(--border-medium);">
+          + Personalizado
+        </button>
+      </div>
+
+      <div id="included-services-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <!-- Se inyectan filas con tmpl-included-service -->
+      </div>
+    </div>
+
     <div class="modal-footer" style="margin: 1.5rem -1.5rem -1.5rem -1.5rem;">
       <button type="button" id="btn-cancel-offer" class="btn btn-ghost">Cancelar</button>
       <button type="submit" class="btn btn-primary">Guardar oferta</button>

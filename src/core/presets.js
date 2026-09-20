@@ -115,6 +115,54 @@ export const SAMPLE_OFFERS = [
     linkedProducts: [
       { id: 'p_i30_1', name: 'Pack mantenimiento 5 años', cost: 600, financed: true, required: false }
     ],
+    includedServices: [],
     createdAt: '2026-09-05T12:00:00.000Z'
+  },
+  {
+    id: 'sample_rav4_cash_6',
+    vehicle: 'Toyota RAV4 2.5 HSD Advance',
+    imageUrl: getVehicleImageUrl('Toyota RAV4'),
+    title: 'Toyota RAV4 2.5 HSD Advance - Al contado',
+    dealer: 'Toyota Madrid Norte',
+    notes: 'Presupuesto oficial al contado sin servicios incluidos (mantenimiento no incluido).',
+    modality: OFFER_MODALITIES.CASH,
+    vehiclePrice: 41500,
+    financeDiscount: 0,
+    cashPriceReference: 41500,
+    offerPrice: 41500,
+    downPayment: 0,
+    tradeInValue: 0,
+    months: 0,
+    tin: 0,
+    manualMonthlyPayment: null,
+    balloonPayment: 0,
+    linkedProducts: [],
+    includedServices: [],
+    createdAt: '2026-09-06T10:00:00.000Z'
+  },
+  {
+    id: 'sample_rav4_finance_7',
+    vehicle: 'Toyota RAV4 2.5 HSD Advance',
+    imageUrl: getVehicleImageUrl('Toyota RAV4'),
+    title: 'Toyota RAV4 2.5 HSD Advance - Financiación con Servicios incluidos',
+    dealer: 'Toyota Madrid Norte',
+    notes: 'Descuento de 3.000 € por financiar. Incluye de serie 4 años de mantenimiento Toyota Care y 1er año de seguro a todo riesgo.',
+    modality: OFFER_MODALITIES.STANDARD_FINANCE,
+    vehiclePrice: 41500,
+    financeDiscount: 3000,
+    cashPriceReference: 41500,
+    offerPrice: 38500,
+    downPayment: 6000,
+    tradeInValue: 0,
+    months: 60,
+    tin: 7.95,
+    manualMonthlyPayment: null,
+    balloonPayment: 0,
+    linkedProducts: [],
+    includedServices: [
+      { id: 'srv_rav4_maint', name: 'Mantenimiento oficial 4 años / 60.000 km', marketValue: 1200, category: 'maintenance' },
+      { id: 'srv_rav4_ins', name: 'Seguro a todo riesgo (1er año)', marketValue: 750, category: 'insurance' }
+    ],
+    createdAt: '2026-09-06T11:00:00.000Z'
   }
 ];

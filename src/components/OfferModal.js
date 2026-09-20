@@ -7,7 +7,7 @@
 
 import { OFFER_MODALITIES, getOfferVehicle, getOfferDisplayTitle } from '../core/types.js';
 import { parseLocaleNumber, formatLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
-import { generateId, ID_PREFIX_OFFER, ID_PREFIX_PRODUCT } from '../core/constants.js';
+import { generateId, ID_PREFIX_OFFER, ID_PREFIX_PRODUCT, ID_PREFIX_SERVICE } from '../core/constants.js';
 import { getVehicleImageUrl, findVehicleInCatalog } from '../core/vehicleCatalog.js';
 
 /**
@@ -30,6 +30,12 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   const groupDownPayment = document.getElementById('group-down-payment');
   const btnAddProduct = document.getElementById('btn-add-product');
   const tmplProduct = document.getElementById('tmpl-linked-product');
+
+  // Contenedores y plantilla de servicios incluidos (TCO)
+  const includedServicesContainer = document.getElementById('included-services-list');
+  const includedServicesTotalBadge = document.getElementById('included-services-total-badge');
+  const btnAddCustomService = document.getElementById('btn-add-custom-service');
+  const tmplIncludedService = document.getElementById('tmpl-included-service');
 
   // Campos del formulario
   const idInput = document.getElementById('offer-id');
@@ -59,6 +65,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
 
   let currentModality = OFFER_MODALITIES.STANDARD_FINANCE;
   let linkedProductsState = [];
+  let includedServicesState = [];
 
   function updateNetCalcPriceUI() {
     const isCash = currentModality === OFFER_MODALITIES.CASH;
@@ -184,27 +191,43 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     }
 
     linkedProductsState.forEach((prod) => {
+      if (!tmplProduct) return;
       const clone = tmplProduct.content.cloneNode(true);
       const row = clone.querySelector('.linked-product-row');
-      const nameInp = row.querySelector('.product-name');
-      const costInp = row.querySelector('.product-cost');
-      const btnRemove = row.querySelector('.btn-remove-product');
+      if (!row) return;
 
-      nameInp.value = prod.name;
-      costInp.value = formatLocaleNumber(prod.cost);
+      const nameInp = row.querySelector('.prod-name, .product-name');
+      const costInp = row.querySelector('.prod-cost, .product-cost');
+      const financedInp = row.querySelector('.prod-financed, .product-financed');
+      const btnRemove = row.querySelector('.btn-remove-prod, .btn-remove-product');
 
-      nameInp.addEventListener('change', (e) => {
-        prod.name = e.target.value;
-      });
+      if (nameInp) {
+        nameInp.value = prod.name || '';
+        nameInp.addEventListener('change', (e) => {
+          prod.name = e.target.value;
+        });
+      }
 
-      costInp.addEventListener('change', (e) => {
-        prod.cost = parseLocaleNumber(e.target.value);
-      });
+      if (costInp) {
+        costInp.value = formatLocaleNumber(prod.cost || 0);
+        costInp.addEventListener('change', (e) => {
+          prod.cost = parseLocaleNumber(e.target.value);
+        });
+      }
 
-      btnRemove.addEventListener('click', () => {
-        linkedProductsState = linkedProductsState.filter(p => p.id !== prod.id);
-        renderProductsList();
-      });
+      if (financedInp) {
+        financedInp.checked = prod.financed !== false;
+        financedInp.addEventListener('change', (e) => {
+          prod.financed = e.target.checked;
+        });
+      }
+
+      if (btnRemove) {
+        btnRemove.addEventListener('click', () => {
+          linkedProductsState = linkedProductsState.filter(p => p.id !== prod.id);
+          renderProductsList();
+        });
+      }
 
       productsListContainer.appendChild(clone);
     });
@@ -213,10 +236,97 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   btnAddProduct?.addEventListener('click', () => {
     linkedProductsState.push({
       id: generateId(ID_PREFIX_PRODUCT),
-      name: 'Seguro de vida / neumáticos',
-      cost: 350
+      name: 'Seguro de protección de pagos',
+      cost: 350,
+      financed: true
     });
     renderProductsList();
+  });
+
+  function updateIncludedServicesTotalBadge() {
+    const totalVal = includedServicesState.reduce((sum, s) => sum + (Number(s.marketValue) || 0), 0);
+    if (includedServicesTotalBadge) {
+      if (totalVal > 0) {
+        includedServicesTotalBadge.style.display = 'inline-flex';
+        includedServicesTotalBadge.textContent = `🎁 ${totalVal.toLocaleString('es-ES')} € en servicios`;
+      } else {
+        includedServicesTotalBadge.style.display = 'none';
+      }
+    }
+  }
+
+  function renderIncludedServicesList() {
+    if (!includedServicesContainer) return;
+    includedServicesContainer.replaceChildren();
+
+    if (includedServicesState.length === 0) {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'empty-inline-help';
+      emptyMsg.textContent = 'Sin servicios bonificados añadidos (ej. mantenimiento, seguro o garantía).';
+      includedServicesContainer.appendChild(emptyMsg);
+      updateIncludedServicesTotalBadge();
+      return;
+    }
+
+    includedServicesState.forEach((srv) => {
+      if (!tmplIncludedService) return;
+      const clone = tmplIncludedService.content.cloneNode(true);
+      const row = clone.querySelector('.included-service-row');
+      if (!row) return;
+
+      const nameInp = row.querySelector('.service-name');
+      const valInp = row.querySelector('.service-value');
+      const btnRemove = row.querySelector('.btn-remove-service');
+
+      if (nameInp) {
+        nameInp.value = srv.name || '';
+        nameInp.addEventListener('change', (e) => {
+          srv.name = e.target.value;
+        });
+      }
+
+      if (valInp) {
+        valInp.value = formatLocaleNumber(srv.marketValue || 0);
+        valInp.addEventListener('change', (e) => {
+          srv.marketValue = parseLocaleNumber(e.target.value);
+          updateIncludedServicesTotalBadge();
+        });
+      }
+
+      if (btnRemove) {
+        btnRemove.addEventListener('click', () => {
+          includedServicesState = includedServicesState.filter(s => s.id !== srv.id);
+          renderIncludedServicesList();
+        });
+      }
+
+      includedServicesContainer.appendChild(clone);
+    });
+
+    updateIncludedServicesTotalBadge();
+  }
+
+  // Presets de 1 clic (calibrados con RAV4 y Tucson)
+  dialog.querySelectorAll('.btn-add-preset-service').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.name || 'Servicio incluido';
+      const val = parseLocaleNumber(btn.dataset.value || 0);
+      includedServicesState.push({
+        id: generateId(ID_PREFIX_SERVICE),
+        name,
+        marketValue: val
+      });
+      renderIncludedServicesList();
+    });
+  });
+
+  btnAddCustomService?.addEventListener('click', () => {
+    includedServicesState.push({
+      id: generateId(ID_PREFIX_SERVICE),
+      name: 'Mantenimiento / Seguro oficial',
+      marketValue: 500
+    });
+    renderIncludedServicesList();
   });
 
   form.addEventListener('submit', (e) => {
@@ -251,6 +361,10 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       linkedProducts: linkedProductsState.map(p => ({
         ...p,
         cost: parseLocaleNumber(p.cost)
+      })),
+      includedServices: includedServicesState.map(s => ({
+        ...s,
+        marketValue: parseLocaleNumber(s.marketValue)
       }))
     };
 
@@ -309,6 +423,13 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
               ...p
             }))
           : [];
+        includedServicesState = Array.isArray(offer.includedServices)
+          ? offer.includedServices.map(s => ({
+              id: s.id || generateId(ID_PREFIX_SERVICE),
+              ...s,
+              marketValue: parseLocaleNumber(s.marketValue)
+            }))
+          : [];
         updateModalityUI(offer.modality || OFFER_MODALITIES.STANDARD_FINANCE);
         updateNetCalcPriceUI();
       } else {
@@ -329,6 +450,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         if (manualMonthlyInput) manualMonthlyInput.value = '';
         if (balloonPaymentInput) balloonPaymentInput.value = '';
         linkedProductsState = [];
+        includedServicesState = [];
 
         // Asignar imagen del modelo si hay vehículo por defecto
         const defaultImg = getVehicleImageUrl(initialVeh);
@@ -338,6 +460,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         updateNetCalcPriceUI();
       }
       renderProductsList();
+      renderIncludedServicesList();
       dialog.showModal();
     },
     close() {

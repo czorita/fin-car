@@ -72,6 +72,27 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
   const badges = document.createElement('div');
   badges.className = 'offer-badges';
 
+  if (isWinner) {
+    const b = document.createElement('span');
+    b.className = 'badge badge-winner';
+    b.textContent = '🏆 Menor coste financiero';
+    badges.appendChild(b);
+  }
+
+  if (offer.isTcoWinner && !isWinner) {
+    const b = document.createElement('span');
+    b.className = 'badge badge-winner';
+    b.textContent = '💎 Mejor TCO equiparado';
+    badges.appendChild(b);
+  }
+
+  if (offer.includedServicesValue > 0) {
+    const b = document.createElement('span');
+    b.className = 'badge badge-info';
+    b.textContent = `🎁 +${offer.includedServicesValue.toLocaleString('es-ES')} € servicios`;
+    badges.appendChild(b);
+  }
+
   const title = document.createElement('h3');
   title.className = 'offer-title';
   title.textContent = offer.vehicle || offer.title;
@@ -130,6 +151,11 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
     if (offer.balloonPayment > 0) {
       specs.appendChild(createSpecRow('Cuota final (VFG):', `${offer.balloonPayment.toLocaleString('es-ES')} €`));
     }
+  }
+
+  if (offer.includedServicesValue > 0) {
+    specs.appendChild(createSpecRow('Servicios incluidos (valor):', `-${offer.includedServicesValue.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
+    specs.appendChild(createSpecRow('Coste equiparado (TCO):', `${offer.adjustedTcoCost.toLocaleString('es-ES')} €`, { isEmphasized: true, highlightClass: 'highlight-save' }));
   }
 
   if (Array.isArray(allRankedOffers) && allRankedOffers.length > 1) {

@@ -85,6 +85,10 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
     });
   }
 
+  if (offer.includedServicesValue > 0) {
+    badgesContainer.appendChild(createBadge(`🎁 +${offer.includedServicesValue.toLocaleString('es-ES')} € servicios`, 'badge-info'));
+  }
+
   // 2. Título (fórmula de financiación y meses) y Concesionario
   card.querySelector('.offer-title').textContent = getOfferFinanceSubtitle(offer);
   card.querySelector('.dealer-text').textContent = offer.dealer || 'Concesionario sin especificar';
@@ -106,20 +110,24 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
     heroSubEl.style.display = paymentPlanSubtext ? 'block' : 'none';
   }
 
-  // 4. Alerta de Veredicto (solo para trampas de financiación y costes asumibles)
+  // 4. Alerta de Veredicto (trampas, costes asumibles o ahorros reales equiparados por servicios)
   const alertEl = card.querySelector('.card-verdict-alert');
   const isTrap = offer.verdict?.status === 'danger';
-  const isSuccess = offer.verdict?.status === 'success'; // "Ahorro Neto" — ocultado para reducir ruido
-  const isNeutralOrWarning = isCash || !offer.verdict || offer.verdict.status === 'neutral' || offer.verdict.status === 'warning' || offer.verdict.badge === 'Sin ventajas';
+  const isEquatedSuccess = offer.verdict?.status === 'success' && offer.verdict?.badge?.includes('equiparado');
+  const isDirectSuccess = offer.verdict?.status === 'success' && !isEquatedSuccess;
+  const isMitigated = offer.verdict?.status === 'info';
+  const isNeutralOrWarning = isCash || !offer.verdict || offer.verdict.status === 'neutral' || (offer.verdict.status === 'warning' && !offer.includedServicesValue);
 
-  if (isNeutralOrWarning || isSuccess) {
+  if ((isNeutralOrWarning || isDirectSuccess) && !isEquatedSuccess) {
     if (alertEl) alertEl.style.display = 'none';
   } else {
     if (alertEl) {
       alertEl.style.display = 'block';
       alertEl.className = 'card-verdict-alert';
       if (isTrap) alertEl.classList.add('danger');
-      else if (offer.verdict.status === 'info') alertEl.classList.add('info');
+      else if (isMitigated) alertEl.classList.add('info');
+      else if (isEquatedSuccess) alertEl.classList.add('success');
+      else if (offer.verdict.status === 'warning') alertEl.classList.add('warning');
 
       card.querySelector('.verdict-badge-text').textContent = offer.verdict.badge;
       card.querySelector('.verdict-msg-text').textContent = offer.verdict.message;
@@ -175,7 +183,17 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
     const diffSign = offer.netDifferenceVsCashRef > 0 ? '+' : '';
     const diffClass = offer.netDifferenceVsCashRef > 0 ? 'highlight-trap' : 'highlight-save';
-    specsList.appendChild(createSpecRow('Diferencia neta vs contado:', `${diffSign}${offer.netDifferenceVsCashRef.toLocaleString('es-ES')} €`, { highlightClass: diffClass, isEmphasized: true }));
+    specsList.appendChild(createSpecRow('Diferencia financiera vs contado:', `${diffSign}${offer.netDifferenceVsCashRef.toLocaleString('es-ES')} €`, { highlightClass: diffClass }));
+  }
+
+  if (offer.includedServicesValue > 0) {
+    specsList.appendChild(createSpecRow('Servicios incluidos (valor mercado):', `-${offer.includedServicesValue.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
+    specsList.appendChild(createSpecRow('Coste total equiparado (TCO):', `${offer.adjustedTcoCost.toLocaleString('es-ES')} €`, { isEmphasized: true, highlightClass: 'highlight-save' }));
+    if (!isCash && offer.netEquatedDifferenceVsCashRef !== undefined) {
+      const eqSign = offer.netEquatedDifferenceVsCashRef > 0 ? '+' : '';
+      const eqClass = offer.netEquatedDifferenceVsCashRef > 0 ? 'highlight-trap' : 'highlight-save';
+      specsList.appendChild(createSpecRow('Diferencia real equiparada:', `${eqSign}${offer.netEquatedDifferenceVsCashRef.toLocaleString('es-ES')} €`, { highlightClass: eqClass, isEmphasized: true }));
+    }
   }
 
   // 6. Notas opcionales

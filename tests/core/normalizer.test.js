@@ -144,5 +144,91 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.equal(normalized.totalInterest, normalizedDirect.totalInterest, 'El total de intereses debe ser idéntico');
     assert.equal(normalized.totalOutOfPocketCost, normalizedDirect.totalOutOfPocketCost, 'El desembolso total debe ser idéntico');
   });
+
+  test('Test 7: Normalización con servicios adicionales incluidos (TCO Equiparado)', () => {
+    // Caso RAV4 financiado:
+    // Precio contado ref: 41.500 €
+    // Descuento financiar: 3.000 € -> 38.500 € base
+    // Entrada: 6.000 € -> 32.500 € financiado
+    // Servicios incluidos: Mantenimiento 1.200 € + Seguro 750 € = 1.950 € valor
+    const offer = createDefaultOffer({
+      vehicle: 'Toyota RAV4',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      vehiclePrice: 41500,
+      financeDiscount: 3000,
+      downPayment: 6000,
+      months: 60,
+      tin: 7.95,
+      includedServices: [
+        { id: 's1', name: 'Mantenimiento 4 años', marketValue: 1200 },
+        { id: 's2', name: 'Seguro todo riesgo 1er año', marketValue: 750 }
+      ]
+    });
+
+    const normalized = normalizeOffer(offer);
+    assert.equal(normalized.includedServicesValue, 1950, 'El valor acumulado de servicios debe ser 1.950 €');
+    assert.ok(normalized.totalOutOfPocketCost > 0);
+    assert.equal(
+      normalized.adjustedTcoCost,
+      Number((normalized.totalOutOfPocketCost - 1950).toFixed(2)),
+      'El coste TCO ajustado debe restar los servicios incluidos'
+    );
+    assert.equal(
+      normalized.netEquatedDifferenceVsCashRef,
+      Number((normalized.adjustedTcoCost - 41500).toFixed(2)),
+      'La diferencia equiparada debe comparar el TCO ajustado contra el precio contado'
+    );
+  });
+
+  test('Test 8: Veredicto de ahorro real equiparado cuando los servicios neutralizan los intereses', () => {
+    // Si pagas 1.000 € más en el préstamo pero te regalan 1.500 € en servicios (mantenimiento y seguro):
+    // netDifferenceVsCashRef = +1000, includedServicesValue = 1500 -> netEquatedDifferenceVsCashRef = -500
+    const verdict = generateVerdict({
+      isCash: false,
+      netDifferenceVsCashRef: 1000,
+      advertisedDiscount: 2000,
+      monthlyPayment: 380,
+      includedServicesValue: 1500,
+      netEquatedDifferenceVsCashRef: -500
+    });
+
+    assert.equal(verdict.status, 'success');
+    assert.ok(verdict.badge.includes('Ahorro real equiparado'));
+    assert.ok(verdict.message.includes('Ahorras 500 € reales'));
+  });
+
+  test('Test 9: rankOffers identifica 💎 Mejor valor equiparado (TCO)', () => {
+    // Oferta 1: Contado pelado sin servicios: 25.000 €
+    const o1 = normalizeOffer(createDefaultOffer({
+      id: 'o_cash',
+      vehicle: 'Tucson',
+      modality: OFFER_MODALITIES.CASH,
+      vehiclePrice: 25000
+    }));
+
+    // Oferta 2: Financiada que cuesta 26.000 € en caja (1.000 € más que contado), pero incluye 1.800 € en servicios
+    // TCO Ajustado de o2 = 26.000 - 1.800 = 24.200 € (¡más barato en TCO que el contado!)
+    const o2 = normalizeOffer(createDefaultOffer({
+      id: 'o_fin',
+      vehicle: 'Tucson',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      vehiclePrice: 25000,
+      financeDiscount: 1500,
+      downPayment: 5000,
+      months: 60,
+      tin: 4.5,
+      includedServices: [
+        { id: 's1', name: 'Mantenimiento 5 años', marketValue: 1200 },
+        { id: 's2', name: 'Extensión garantía', marketValue: 600 }
+      ]
+    }));
+
+    const ranked = rankOffers([o1, o2]);
+    const cashRanked = ranked.find(o => o.id === 'o_cash');
+    const finRanked = ranked.find(o => o.id === 'o_fin');
+
+    assert.ok(cashRanked.highlights.includes('🏆 Menor coste total'), 'El contado tiene menor desembolso financiero');
+    assert.ok(finRanked.highlights.includes('💎 Mejor valor equiparado (TCO)'), 'La oferta financiada ofrece mejor TCO equiparado');
+  });
 });
 

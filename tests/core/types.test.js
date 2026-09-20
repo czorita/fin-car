@@ -117,5 +117,24 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
     assert.equal(cashOffer.financeDiscount, 0);
     assert.equal(cashOffer.offerPrice, 30000);
   });
+
+  test('Test 8: Soporte para includedServices (servicios bonificados) en createDefaultOffer', () => {
+    // Por defecto es array vacío
+    const def = createDefaultOffer({ vehicle: 'Toyota RAV4' });
+    assert.ok(Array.isArray(def.includedServices), 'Debe inicializar includedServices como array');
+    assert.equal(def.includedServices.length, 0);
+
+    // Con servicios definidos
+    const withServices = createDefaultOffer({
+      vehicle: 'Toyota RAV4',
+      includedServices: [
+        { id: 'srv_1', name: 'Mantenimiento 4 años', marketValue: 1200 },
+        { id: 'srv_2', name: 'Seguro 1er año', marketValue: 750 }
+      ]
+    });
+    assert.equal(withServices.includedServices.length, 2);
+    assert.equal(withServices.includedServices[0].marketValue, 1200);
+    assert.equal(withServices.includedServices[1].marketValue, 750);
+  });
 });
 

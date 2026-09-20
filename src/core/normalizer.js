@@ -27,6 +27,10 @@ export function normalizeOffer(offer) {
     .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
   const totalProductsCost = productsFinanced + productsUpfront;
 
+  // 1b. Servicios adicionales incluidos de serie o bonificados (ej. mantenimiento oficial, seguro, garantía)
+  const includedServices = Array.isArray(offer.includedServices) ? offer.includedServices : [];
+  const includedServicesValue = includedServices.reduce((sum, s) => sum + (Number(s.marketValue) || 0), 0);
+
   const tradeInValue = Number(offer.tradeInValue) || 0;
 
   // Precio del vehículo y descuento por financiar
@@ -53,6 +57,10 @@ export function normalizeOffer(offer) {
   // Si es contado
   if (isCash) {
     const totalOutofPocket = Math.max(0, offerPrice - tradeInValue + totalProductsCost);
+    const adjustedTcoCost = Number(Math.max(0, totalOutofPocket - includedServicesValue).toFixed(2));
+    const netDifferenceVsCashRef = totalOutofPocket - (cashPriceRef - tradeInValue);
+    const netEquatedDifferenceVsCashRef = Number((adjustedTcoCost - (cashPriceRef - tradeInValue)).toFixed(2));
+
     return {
       ...offer,
       vehiclePrice,
@@ -71,16 +79,21 @@ export function normalizeOffer(offer) {
       upfrontPayment: totalOutofPocket,
       totalFinancedPayments: 0,
       totalOutOfPocketCost: totalOutofPocket,
+      includedServices,
+      includedServicesValue,
+      adjustedTcoCost,
       
       // Métricas de comparación
       costBreakdown: {
         vehicleNet: Math.max(0, offerPrice - tradeInValue),
         interests: 0,
-        linkedProducts: totalProductsCost
+        linkedProducts: totalProductsCost,
+        includedServicesValue
       },
       advertisedDiscount: 0,
-      netDifferenceVsCashRef: totalOutofPocket - (cashPriceRef - tradeInValue),
-      verdict: generateVerdict({ isCash: true }),
+      netDifferenceVsCashRef,
+      netEquatedDifferenceVsCashRef,
+      verdict: generateVerdict({ isCash: true, includedServicesValue, netDifferenceVsCashRef, netEquatedDifferenceVsCashRef }),
       amortizationSchedule: []
     };
   }
@@ -121,8 +134,11 @@ export function normalizeOffer(offer) {
   // Pagos futuros
   const totalInstallments = Number((monthlyPayment * months).toFixed(2));
   
-  // Coste total (desembolso inicial + cuotas + cuota final si aplica)
+  // Coste total financiero en caja (desembolso inicial + cuotas + cuota final si aplica)
   const totalOutOfPocketCost = Number((initialCashOut + totalInstallments + balloon).toFixed(2));
+
+  // Coste total equiparado (TCO: coste financiero menos el valor de mercado de los servicios incluidos que te ahorras de pagar a mano)
+  const adjustedTcoCost = Number(Math.max(0, totalOutOfPocketCost - includedServicesValue).toFixed(2));
 
   // TAE real efectiva
   const effectiveApr = calculateEffectiveApr(
@@ -137,7 +153,8 @@ export function normalizeOffer(offer) {
   const costBreakdown = {
     vehicleNet: Math.max(0, offerPrice - tradeInValue),
     interests: totalInterest,
-    linkedProducts: totalProductsCost
+    linkedProducts: totalProductsCost,
+    includedServicesValue
   };
 
   // Comparación contra precio contado de referencia
@@ -145,13 +162,17 @@ export function normalizeOffer(offer) {
   const advertisedDiscount = Math.max(0, cashPriceRef - offerPrice); // El descuento que te promete el comercial por financiar
   const financialSurcharge = totalInterest + totalProductsCost; // Todo lo que añades por financiar
   const netDifferenceVsCashRef = Number((totalOutOfPocketCost - baseCashReferenceTotal).toFixed(2));
+  // Diferencia real equiparada (coste financiado vs lo que costaría el coche al contado + pagar esos servicios a mano)
+  const netEquatedDifferenceVsCashRef = Number((adjustedTcoCost - baseCashReferenceTotal).toFixed(2));
 
   // Veredicto
   const verdict = generateVerdict({
     isCash: false,
     netDifferenceVsCashRef,
     advertisedDiscount,
-    monthlyPayment
+    monthlyPayment,
+    includedServicesValue,
+    netEquatedDifferenceVsCashRef
   });
 
   // Cuadro de amortización
@@ -174,10 +195,14 @@ export function normalizeOffer(offer) {
     upfrontPayment: initialCashOut,
     totalFinancedPayments: totalInstallments,
     totalOutOfPocketCost,
+    includedServices,
+    includedServicesValue,
+    adjustedTcoCost,
     costBreakdown,
     advertisedDiscount,
     financialSurcharge,
     netDifferenceVsCashRef,
+    netEquatedDifferenceVsCashRef,
     baseCashReferenceTotal,
     verdict,
     amortizationSchedule
@@ -206,14 +231,19 @@ export function rankOffers(normalizedOffers) {
     return (a.totalMonths || 0) - (b.totalMonths || 0);
   });
 
-  // Mínimo coste total y menor interés (sobre el conjunto original, no el ordenado)
+  // Mínimo coste total financiero y mínimo coste equiparado TCO
   const minTotalCost = Math.min(...sorted.map(o => o.totalOutOfPocketCost));
+  const minTcoCost = Math.min(...sorted.map(o => o.adjustedTcoCost !== undefined ? o.adjustedTcoCost : o.totalOutOfPocketCost));
   const minInterest = Math.min(...sorted.map(o => o.totalInterest));
+  const hasIncludedServices = sorted.some(o => (o.includedServicesValue || 0) > 0);
 
   return sorted.map(offer => {
     const badges = [];
     if (offer.totalOutOfPocketCost === minTotalCost) {
       badges.push('🏆 Menor coste total');
+    }
+    if (hasIncludedServices && (offer.adjustedTcoCost ?? offer.totalOutOfPocketCost) === minTcoCost && offer.totalOutOfPocketCost !== minTotalCost) {
+      badges.push('💎 Mejor valor equiparado (TCO)');
     }
     if (offer.totalInterest === minInterest && offer.totalInterest > 0) {
       badges.push('📉 Menos intereses pagados');
