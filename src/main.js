@@ -79,7 +79,7 @@ const reverseCalcModalCtrl = initReverseCalcModal({
   onApplyAsOffer: async (computedOffer) => {
     const fullOffer = createDefaultOffer({
       ...computedOffer,
-      vehicle: selectedVehicle || 'Nuevo Vehículo'
+      vehicle: selectedVehicle || 'Nuevo vehículo'
     });
     try {
       rawOffers = await upsertOffer(fullOffer);

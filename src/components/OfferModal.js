@@ -213,7 +213,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   btnAddProduct?.addEventListener('click', () => {
     linkedProductsState.push({
       id: generateId(ID_PREFIX_PRODUCT),
-      name: 'Seguro de Vida / Neumáticos',
+      name: 'Seguro de vida / neumáticos',
       cost: 350
     });
     renderProductsList();

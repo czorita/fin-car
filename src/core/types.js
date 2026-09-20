@@ -14,15 +14,15 @@ export const OFFER_MODALITIES = {
 };
 
 export const MODALITY_LABELS = {
-  [OFFER_MODALITIES.CASH]: 'Pago al Contado',
-  [OFFER_MODALITIES.STANDARD_FINANCE]: 'Financiación Lineal Estándar',
-  [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 'Financiación Flexible (Multiopción / Balloon)'
+  [OFFER_MODALITIES.CASH]: 'Pago al contado',
+  [OFFER_MODALITIES.STANDARD_FINANCE]: 'Financiación lineal estándar',
+  [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 'Financiación flexible (multiopción / balloon)'
 };
 
 export const MODALITY_SHORT_NAMES = {
-  [OFFER_MODALITIES.CASH]: 'Al Contado',
-  [OFFER_MODALITIES.STANDARD_FINANCE]: 'Financiación Lineal',
-  [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 'Compra Flexible'
+  [OFFER_MODALITIES.CASH]: 'Al contado',
+  [OFFER_MODALITIES.STANDARD_FINANCE]: 'Financiación lineal',
+  [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 'Compra flexible'
 };
 
 /**
@@ -125,7 +125,7 @@ export function createDefaultOffer(overrides = {}) {
     id,
     vehicle,
     imageUrl,
-    title: overrides.title || 'Nueva Oferta',
+    title: overrides.title || 'Nueva oferta',
     dealer: overrides.dealer || '',
     notes: overrides.notes || '',
     modality: overrides.modality || OFFER_MODALITIES.STANDARD_FINANCE,

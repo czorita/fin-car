@@ -123,7 +123,7 @@ export function createCrossVehicleTableElement(rankedCrossOffers) {
     appendRow(tbody, 'Precio base de cálculo', rankedCrossOffers.map(o => `${o.offerPrice.toLocaleString('es-ES')} €`), { isBold: true });
   }
   appendRow(tbody, 'Entrada aportada', rankedCrossOffers.map(o => o.isCash ? '—' : (o.downPayment > 0 ? `${o.downPayment.toLocaleString('es-ES')} €` : '0 €')));
-  appendRow(tbody, 'Plazo', rankedCrossOffers.map(o => o.isCash ? 'Al Contado' : `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`));
+  appendRow(tbody, 'Plazo', rankedCrossOffers.map(o => o.isCash ? 'Al contado' : `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`));
   appendRow(tbody, 'Cuota mensual', rankedCrossOffers.map(o => o.isCash ? '—' : `${o.monthlyPayment.toLocaleString('es-ES')} €/mes`), { isBold: true });
   appendRow(tbody, 'Cuota final (VFG)', rankedCrossOffers.map(o => o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—'));
   appendRow(tbody, 'TIN / TAE real', rankedCrossOffers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${o.effectiveApr}% TAE`));

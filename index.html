@@ -3,7 +3,7 @@
   <head>
     <!-- @include partials/head-meta.html -->
     <meta name="description" content="Comparador y normalizador financiero de ofertas de coches: calcula costes totales reales, sobrecostes de financiación, precio contado equivalente y analiza si las ofertas de los concesionarios compensan o son una trampa." />
-    <title>FinCar — Comparador y Normalizador de Ofertas de Coches</title>
+    <title>FinCar — Comparador y normalizador de ofertas de coches</title>
   </head>
   <body>
     <div class="ambient-glow" aria-hidden="true"></div>
@@ -22,7 +22,7 @@
           </div>
           <div>
             <h1 class="brand-title">FinCar</h1>
-            <p class="brand-subtitle">Comparador y Normalizador Financiero de Ofertas de Coches</p>
+            <p class="brand-subtitle">Comparador y normalizador financiero de ofertas de coches</p>
           </div>
         </div>
 
@@ -41,12 +41,12 @@
         <nav class="header-actions" aria-label="Acciones de la aplicación">
           <button id="btn-new-offer" class="btn btn-primary" type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-            Nueva Oferta
+            Nueva oferta
           </button>
 
           <button id="btn-reverse-calc" class="btn btn-secondary" type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            Ingeniería Inversa
+            Ingeniería inversa
           </button>
 
           <a href="/ejemplos.html" class="btn btn-ghost btn-sm" title="Ver web con 3 ofertas de ejemplo precargadas" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.45rem;">
@@ -66,7 +66,7 @@
         <div class="vehicle-carousel-container" id="vehicle-selector-bar">
           <div class="vehicle-carousel-header">
             <div class="vehicle-carousel-title-group">
-              <span class="vehicle-carousel-badge">🚗 Tus Modelos</span>
+              <span class="vehicle-carousel-badge">🚗 Tus modelos</span>
               <span class="vehicle-carousel-hint">Selecciona un vehículo para comparar sus opciones:</span>
             </div>
             <div class="vehicle-carousel-actions">
@@ -121,9 +121,9 @@
           <div class="cross-filter-group">
             <span class="cross-filter-label">Comparar en modalidad:</span>
             <div class="segmented-control cross-modality-selector" id="cross-modality-selector">
-              <button type="button" class="segmented-btn active" data-modality="cash">💵 Al Contado</button>
-              <button type="button" class="segmented-btn" data-modality="standard_finance">📆 Financiación Lineal</button>
-              <button type="button" class="segmented-btn" data-modality="flexible_finance">🔄 Compra Flexible</button>
+              <button type="button" class="segmented-btn active" data-modality="cash">💵 Al contado</button>
+              <button type="button" class="segmented-btn" data-modality="standard_finance">📆 Financiación lineal</button>
+              <button type="button" class="segmented-btn" data-modality="flexible_finance">🔄 Compra flexible</button>
             </div>
           </div>
           <div class="segmented-control cross-view-switcher" style="width: 200px;">
@@ -149,7 +149,7 @@
 
       <!-- Botón Flotante para Móvil -->
       <div class="mobile-fab">
-        <button id="fab-new-offer" class="btn btn-primary btn-icon" style="width: 52px; height: 52px; border-radius: 50%; box-shadow: var(--shadow-xl);" title="Añadir Oferta" type="button">
+        <button id="fab-new-offer" class="btn btn-primary btn-icon" style="width: 52px; height: 52px; border-radius: 50%; box-shadow: var(--shadow-xl);" title="Añadir oferta" type="button">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
@@ -165,7 +165,7 @@
       <div class="modal-header">
         <h2>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          Calculadora de Ingeniería Inversa
+          Calculadora de ingeniería inversa
         </h2>
         <button id="btn-close-reverse" class="btn btn-ghost btn-icon" type="button">&times;</button>
       </div>
@@ -288,11 +288,11 @@
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
           <button class="btn btn-primary empty-add-btn" type="button" style="display: inline-flex; align-items: center; gap: 0.5rem;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-            Nueva Oferta
+            Nueva oferta
           </button>
           <a href="/ejemplos.html" class="btn btn-secondary empty-examples-link" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            👀 Ver Ejemplos
+            👀 Ver ejemplos
           </a>
         </div>
       </div>

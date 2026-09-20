@@ -21,7 +21,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.equal(normalized.totalInterest, 0);
     assert.equal(normalized.totalOutOfPocketCost, 18000); // 20000 - 2000
     assert.equal(normalized.verdict.status, 'neutral');
-    assert.equal(normalized.verdict.badge, 'Pago al Contado');
+    assert.equal(normalized.verdict.badge, 'Pago al contado');
 
     // Comprobar que incluso con downPayment residual, se normaliza a 0
     const cashWithResidualDown = normalizeOffer({ ...cashOffer, downPayment: 4000 });
@@ -37,7 +37,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     });
 
     assert.equal(trapVerdict.status, 'danger');
-    assert.ok(trapVerdict.badge.includes('Trampa de Financiación'));
+    assert.ok(trapVerdict.badge.includes('Trampa de financiación'));
     assert.ok(trapVerdict.message.includes('MÁS que al contado'));
   });
 
@@ -50,7 +50,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     });
 
     assert.equal(verdict.status, 'warning');
-    assert.equal(verdict.badge, 'Sin Ventajas');
+    assert.equal(verdict.badge, 'Sin ventajas');
     assert.ok(verdict.message.includes('La financiación no tiene ventajas'));
     assert.ok(!verdict.message.includes('ficticio'));
   });
@@ -64,7 +64,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     });
 
     assert.equal(savingVerdict.status, 'success');
-    assert.equal(savingVerdict.badge, 'Ahorro Neto');
+    assert.equal(savingVerdict.badge, 'Ahorro neto');
     assert.ok(savingVerdict.message.includes('Ahorras'));
   });
 
@@ -77,7 +77,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     });
 
     assert.equal(affordableVerdict.status, 'info');
-    assert.equal(affordableVerdict.badge, 'Coste Asumible');
+    assert.equal(affordableVerdict.badge, 'Coste asumible');
   });
 
   test('Test 5: Ranking de ofertas identifica al ganador y no premia cuotas engañosas', () => {
@@ -100,7 +100,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     }));
 
     const ranked = rankOffers([o1, o2]);
-    const winner = ranked.find(o => o.highlights.includes('🏆 Menor Coste Total'));
+    const winner = ranked.find(o => o.highlights.includes('🏆 Menor coste total'));
 
     assert.equal(winner.id, 'o1', 'La oferta más barata debe ser la ganadora');
     assert.ok(

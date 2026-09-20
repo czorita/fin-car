@@ -9,7 +9,7 @@ export const SAMPLE_OFFERS = [
     id: 'sample_cash_1',
     vehicle: 'Toyota Corolla 140H Style',
     imageUrl: getVehicleImageUrl('Toyota Corolla 140H Style'),
-    title: 'Toyota Corolla 140H Style - Al Contado',
+    title: 'Toyota Corolla 140H Style - Al contado',
     dealer: 'Concesionario Oficial Madrid',
     notes: 'Presupuesto oficial pagando todo al contado con transferencia.',
     modality: OFFER_MODALITIES.CASH,
@@ -30,7 +30,7 @@ export const SAMPLE_OFFERS = [
     id: 'sample_finance_trap_2',
     vehicle: 'Toyota Corolla 140H Style',
     imageUrl: getVehicleImageUrl('Toyota Corolla 140H Style'),
-    title: 'Toyota Corolla 140H Style - Financiación Lineal (Trampa Descuento)',
+    title: 'Toyota Corolla 140H Style - Financiación lineal (trampa descuento)',
     dealer: 'Concesionario Oficial Madrid',
     notes: 'Te descuentan 3.300 € del coche por financiar con su financiera, pero con TIN 8.95% y seguro obligatorio.',
     modality: OFFER_MODALITIES.STANDARD_FINANCE,
@@ -45,8 +45,8 @@ export const SAMPLE_OFFERS = [
     manualMonthlyPayment: null,
     balloonPayment: 0,
     linkedProducts: [
-      { id: 'p1', name: 'Seguro de Protección de Pagos (Obligatorio)', cost: 850, financed: true, required: true },
-      { id: 'p2', name: 'Pack Mantenimiento 4 años', cost: 750, financed: true, required: false }
+      { id: 'p1', name: 'Seguro de protección de pagos (obligatorio)', cost: 850, financed: true, required: true },
+      { id: 'p2', name: 'Pack mantenimiento 4 años', cost: 750, financed: true, required: false }
     ],
     createdAt: '2026-09-02T11:30:00.000Z'
   },
@@ -54,7 +54,7 @@ export const SAMPLE_OFFERS = [
     id: 'sample_flexible_3',
     vehicle: 'Toyota Corolla 140H Style',
     imageUrl: getVehicleImageUrl('Toyota Corolla 140H Style'),
-    title: 'Toyota Corolla 140H Style - Compra Flexible (Easy / Balloon)',
+    title: 'Toyota Corolla 140H Style - Compra flexible (Easy / balloon)',
     dealer: 'Toyota Financial Services',
     notes: 'Cuotas bajas durante 48 meses y cuota final (VFG) de 13.500 €.',
     modality: OFFER_MODALITIES.FLEXIBLE_FINANCE,
@@ -77,7 +77,7 @@ export const SAMPLE_OFFERS = [
     id: 'sample_i30_cash_4',
     vehicle: 'Hyundai i30 1.5 T-GDI',
     imageUrl: getVehicleImageUrl('Hyundai i30 1.5 T-GDI'),
-    title: 'Hyundai i30 1.5 T-GDI - Al Contado Promoción',
+    title: 'Hyundai i30 1.5 T-GDI - Al contado promoción',
     dealer: 'Hyundai Gamboa',
     notes: 'Presupuesto oficial al contado con campaña mensual.',
     modality: OFFER_MODALITIES.CASH,
@@ -98,7 +98,7 @@ export const SAMPLE_OFFERS = [
     id: 'sample_i30_finance_5',
     vehicle: 'Hyundai i30 1.5 T-GDI',
     imageUrl: getVehicleImageUrl('Hyundai i30 1.5 T-GDI'),
-    title: 'Hyundai i30 1.5 T-GDI - Financiación Smart 60m',
+    title: 'Hyundai i30 1.5 T-GDI - Financiación smart 60m',
     dealer: 'Hyundai Gamboa',
     notes: 'Descuento de concesionario por financiar con TIN 7.95% a 5 años.',
     modality: OFFER_MODALITIES.STANDARD_FINANCE,
@@ -113,7 +113,7 @@ export const SAMPLE_OFFERS = [
     manualMonthlyPayment: null,
     balloonPayment: 0,
     linkedProducts: [
-      { id: 'p_i30_1', name: 'Pack Mantenimiento 5 años', cost: 600, financed: true, required: false }
+      { id: 'p_i30_1', name: 'Pack mantenimiento 5 años', cost: 600, financed: true, required: false }
     ],
     createdAt: '2026-09-05T12:00:00.000Z'
   }

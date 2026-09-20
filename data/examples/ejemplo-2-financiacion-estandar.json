@@ -1,7 +1,7 @@
 {
   "id": "ejemplo-2-financiacion-lineal",
   "vehicle": "Toyota Corolla 140H Style",
-  "title": "Toyota Corolla 140H Style - Financiación Lineal (Trampa Descuento)",
+  "title": "Toyota Corolla 140H Style - Financiación lineal (trampa descuento)",
   "dealer": "Concesionario Oficial Madrid",
   "notes": "Te descuentan 2.600 € del coche por financiar con su financiera, pero con TIN 8.95% y seguro obligatorio.",
   "modality": "standard_finance",
@@ -17,14 +17,14 @@
   "linkedProducts": [
     {
       "id": "p1",
-      "name": "Seguro de Protección de Pagos (Obligatorio)",
+      "name": "Seguro de protección de pagos (obligatorio)",
       "cost": 850,
       "financed": true,
       "required": true
     },
     {
       "id": "p2",
-      "name": "Pack Mantenimiento 4 años",
+      "name": "Pack mantenimiento 4 años",
       "cost": 750,
       "financed": true,
       "required": false

@@ -124,7 +124,7 @@ export function rankCrossVehicleOffers(crossOffers) {
     if (index === 0) {
       crossHighlight = '';
     } else if (index === 1 && sorted.length > 2) {
-      crossHighlight = '🥈 2º Más Económico';
+      crossHighlight = '🥈 2º más económico';
     } else {
       crossHighlight = `+${diffVsWinner.toLocaleString('es-ES')} € vs ${getOfferVehicle(winner)}`;
     }

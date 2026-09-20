@@ -74,12 +74,12 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   const badgesContainer = card.querySelector('.offer-badges');
 
   if (isWinner) {
-    badgesContainer.appendChild(createBadge('🏆 Menor Coste', 'badge-winner'));
+    badgesContainer.appendChild(createBadge('🏆 Menor coste', 'badge-winner'));
   }
 
   if (offer.highlights && offer.highlights.length) {
     offer.highlights.forEach(hl => {
-      if (!hl.includes('Menor Coste Total')) {
+      if (!hl.includes('Menor coste total')) {
         badgesContainer.appendChild(createBadge(hl, 'badge-info'));
       }
     });
@@ -110,7 +110,7 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   const alertEl = card.querySelector('.card-verdict-alert');
   const isTrap = offer.verdict?.status === 'danger';
   const isSuccess = offer.verdict?.status === 'success'; // "Ahorro Neto" — ocultado para reducir ruido
-  const isNeutralOrWarning = isCash || !offer.verdict || offer.verdict.status === 'neutral' || offer.verdict.status === 'warning' || offer.verdict.badge === 'Sin Ventajas';
+  const isNeutralOrWarning = isCash || !offer.verdict || offer.verdict.status === 'neutral' || offer.verdict.status === 'warning' || offer.verdict.badge === 'Sin ventajas';
 
   if (isNeutralOrWarning || isSuccess) {
     if (alertEl) alertEl.style.display = 'none';

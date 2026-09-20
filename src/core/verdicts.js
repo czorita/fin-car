@@ -26,7 +26,7 @@ export function generateVerdict({ isCash, netDifferenceVsCashRef = 0, advertised
   if (isCash) {
     return {
       status: 'neutral',
-      badge: 'Pago al Contado',
+      badge: 'Pago al contado',
       message: 'Sin intereses ni comisiones de financiación.',
       isWinnerCandidate: true
     };
@@ -35,7 +35,7 @@ export function generateVerdict({ isCash, netDifferenceVsCashRef = 0, advertised
   if (netDifferenceVsCashRef < 0) {
     return {
       status: 'success',
-      badge: 'Ahorro Neto',
+      badge: 'Ahorro neto',
       message: `Ahorras ${Math.abs(netDifferenceVsCashRef).toLocaleString('es-ES')} € respecto al precio contado de catálogo gracias a las promociones.`
     };
   }
@@ -43,7 +43,7 @@ export function generateVerdict({ isCash, netDifferenceVsCashRef = 0, advertised
   if (netDifferenceVsCashRef === 0) {
     return {
       status: 'neutral',
-      badge: 'Mismo Coste que Contado',
+      badge: 'Mismo coste que contado',
       message: 'El desembolso total de la financiación equivale exactamente al precio al contado.'
     };
   }
@@ -52,7 +52,7 @@ export function generateVerdict({ isCash, netDifferenceVsCashRef = 0, advertised
   if (advertisedDiscount <= 0) {
     return {
       status: 'warning',
-      badge: 'Sin Ventajas',
+      badge: 'Sin ventajas',
       message: `La financiación no tiene ventajas: al no haber descuento inicial, terminas pagando ${netDifferenceVsCashRef.toLocaleString('es-ES')} € más que al contado debido a intereses y comisiones.`
     };
   }
@@ -61,7 +61,7 @@ export function generateVerdict({ isCash, netDifferenceVsCashRef = 0, advertised
   if (netDifferenceVsCashRef < advertisedDiscount * AFFORDABLE_SURCHARGE_FACTOR) {
     return {
       status: 'info',
-      badge: 'Coste Asumible',
+      badge: 'Coste asumible',
       message: `Pagas ${netDifferenceVsCashRef.toLocaleString('es-ES')} € de más respecto al contado, pero conservas liquidez con una cuota de ${monthlyPayment.toLocaleString('es-ES')} €/mes.`
     };
   }
@@ -69,7 +69,7 @@ export function generateVerdict({ isCash, netDifferenceVsCashRef = 0, advertised
   // Si hay descuento inicial pero es ficticio (trampa de financiación)
   return {
     status: 'danger',
-    badge: '⚠️ Trampa de Financiación',
+    badge: '⚠️ Trampa de financiación',
     message: `El descuento inicial de ${advertisedDiscount.toLocaleString('es-ES')} € es ficticio: terminas pagando ${netDifferenceVsCashRef.toLocaleString('es-ES')} € MÁS que al contado debido a intereses y comisiones.`
   };
 }

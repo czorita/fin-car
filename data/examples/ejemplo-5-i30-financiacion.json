@@ -1,7 +1,7 @@
 {
   "id": "ejemplo-5-i30-financiacion",
   "vehicle": "Hyundai i30 1.5 T-GDI",
-  "title": "Hyundai i30 1.5 T-GDI - Financiación Smart 60m",
+  "title": "Hyundai i30 1.5 T-GDI - Financiación smart 60m",
   "dealer": "Hyundai Gamboa",
   "notes": "Descuento de concesionario por financiar con TIN 7.95% a 5 años.",
   "modality": "standard_finance",
@@ -17,7 +17,7 @@
   "linkedProducts": [
     {
       "id": "p_i30_1",
-      "name": "Pack Mantenimiento 5 años",
+      "name": "Pack mantenimiento 5 años",
       "cost": 600,
       "financed": true,
       "required": false

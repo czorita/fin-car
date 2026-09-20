@@ -32,7 +32,7 @@ export function updateVerdictBanner(offers) {
 
   if (bestTitleEl) bestTitleEl.textContent = bestOffer.title;
   if (bestSubtextEl) {
-    const paymentMode = bestOffer.isCash ? 'Al Contado' : `${bestOffer.monthlyPayment.toLocaleString('es-ES')} €/mes`;
+    const paymentMode = bestOffer.isCash ? 'Al contado' : `${bestOffer.monthlyPayment.toLocaleString('es-ES')} €/mes`;
     bestSubtextEl.textContent = `Desembolso total neto de ${bestOffer.totalOutOfPocketCost.toLocaleString('es-ES')} € (${paymentMode}).`;
   }
   if (savingsAmountEl) {

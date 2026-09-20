@@ -330,7 +330,7 @@ export function createAppRenderer({
           </h4>
           <p style="font-size: 0.88rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto 1.25rem auto;">
             Ninguno de tus vehículos registrados tiene actualmente una oferta bajo esta modalidad.
-            Selecciona otra modalidad (como <strong>Al Contado</strong> o <strong>Financiación Lineal</strong>) o añade un presupuesto para evaluarlo.
+            Selecciona otra modalidad (como <strong>Al contado</strong> o <strong>Financiación lineal</strong>) o añade un presupuesto para evaluarlo.
           </p>
         </div>
       `;

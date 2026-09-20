@@ -49,19 +49,19 @@ export function renderCostBreakdownChart(canvas, offers, theme = 'dark', activeT
 
   const datasets = [
     {
-      label: 'Coche Neto (€)',
+      label: 'Coche neto (€)',
       data: vehicleData,
       backgroundColor: '#3b82f6',
       borderRadius: 4
     },
     {
-      label: 'Intereses Bancarios (€)',
+      label: 'Intereses bancarios (€)',
       data: interestData,
       backgroundColor: '#f43f5e',
       borderRadius: 4
     },
     {
-      label: 'Seguros y Extras Vinculados (€)',
+      label: 'Seguros y extras vinculados (€)',
       data: productsData,
       backgroundColor: '#f59e0b',
       borderRadius: 4
@@ -142,7 +142,7 @@ export function renderCostBreakdownChart(canvas, offers, theme = 'dark', activeT
               tooltipItems.forEach(item => {
                 sum += Number(item.raw) || 0;
               });
-              return `Total Desembolso: ${sum.toLocaleString('es-ES')} €`;
+              return `Total desembolso: ${sum.toLocaleString('es-ES')} €`;
             }
           }
         }

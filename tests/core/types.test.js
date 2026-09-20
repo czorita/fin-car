@@ -20,7 +20,7 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
 
   test('Test 2: createDefaultOffer con valores por defecto', () => {
     const offer = createDefaultOffer();
-    assert.equal(offer.title, 'Nueva Oferta');
+    assert.equal(offer.title, 'Nueva oferta');
     assert.equal(offer.modality, OFFER_MODALITIES.STANDARD_FINANCE);
     assert.equal(offer.cashPriceReference, DEFAULTS.cashPriceReference);
     assert.equal(offer.offerPrice, DEFAULTS.offerPrice);
@@ -46,9 +46,9 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
   });
 
   test('Test 4: Modalidades y etiquetas definidas correctamente', () => {
-    assert.equal(MODALITY_LABELS[OFFER_MODALITIES.CASH], 'Pago al Contado');
-    assert.equal(MODALITY_LABELS[OFFER_MODALITIES.STANDARD_FINANCE], 'Financiación Lineal Estándar');
-    assert.equal(MODALITY_LABELS[OFFER_MODALITIES.FLEXIBLE_FINANCE], 'Financiación Flexible (Multiopción / Balloon)');
+    assert.equal(MODALITY_LABELS[OFFER_MODALITIES.CASH], 'Pago al contado');
+    assert.equal(MODALITY_LABELS[OFFER_MODALITIES.STANDARD_FINANCE], 'Financiación lineal estándar');
+    assert.equal(MODALITY_LABELS[OFFER_MODALITIES.FLEXIBLE_FINANCE], 'Financiación flexible (multiopción / balloon)');
   });
 
   test('Test 5: Soporte de vehículo explícito y extracción retrocompatible', () => {
@@ -68,29 +68,29 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
   test('Test 6: getOfferDisplayTitle genera el título con Modelo + Tipo de Financiación', () => {
     assert.equal(
       getOfferDisplayTitle({ vehicle: 'Hyundai Tucson', modality: OFFER_MODALITIES.CASH }),
-      'Hyundai Tucson - Al Contado'
+      'Hyundai Tucson - Al contado'
     );
     assert.equal(
       getOfferDisplayTitle({ vehicle: 'Hyundai Tucson', modality: OFFER_MODALITIES.STANDARD_FINANCE, months: 60 }),
-      'Hyundai Tucson - Financiación Lineal (60m)'
+      'Hyundai Tucson - Financiación lineal (60m)'
     );
     assert.equal(
       getOfferDisplayTitle({ vehicle: 'Hyundai Tucson', modality: OFFER_MODALITIES.FLEXIBLE_FINANCE, months: 48 }),
-      'Hyundai Tucson - Compra Flexible (48m)'
+      'Hyundai Tucson - Compra flexible (48m)'
     );
 
     // Subtítulo / Tipo de financiación a la derecha del guion para tarjetas en "Mismo vehículo"
     assert.equal(
       getOfferFinanceSubtitle({ vehicle: 'Toyota RAV4', modality: OFFER_MODALITIES.CASH }),
-      'Al Contado'
+      'Al contado'
     );
     assert.equal(
       getOfferFinanceSubtitle({ vehicle: 'Toyota RAV4', modality: OFFER_MODALITIES.STANDARD_FINANCE, months: 60 }),
-      'Financiación Lineal (60m)'
+      'Financiación lineal (60m)'
     );
     assert.equal(
       getOfferFinanceSubtitle({ vehicle: 'Toyota RAV4', modality: OFFER_MODALITIES.FLEXIBLE_FINANCE, months: 48 }),
-      'Compra Flexible (48m)'
+      'Compra flexible (48m)'
     );
   });
 

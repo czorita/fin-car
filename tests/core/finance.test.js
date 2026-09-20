@@ -29,7 +29,7 @@ describe('Cálculos Financieros y Normalización de Ofertas', () => {
 
     assert.equal(ranked.length, SAMPLE_OFFERS.length, 'Todas las ofertas deben normalizarse');
     
-    const best = ranked.find(o => o.highlights && o.highlights.includes('🏆 Menor Coste Total'));
+    const best = ranked.find(o => o.highlights && o.highlights.includes('🏆 Menor coste total'));
     assert.ok(best, 'Debe identificarse la oferta ganadora por menor coste total');
   });
 

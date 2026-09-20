@@ -173,7 +173,7 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
     btnInspect.style.flex = '1';
     btnInspect.innerHTML = `
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-      Ver este Coche
+      Ver este coche
     `;
     btnInspect.addEventListener('click', () => onInspectVehicle(offer.vehicle));
     actions.appendChild(btnInspect);

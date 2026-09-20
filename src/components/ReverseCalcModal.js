@@ -81,8 +81,8 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
     resultsContainer.style.display = 'block';
 
     currentComputedOffer = {
-      title: `Cálculo Inverso (${months} meses a ${monthly.toLocaleString('es-ES')}€/mes)`,
-      dealer: 'Presupuesto Deducido',
+      title: `Cálculo inverso (${months} meses a ${monthly.toLocaleString('es-ES')}€/mes)`,
+      dealer: 'Presupuesto deducido',
       modality: balloon > 0 ? OFFER_MODALITIES.FLEXIBLE_FINANCE : OFFER_MODALITIES.STANDARD_FINANCE,
       cashPriceReference: price,
       offerPrice: price,

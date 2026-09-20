@@ -12,7 +12,7 @@ import {
 describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
   const offerCorollaCash = createDefaultOffer({
     vehicle: 'Toyota Corolla',
-    title: 'Al Contado',
+    title: 'Al contado',
     modality: OFFER_MODALITIES.CASH,
     offerPrice: 26000,
     cashPriceReference: 26000
@@ -20,7 +20,7 @@ describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
 
   const offerCorollaFin = createDefaultOffer({
     vehicle: 'Toyota Corolla',
-    title: 'Financiación Lineal',
+    title: 'Financiación lineal',
     modality: OFFER_MODALITIES.STANDARD_FINANCE,
     offerPrice: 23500,
     cashPriceReference: 26000,
@@ -31,7 +31,7 @@ describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
 
   const offerTucsonCash = createDefaultOffer({
     vehicle: 'Hyundai Tucson',
-    title: 'Al Contado Oficial',
+    title: 'Al contado oficial',
     modality: OFFER_MODALITIES.CASH,
     offerPrice: 32000,
     cashPriceReference: 32000
@@ -39,7 +39,7 @@ describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
 
   const offerTucsonFin = createDefaultOffer({
     vehicle: 'Hyundai Tucson',
-    title: 'Financiación Flexible',
+    title: 'Financiación flexible',
     modality: OFFER_MODALITIES.FLEXIBLE_FINANCE,
     offerPrice: 29000,
     cashPriceReference: 32000,

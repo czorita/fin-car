@@ -143,7 +143,7 @@ export function createComparisonTableElement(offers) {
   offers.forEach(o => {
     const td = document.createElement('td');
     td.className = 'table-cell--data';
-    if (o.isCash || o.verdict.status === 'warning' || o.verdict.status === 'neutral' || o.verdict.badge === 'Sin Ventajas') {
+    if (o.isCash || o.verdict.status === 'warning' || o.verdict.status === 'neutral' || o.verdict.badge === 'Sin ventajas') {
       td.textContent = '—';
       td.className = 'table-cell--data table-cell--muted';
     } else {

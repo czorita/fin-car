@@ -213,10 +213,10 @@ export function rankOffers(normalizedOffers) {
   return sorted.map(offer => {
     const badges = [];
     if (offer.totalOutOfPocketCost === minTotalCost) {
-      badges.push('🏆 Menor Coste Total');
+      badges.push('🏆 Menor coste total');
     }
     if (offer.totalInterest === minInterest && offer.totalInterest > 0) {
-      badges.push('📉 Menos Intereses Pagados');
+      badges.push('📉 Menos intereses pagados');
     }
 
     return {
