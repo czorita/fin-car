@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createDefaultOffer, OFFER_MODALITIES, MODALITY_LABELS, getOfferDisplayTitle, getOfferFinanceSubtitle } from '../../src/core/types.js';
+import { createDefaultOffer, OFFER_MODALITIES, MODALITY_LABELS, MODALITY_SHORT_NAMES, getOfferDisplayTitle, getOfferFinanceSubtitle } from '../../src/core/types.js';
 import { generateId, ID_PREFIX_OFFER, ID_PREFIX_PRODUCT, DEFAULTS } from '../../src/core/constants.js';
 
 describe('Tipos y Estructuras de Datos (types.js)', () => {
@@ -135,6 +135,33 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
     assert.equal(withServices.includedServices.length, 2);
     assert.equal(withServices.includedServices[0].marketValue, 1200);
     assert.equal(withServices.includedServices[1].marketValue, 750);
+  });
+
+  test('Test 9: Modalidad EARLY_CANCELLATION definida y subtítulo claro', () => {
+    assert.equal(OFFER_MODALITIES.EARLY_CANCELLATION, 'early_cancellation');
+    assert.ok(MODALITY_LABELS[OFFER_MODALITIES.EARLY_CANCELLATION]);
+    assert.ok(MODALITY_SHORT_NAMES[OFFER_MODALITIES.EARLY_CANCELLATION]);
+
+    const sub = getOfferFinanceSubtitle({
+      modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+      contractMonths: 84,
+      earlyCancellationMonth: 24
+    });
+    assert.equal(sub, 'Cancelación mes 24 (de 84m)');
+  });
+
+  test('Test 10: createDefaultOffer soporta campos de cancelación anticipada', () => {
+    const offer = createDefaultOffer({
+      modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+      contractMonths: 96,
+      earlyCancellationMonth: 18,
+      earlyCancellationPenaltyRate: 0.5
+    });
+
+    assert.equal(offer.modality, OFFER_MODALITIES.EARLY_CANCELLATION);
+    assert.equal(offer.contractMonths, 96);
+    assert.equal(offer.earlyCancellationMonth, 18);
+    assert.equal(offer.earlyCancellationPenaltyRate, 0.5);
   });
 });
 

@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateMonthlyPayment, reverseEngineerInterestRate, generateAmortizationSchedule } from '../../src/core/finance.js';
+import { calculateMonthlyPayment, reverseEngineerInterestRate, generateAmortizationSchedule, calculateEarlyCancellationSettlement } from '../../src/core/finance.js';
 import { normalizeOffer, rankOffers } from '../../src/core/normalizer.js';
 import { SAMPLE_OFFERS } from '../../src/core/presets.js';
 
@@ -55,5 +55,34 @@ describe('Cálculos Financieros y Normalización de Ofertas', () => {
     // Deducción inversa con 42 meses
     const rev42 = reverseEngineerInterestRate(18000, payment42, 42, 0);
     assert.ok(Math.abs(rev42.tin - 6.5) < 0.05, `TIN deducido (~6.5%) obtenido: ${rev42.tin}%`);
+  });
+
+  test('Test 6: calculateEarlyCancellationSettlement (préstamo 84m cancelado al mes 24 con 1%)', () => {
+    const principal = 20000;
+    const tin = 8.5;
+    const contractMonths = 84;
+    const cancelMonth = 24;
+    const penaltyRate = 1.0;
+
+    const res = calculateEarlyCancellationSettlement(principal, tin, contractMonths, cancelMonth, penaltyRate);
+
+    assert.equal(res.cancelMonth, 24);
+    assert.equal(res.contractMonths, 84);
+    assert.ok(res.monthlyPayment > 300 && res.monthlyPayment < 330, `Cuota esperada ~317 €, obtenida ${res.monthlyPayment}`);
+    assert.ok(res.settlementCapital > 14000 && res.settlementCapital < 16000, `Capital pendiente esperado ~15.5k €, obtenido ${res.settlementCapital}`);
+    assert.ok(Math.abs(res.penaltyAmount - (res.settlementCapital * 0.01)) < 0.05, 'La penalización debe ser el 1% del capital pendiente');
+    assert.ok(res.futureInterestSaved > 2000, `El ahorro en intereses futuros debe ser sustancial (>2000 €), obtenido ${res.futureInterestSaved}`);
+    assert.equal(res.finalSettlementPayment, Number((res.settlementCapital + res.penaltyAmount).toFixed(2)));
+  });
+
+  test('Test 7: Cuadro de amortización con cancelación anticipada', () => {
+    const sched = generateAmortizationSchedule(20000, 8.5, 84, 0, { cancelMonth: 24, penaltyRate: 1.0 });
+
+    assert.equal(sched.length, 24, 'Debe cortar en el mes 24');
+    const lastRow = sched[23];
+    assert.equal(lastRow.month, 24);
+    assert.equal(lastRow.isCancellation, true);
+    assert.equal(lastRow.remainingBalance, 0, 'El saldo al final del mes 24 debe ser 0');
+    assert.ok(lastRow.cancellationDetails.penaltyAmount > 0);
   });
 });

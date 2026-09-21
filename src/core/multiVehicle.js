@@ -46,7 +46,7 @@ export function filterOffersByVehicle(offers, vehicleName) {
  * Selecciona una oferta representativa por cada vehículo para una modalidad determinada.
  * Si un vehículo tiene varias ofertas de esa modalidad, selecciona la de menor coste total.
  * @param {Array<import('./normalizer.js').NormalizedOffer>} normalizedOffers
- * @param {'cash' | 'standard_finance' | 'flexible_finance' | 'best_overall'} modality
+ * @param {'cash' | 'standard_finance' | 'flexible_finance' | 'early_cancellation' | 'best_overall'} modality
  * @returns {Array<import('./normalizer.js').NormalizedOffer>}
  */
 export function getCrossVehicleOffers(normalizedOffers, modality = 'cash') {

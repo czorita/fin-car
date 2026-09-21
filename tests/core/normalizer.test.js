@@ -230,5 +230,77 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.ok(cashRanked.highlights.includes('🏆 Menor coste total'), 'El contado tiene menor desembolso financiero');
     assert.ok(finRanked.highlights.includes('💎 Mejor valor equiparado (TCO)'), 'La oferta financiada ofrece mejor TCO equiparado');
   });
+
+  test('Test 10: Normalización de oferta con modalidad EARLY_CANCELLATION', () => {
+    // Coche de 30.000 € con 3.000 € de descuento por financiar a 84 meses
+    // Cancelación en mes 24 con 1.0% de comisión
+    // Entrada: 5.000 € -> Capital a financiar: 22.000 €
+    const offer = createDefaultOffer({
+      modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+      vehiclePrice: 30000,
+      financeDiscount: 3000,
+      downPayment: 5000,
+      months: 84,
+      contractMonths: 84,
+      earlyCancellationMonth: 24,
+      earlyCancellationPenaltyRate: 1.0,
+      tin: 8.5
+    });
+
+    const norm = normalizeOffer(offer);
+
+    assert.equal(norm.isEarlyCancellation, true);
+    assert.equal(norm.contractMonths, 84);
+    assert.equal(norm.earlyCancellationMonth, 24);
+    assert.equal(norm.totalMonths, 24, 'Total meses de cuotas debe ser el mes de cancelación (24)');
+    assert.ok(norm.settlementCapital > 16000 && norm.settlementCapital < 18500, `Capital pendiente esperado ~17k €, obtenido ${norm.settlementCapital}`);
+    assert.ok(Math.abs(norm.cancellationPenalty - (norm.settlementCapital * 0.01)) < 0.05, 'Comisión debe ser el 1% del capital pendiente');
+    assert.equal(norm.finalSettlementPayment, Number((norm.settlementCapital + norm.cancellationPenalty).toFixed(2)));
+    assert.ok(norm.futureInterestSaved > 2000, 'Debe reflejar el ahorro sustancial en intereses evitados');
+    assert.equal(norm.costBreakdown.earlyCancellationPenalty, norm.cancellationPenalty);
+    assert.equal(norm.amortizationSchedule.length, 24, 'El cuadro de amortización debe cortarse en el mes 24');
+    assert.equal(norm.amortizationSchedule[23].isCancellation, true);
+    assert.equal(norm.amortizationSchedule[23].remainingBalance, 0);
+  });
+
+  test('Test 11: Veredicto de cancelación anticipada rentable', () => {
+    // Descuento de 4.000 € por financiar a 84 meses con TIN moderado (5%)
+    // Intereses en 24 meses + penalización ~ 2.000 € -> ¡Ahorro neto de ~2.000 € vs contado!
+    const offer = createDefaultOffer({
+      modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+      vehiclePrice: 30000,
+      financeDiscount: 4000,
+      downPayment: 5000,
+      months: 84,
+      earlyCancellationMonth: 24,
+      earlyCancellationPenaltyRate: 1.0,
+      tin: 5.0
+    });
+
+    const norm = normalizeOffer(offer);
+    assert.equal(norm.verdict.status, 'success');
+    assert.ok(norm.verdict.badge.includes('Ahorro neto cancelando'));
+    assert.ok(norm.netDifferenceVsCashRef < 0, 'El desembolso debe ser inferior al precio al contado');
+  });
+
+  test('Test 12: Veredicto de permanencia trampa cuando los intereses superan el descuento', () => {
+    // Descuento pequeño (1.000 €) con TIN alto (10.5%) y cancelación a 24 meses
+    // Intereses de 24 meses devoran completamente el descuento
+    const offer = createDefaultOffer({
+      modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+      vehiclePrice: 30000,
+      financeDiscount: 1000,
+      downPayment: 3000,
+      months: 84,
+      earlyCancellationMonth: 24,
+      earlyCancellationPenaltyRate: 1.0,
+      tin: 10.5
+    });
+
+    const norm = normalizeOffer(offer);
+    assert.equal(norm.verdict.status, 'danger');
+    assert.ok(norm.verdict.badge.includes('Ni cancelando compensa'));
+    assert.ok(norm.netDifferenceVsCashRef > 0, 'Debe haber un sobrecoste neto frente al contado');
+  });
 });
 

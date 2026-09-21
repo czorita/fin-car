@@ -124,9 +124,23 @@ export function createCrossVehicleTableElement(rankedCrossOffers) {
     appendRow(tbody, 'Precio base de cálculo', rankedCrossOffers.map(o => `${o.offerPrice.toLocaleString('es-ES')} €`), { isBold: true });
   }
   appendRow(tbody, 'Entrada aportada', rankedCrossOffers.map(o => o.isCash ? '—' : (o.downPayment > 0 ? `${o.downPayment.toLocaleString('es-ES')} €` : '0 €')));
-  appendRow(tbody, 'Plazo', rankedCrossOffers.map(o => o.isCash ? 'Al contado' : `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`));
+  appendRow(tbody, 'Plazo', rankedCrossOffers.map(o => {
+    if (o.isCash) return 'Al contado';
+    if (o.isEarlyCancellation) return `Mes ${o.earlyCancellationMonth} (de ${o.contractMonths}m)`;
+    return `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`;
+  }));
   appendRow(tbody, 'Cuota mensual', rankedCrossOffers.map(o => o.isCash ? '—' : `${o.monthlyPayment.toLocaleString('es-ES')} €/mes`), { isBold: true });
-  appendRow(tbody, 'Cuota final (VFG)', rankedCrossOffers.map(o => o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—'));
+  appendRow(tbody, 'Cuota final / Finiquito', rankedCrossOffers.map(o => {
+    if (o.isEarlyCancellation) return `${o.finalSettlementPayment.toLocaleString('es-ES')} € (finiquito)`;
+    return o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—';
+  }));
+
+  const hasCrossEarlyCancel = rankedCrossOffers.some(o => o.isEarlyCancellation);
+  if (hasCrossEarlyCancel) {
+    appendRow(tbody, 'Comisión cancelación', rankedCrossOffers.map(o => o.isEarlyCancellation ? `+${o.cancellationPenalty.toLocaleString('es-ES')} € (${o.earlyCancellationPenaltyRate}%)` : '—'));
+    appendRow(tbody, 'Intereses futuros ahorrados', rankedCrossOffers.map(o => (o.isEarlyCancellation && o.futureInterestSaved > 0) ? `-${o.futureInterestSaved.toLocaleString('es-ES')} €` : '—'), { highlightClass: 'highlight-save' });
+  }
+
   appendRow(tbody, 'TIN / TAE real', rankedCrossOffers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${o.effectiveApr}% TAE`));
   appendRow(tbody, 'Total intereses pagados', rankedCrossOffers.map(o => o.totalInterest > 0 ? `+${o.totalInterest.toLocaleString('es-ES')} €` : '0 €'), { isBold: true, highlightClass: 'highlight-trap' });
   appendRow(tbody, 'Coste financiero compra', rankedCrossOffers.map(o => `${o.totalOutOfPocketCost.toLocaleString('es-ES')} €`), { isBold: true, isLargeText: true });

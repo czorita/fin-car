@@ -104,9 +104,27 @@ export function createComparisonTableElement(offers) {
     appendTableRow(tbody, 'Precio base de cálculo', offers.map(o => `${o.offerPrice.toLocaleString('es-ES')} €`), { isBold: true });
   }
   appendTableRow(tbody, 'Entrada inicial', offers.map(o => o.isCash ? '—' : (o.downPayment > 0 ? `${o.downPayment.toLocaleString('es-ES')} €` : '0 €')));
-  appendTableRow(tbody, 'Plazo', offers.map(o => o.isCash ? 'Contado' : `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`));
+  appendTableRow(tbody, 'Plazo', offers.map(o => {
+    if (o.isCash) return 'Contado';
+    if (o.isEarlyCancellation) return `Mes ${o.earlyCancellationMonth} (de ${o.contractMonths}m)`;
+    return `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`;
+  }));
   appendTableRow(tbody, 'Cuota mensual', offers.map(o => o.isCash ? '—' : `${o.monthlyPayment.toLocaleString('es-ES')} €/mes`), { isBold: true });
-  appendTableRow(tbody, 'Cuota final (VFG)', offers.map(o => o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—'));
+  appendTableRow(tbody, 'Cuota final / Finiquito', offers.map(o => {
+    if (o.isEarlyCancellation) return `${o.finalSettlementPayment.toLocaleString('es-ES')} € (finiquito)`;
+    return o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—';
+  }));
+
+  const hasAnyEarlyCancellation = offers.some(o => o.isEarlyCancellation);
+  if (hasAnyEarlyCancellation) {
+    appendTableRow(tbody, 'Comisión de cancelación', offers.map(o => {
+      return o.isEarlyCancellation ? `+${o.cancellationPenalty.toLocaleString('es-ES')} € (${o.earlyCancellationPenaltyRate}%)` : '—';
+    }));
+    appendTableRow(tbody, 'Intereses futuros ahorrados', offers.map(o => {
+      return (o.isEarlyCancellation && o.futureInterestSaved > 0) ? `-${o.futureInterestSaved.toLocaleString('es-ES')} €` : '—';
+    }), { highlightClass: 'highlight-save' });
+  }
+
   appendTableRow(tbody, 'TIN / TAE', offers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${o.effectiveApr}% TAE`));
   appendTableRow(tbody, 'Intereses bancarios', offers.map(o => o.totalInterest > 0 ? `+${o.totalInterest.toLocaleString('es-ES')} €` : '0 €'), { isBold: true, highlightClass: 'highlight-trap' });
   appendTableRow(tbody, 'Seguros / extras cobrados', offers.map(o => o.costBreakdown.linkedProducts > 0 ? `+${o.costBreakdown.linkedProducts.toLocaleString('es-ES')} €` : '0 €'));

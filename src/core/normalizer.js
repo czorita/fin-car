@@ -5,7 +5,7 @@
  */
 
 import { OFFER_MODALITIES } from './types.js';
-import { calculateMonthlyPayment, calculateEffectiveApr, reverseEngineerInterestRate, generateAmortizationSchedule } from './finance.js';
+import { calculateMonthlyPayment, calculateEffectiveApr, reverseEngineerInterestRate, generateAmortizationSchedule, calculateEarlyCancellationSettlement } from './finance.js';
 import { generateVerdict } from './verdicts.js';
 
 /**
@@ -16,6 +16,7 @@ import { generateVerdict } from './verdicts.js';
 export function normalizeOffer(offer) {
   const isCash = offer.modality === OFFER_MODALITIES.CASH;
   const isFlexible = offer.modality === OFFER_MODALITIES.FLEXIBLE_FINANCE;
+  const isEarlyCancellation = offer.modality === OFFER_MODALITIES.EARLY_CANCELLATION;
 
   // 1. Productos vinculados
   const products = offer.linkedProducts || [];
@@ -68,10 +69,18 @@ export function normalizeOffer(offer) {
       cashPriceReference: vehiclePrice,
       offerPrice,
       isCash: true,
+      isEarlyCancellation: false,
       downPayment: 0,
       principalFinanced: 0,
       monthlyPayment: 0,
       totalMonths: 0,
+      contractMonths: 0,
+      earlyCancellationMonth: 0,
+      earlyCancellationPenaltyRate: 0,
+      settlementCapital: 0,
+      cancellationPenalty: 0,
+      finalSettlementPayment: 0,
+      futureInterestSaved: 0,
       balloonPayment: 0,
       effectiveApr: 0,
       nominalTin: 0,
@@ -87,6 +96,7 @@ export function normalizeOffer(offer) {
       costBreakdown: {
         vehicleNet: Math.max(0, offerPrice - tradeInValue),
         interests: 0,
+        earlyCancellationPenalty: 0,
         linkedProducts: totalProductsCost,
         includedServicesValue
       },
@@ -98,44 +108,63 @@ export function normalizeOffer(offer) {
     };
   }
 
-  // Si es financiación (estándar o flexible)
+  // Si es financiación (estándar, flexible o cancelación anticipada)
   const downPayment = Number(offer.downPayment) || 0;
-  const months = Number(offer.months) || 60;
-  const balloon = isFlexible ? (Number(offer.balloonPayment) || 0) : 0;
   const tin = Number(offer.tin) || 0;
 
   // Capital base del vehículo a financiar
   const netVehicleToFinance = Math.max(0, offerPrice - downPayment - tradeInValue);
   const financedPrincipal = netVehicleToFinance + productsFinanced;
 
-  // Cuota mensual
+  let months = Number(offer.months) || 60;
+  const contractMonths = Number(offer.contractMonths) || months;
+  const cancelMonth = Number(offer.earlyCancellationMonth) || 24;
+  const penaltyRate = offer.earlyCancellationPenaltyRate !== undefined ? Number(offer.earlyCancellationPenaltyRate) : 1.0;
+
+  let balloon = isFlexible ? (Number(offer.balloonPayment) || 0) : 0;
   let monthlyPayment = 0;
   let totalInterest = 0;
   let effectiveTin = tin;
+  let settlementCapital = 0;
+  let cancellationPenalty = 0;
+  let finalSettlementPayment = 0;
+  let futureInterestSaved = 0;
+  let totalInstallments = 0;
+  let totalOutOfPocketCost = 0;
 
-  if (offer.manualMonthlyPayment && Number(offer.manualMonthlyPayment) > 0) {
+  // Desembolso inicial (de tu bolsillo al firmar)
+  const initialCashOut = downPayment + productsUpfront;
+
+  if (isEarlyCancellation) {
+    const earlyCalc = calculateEarlyCancellationSettlement(financedPrincipal, tin, contractMonths, cancelMonth, penaltyRate);
+    monthlyPayment = earlyCalc.monthlyPayment;
+    totalInterest = earlyCalc.totalInterestPaid;
+    settlementCapital = earlyCalc.settlementCapital;
+    cancellationPenalty = earlyCalc.penaltyAmount;
+    finalSettlementPayment = earlyCalc.finalSettlementPayment;
+    futureInterestSaved = earlyCalc.futureInterestSaved;
+    months = earlyCalc.cancelMonth;
+    totalInstallments = earlyCalc.regularPaymentsTotal;
+    balloon = finalSettlementPayment;
+    totalOutOfPocketCost = Number((initialCashOut + totalInstallments + finalSettlementPayment).toFixed(2));
+  } else if (offer.manualMonthlyPayment && Number(offer.manualMonthlyPayment) > 0) {
     // Si el usuario introdujo manualmente la cuota del concesionario, deducimos el TIN
     monthlyPayment = Number(offer.manualMonthlyPayment);
     const rev = reverseEngineerInterestRate(financedPrincipal, monthlyPayment, months, balloon);
     effectiveTin = rev.tin;
     totalInterest = rev.totalInterest;
+    totalInstallments = Number((monthlyPayment * months).toFixed(2));
+    totalOutOfPocketCost = Number((initialCashOut + totalInstallments + balloon).toFixed(2));
   } else {
     monthlyPayment = calculateMonthlyPayment(financedPrincipal, tin, months, balloon);
     const totalPayments = (monthlyPayment * months) + balloon;
     totalInterest = Math.max(0, totalPayments - financedPrincipal);
+    totalInstallments = Number((monthlyPayment * months).toFixed(2));
+    totalOutOfPocketCost = Number((initialCashOut + totalInstallments + balloon).toFixed(2));
   }
 
   monthlyPayment = Number(monthlyPayment.toFixed(2));
   totalInterest = Number(totalInterest.toFixed(2));
-
-  // Desembolso inicial (de tu bolsillo al firmar)
-  const initialCashOut = downPayment + productsUpfront;
-
-  // Pagos futuros
-  const totalInstallments = Number((monthlyPayment * months).toFixed(2));
-  
-  // Coste total financiero en caja (desembolso inicial + cuotas + cuota final si aplica)
-  const totalOutOfPocketCost = Number((initialCashOut + totalInstallments + balloon).toFixed(2));
 
   // Coste total equiparado (TCO: coste financiero menos el valor de mercado de los servicios incluidos que te ahorras de pagar a mano)
   const adjustedTcoCost = Number(Math.max(0, totalOutOfPocketCost - includedServicesValue).toFixed(2));
@@ -153,6 +182,7 @@ export function normalizeOffer(offer) {
   const costBreakdown = {
     vehicleNet: Math.max(0, offerPrice - tradeInValue),
     interests: totalInterest,
+    earlyCancellationPenalty: cancellationPenalty,
     linkedProducts: totalProductsCost,
     includedServicesValue
   };
@@ -160,7 +190,7 @@ export function normalizeOffer(offer) {
   // Comparación contra precio contado de referencia
   const baseCashReferenceTotal = Math.max(0, cashPriceRef - tradeInValue);
   const advertisedDiscount = Math.max(0, cashPriceRef - offerPrice); // El descuento que te promete el comercial por financiar
-  const financialSurcharge = totalInterest + totalProductsCost; // Todo lo que añades por financiar
+  const financialSurcharge = totalInterest + totalProductsCost + cancellationPenalty; // Todo lo que añades por financiar
   const netDifferenceVsCashRef = Number((totalOutOfPocketCost - baseCashReferenceTotal).toFixed(2));
   // Diferencia real equiparada (coste financiado vs lo que costaría el coche al contado + pagar esos servicios a mano)
   const netEquatedDifferenceVsCashRef = Number((adjustedTcoCost - baseCashReferenceTotal).toFixed(2));
@@ -168,6 +198,10 @@ export function normalizeOffer(offer) {
   // Veredicto
   const verdict = generateVerdict({
     isCash: false,
+    isEarlyCancellation,
+    cancelMonth: isEarlyCancellation ? months : 0,
+    futureInterestSaved,
+    cancellationPenalty,
     netDifferenceVsCashRef,
     advertisedDiscount,
     monthlyPayment,
@@ -176,7 +210,9 @@ export function normalizeOffer(offer) {
   });
 
   // Cuadro de amortización
-  const amortizationSchedule = generateAmortizationSchedule(financedPrincipal, effectiveTin, months, balloon);
+  const amortizationSchedule = isEarlyCancellation
+    ? generateAmortizationSchedule(financedPrincipal, effectiveTin, contractMonths, 0, { cancelMonth, penaltyRate })
+    : generateAmortizationSchedule(financedPrincipal, effectiveTin, months, balloon);
 
   return {
     ...offer,
@@ -185,9 +221,17 @@ export function normalizeOffer(offer) {
     offerPrice,
     cashPriceReference: vehiclePrice,
     isCash: false,
+    isEarlyCancellation,
     principalFinanced: Number(financedPrincipal.toFixed(2)),
     monthlyPayment,
     totalMonths: months,
+    contractMonths,
+    earlyCancellationMonth: cancelMonth,
+    earlyCancellationPenaltyRate: penaltyRate,
+    settlementCapital,
+    cancellationPenalty,
+    finalSettlementPayment,
+    futureInterestSaved,
     balloonPayment: balloon,
     effectiveApr: effectiveApr || Number((effectiveTin * 1.05).toFixed(2)), // Si TAE da 0 aproximar
     nominalTin: effectiveTin,
@@ -217,11 +261,12 @@ export function normalizeOffer(offer) {
 export function rankOffers(normalizedOffers) {
   if (!normalizedOffers.length) return [];
 
-  // Orden de modalidad: contado → financiación lineal → financiación flexible
+  // Orden de modalidad: contado → financiación lineal → financiación flexible → cancelación anticipada
   const MODALITY_ORDER = {
     [OFFER_MODALITIES.CASH]: 0,
     [OFFER_MODALITIES.STANDARD_FINANCE]: 1,
-    [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 2
+    [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 2,
+    [OFFER_MODALITIES.EARLY_CANCELLATION]: 3
   };
 
   const sorted = [...normalizedOffers].sort((a, b) => {

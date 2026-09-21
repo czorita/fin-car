@@ -9,6 +9,7 @@ import { OFFER_MODALITIES, getOfferVehicle, getOfferDisplayTitle } from '../core
 import { parseLocaleNumber, formatLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
 import { generateId, ID_PREFIX_OFFER, ID_PREFIX_PRODUCT, ID_PREFIX_SERVICE } from '../core/constants.js';
 import { getVehicleImageUrl, findVehicleInCatalog } from '../core/vehicleCatalog.js';
+import { calculateEarlyCancellationSettlement } from '../core/finance.js';
 
 /**
  * Inicializa el modal de formulario de oferta.
@@ -26,6 +27,18 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   const modalitySelector = document.getElementById('modality-selector');
   const financeFieldsContainer = document.getElementById('finance-fields-container');
   const flexibleBalloonContainer = document.getElementById('flexible-balloon-container');
+  const earlyCancellationContainer = document.getElementById('early-cancellation-container');
+  const earlyCancelMonthInput = document.getElementById('early-cancel-month');
+  const cancelMonthsPills = document.getElementById('cancel-months-pills');
+  const earlyCancelPenaltyInput = document.getElementById('early-cancel-penalty');
+  const penaltyQuickPills = document.getElementById('penalty-quick-pills');
+  const cancelSummaryMonth = document.getElementById('cancel-summary-month');
+  const cancelSummaryCapital = document.getElementById('cancel-summary-capital');
+  const cancelSummaryRate = document.getElementById('cancel-summary-rate');
+  const cancelSummaryPenalty = document.getElementById('cancel-summary-penalty');
+  const cancelSummarySettlement = document.getElementById('cancel-summary-settlement');
+  const cancelSummarySaved = document.getElementById('cancel-summary-saved');
+
   const productsListContainer = document.getElementById('linked-products-list');
   const groupDownPayment = document.getElementById('group-down-payment');
   const btnAddProduct = document.getElementById('btn-add-product');
@@ -101,6 +114,33 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     }
   }
 
+  function updateEarlyCancelLiveSummary() {
+    if (currentModality !== OFFER_MODALITIES.EARLY_CANCELLATION) return;
+    const price = parseLocaleNumber(offerPriceInput?.value || 0);
+    const discount = parseLocaleNumber(financeDiscountInput?.value || 0);
+    const downPayment = parseLocaleNumber(downPaymentInput?.value || 0);
+    const tradeIn = parseLocaleNumber(tradeInValueInput?.value || 0);
+    const productsFinanced = linkedProductsState
+      .filter(p => p.financed !== false)
+      .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
+    const netVehicle = Math.max(0, price - discount - downPayment - tradeIn);
+    const principal = netVehicle + productsFinanced;
+
+    const contractMonths = Math.max(1, Math.round(Number(loanMonthsInput?.value) || 84));
+    const cancelMonth = Math.max(1, Math.round(Number(earlyCancelMonthInput?.value) || 24));
+    const penaltyRate = parseLocaleNumber(earlyCancelPenaltyInput?.value || '1,0');
+    const tin = parseLocaleNumber(loanTinInput?.value || '8,5');
+
+    const res = calculateEarlyCancellationSettlement(principal, tin, contractMonths, cancelMonth, penaltyRate);
+
+    if (cancelSummaryMonth) cancelSummaryMonth.textContent = String(res.cancelMonth);
+    if (cancelSummaryCapital) cancelSummaryCapital.textContent = `${res.settlementCapital.toLocaleString('es-ES')} €`;
+    if (cancelSummaryRate) cancelSummaryRate.textContent = formatLocaleNumber(res.penaltyRate);
+    if (cancelSummaryPenalty) cancelSummaryPenalty.textContent = `+${res.penaltyAmount.toLocaleString('es-ES')} €`;
+    if (cancelSummarySettlement) cancelSummarySettlement.textContent = `${res.finalSettlementPayment.toLocaleString('es-ES')} €`;
+    if (cancelSummarySaved) cancelSummarySaved.textContent = `${res.futureInterestSaved.toLocaleString('es-ES')} €`;
+  }
+
   function updateModalityUI(modality) {
     currentModality = modality;
     modalitySelector.querySelectorAll('.segmented-btn').forEach(btn => {
@@ -123,11 +163,50 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       if (flexibleBalloonContainer) {
         flexibleBalloonContainer.style.display = modality === OFFER_MODALITIES.FLEXIBLE_FINANCE ? 'block' : 'none';
       }
+      if (earlyCancellationContainer) {
+        earlyCancellationContainer.style.display = modality === OFFER_MODALITIES.EARLY_CANCELLATION ? 'block' : 'none';
+      }
+      if (modality === OFFER_MODALITIES.EARLY_CANCELLATION) {
+        if (!loanMonthsInput.value || loanMonthsInput.value === '60') {
+          loanMonthsInput.value = '84';
+          updateMonthsUI('84');
+        }
+        updateEarlyCancelLiveSummary();
+      }
     }
   }
 
-  offerPriceInput?.addEventListener('input', updateNetCalcPriceUI);
-  financeDiscountInput?.addEventListener('input', updateNetCalcPriceUI);
+  offerPriceInput?.addEventListener('input', () => {
+    updateNetCalcPriceUI();
+    updateEarlyCancelLiveSummary();
+  });
+  financeDiscountInput?.addEventListener('input', () => {
+    updateNetCalcPriceUI();
+    updateEarlyCancelLiveSummary();
+  });
+  downPaymentInput?.addEventListener('input', updateEarlyCancelLiveSummary);
+  tradeInValueInput?.addEventListener('input', updateEarlyCancelLiveSummary);
+  loanTinInput?.addEventListener('input', updateEarlyCancelLiveSummary);
+  earlyCancelMonthInput?.addEventListener('input', updateEarlyCancelLiveSummary);
+  earlyCancelPenaltyInput?.addEventListener('input', updateEarlyCancelLiveSummary);
+
+  cancelMonthsPills?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.months-pill-btn');
+    if (btn && btn.dataset.cancel) {
+      if (earlyCancelMonthInput) earlyCancelMonthInput.value = btn.dataset.cancel;
+      cancelMonthsPills.querySelectorAll('.months-pill-btn').forEach(b => b.classList.toggle('active', b === btn));
+      updateEarlyCancelLiveSummary();
+    }
+  });
+
+  penaltyQuickPills?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.months-pill-btn');
+    if (btn && btn.dataset.penalty) {
+      if (earlyCancelPenaltyInput) earlyCancelPenaltyInput.value = formatLocaleNumber(btn.dataset.penalty);
+      penaltyQuickPills.querySelectorAll('.months-pill-btn').forEach(b => b.classList.toggle('active', b === btn));
+      updateEarlyCancelLiveSummary();
+    }
+  });
 
   function updateImagePreview(url) {
     if (!url) {
@@ -162,6 +241,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
 
   loanMonthsInput.addEventListener('input', () => {
     updateMonthsUI(loanMonthsInput.value);
+    updateEarlyCancelLiveSummary();
   });
 
   loanMonthsPills?.addEventListener('click', (e) => {
@@ -169,6 +249,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     if (btn && btn.dataset.months) {
       loanMonthsInput.value = btn.dataset.months;
       updateMonthsUI(btn.dataset.months);
+      updateEarlyCancelLiveSummary();
     }
   });
 
@@ -339,11 +420,15 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     const months = Math.max(1, Math.round(Number(loanMonthsInput.value) || 60));
     const detectedImg = getVehicleImageUrl(vName);
 
+    const isEarlyCancel = currentModality === OFFER_MODALITIES.EARLY_CANCELLATION;
+    const cancelMonth = isEarlyCancel ? Math.max(1, Math.round(Number(earlyCancelMonthInput?.value) || 24)) : 0;
+    const penaltyRate = isEarlyCancel ? parseLocaleNumber(earlyCancelPenaltyInput?.value || '1,0') : 0;
+
     const offerData = {
       id: idInput.value || generateId(ID_PREFIX_OFFER),
       vehicle: vName || 'Vehículo sin especificar',
       imageUrl: detectedImg || '',
-      title: getOfferDisplayTitle({ vehicle: vName, modality: currentModality, months }),
+      title: getOfferDisplayTitle({ vehicle: vName, modality: currentModality, months, contractMonths: months, earlyCancellationMonth: cancelMonth }),
       dealer: dealerInput.value.trim(),
       notes: notesInput.value.trim(),
       modality: currentModality,
@@ -355,6 +440,9 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       downPayment: currentModality === OFFER_MODALITIES.CASH ? 0 : parseLocaleNumber(downPaymentInput.value),
       tradeInValue: parseLocaleNumber(tradeInValueInput.value),
       months,
+      contractMonths: months,
+      earlyCancellationMonth: cancelMonth,
+      earlyCancellationPenaltyRate: penaltyRate,
       tin: parseLocaleNumber(loanTinInput.value),
       manualMonthlyPayment: manualMonthlyInput.value ? parseLocaleNumber(manualMonthlyInput.value) : null,
       balloonPayment: parseLocaleNumber(balloonPaymentInput.value),
@@ -412,11 +500,28 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
 
         downPaymentInput.value = offer.modality === OFFER_MODALITIES.CASH ? '0' : formatLocaleNumber(offer.downPayment || '');
         tradeInValueInput.value = formatLocaleNumber(offer.tradeInValue || '');
-        loanMonthsInput.value = String(offer.months || 60);
-        updateMonthsUI(offer.months || 60);
+        loanMonthsInput.value = String(offer.contractMonths || offer.months || 60);
+        updateMonthsUI(offer.contractMonths || offer.months || 60);
         loanTinInput.value = offer.tin !== undefined ? formatLocaleNumber(offer.tin) : '8,5';
         manualMonthlyInput.value = offer.manualMonthlyPayment ? formatLocaleNumber(offer.manualMonthlyPayment) : '';
         balloonPaymentInput.value = offer.balloonPayment ? formatLocaleNumber(offer.balloonPayment) : '';
+
+        // Campos de cancelación anticipada
+        if (earlyCancelMonthInput) {
+          earlyCancelMonthInput.value = String(offer.earlyCancellationMonth || 24);
+        }
+        if (earlyCancelPenaltyInput) {
+          earlyCancelPenaltyInput.value = offer.earlyCancellationPenaltyRate !== undefined ? formatLocaleNumber(offer.earlyCancellationPenaltyRate) : '1,0';
+        }
+        if (cancelMonthsPills) {
+          const cM = Number(offer.earlyCancellationMonth || 24);
+          cancelMonthsPills.querySelectorAll('.months-pill-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.cancel) === cM));
+        }
+        if (penaltyQuickPills) {
+          const pR = Number(offer.earlyCancellationPenaltyRate !== undefined ? offer.earlyCancellationPenaltyRate : 1.0);
+          penaltyQuickPills.querySelectorAll('.months-pill-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.penalty) === pR));
+        }
+
         linkedProductsState = offer.linkedProducts
           ? offer.linkedProducts.map(p => ({
               id: p.id || `p_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -432,6 +537,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
           : [];
         updateModalityUI(offer.modality || OFFER_MODALITIES.STANDARD_FINANCE);
         updateNetCalcPriceUI();
+        updateEarlyCancelLiveSummary();
       } else {
         modalTitle.textContent = 'Nueva oferta de concesionario';
         idInput.value = '';
@@ -449,6 +555,14 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         if (tradeInValueInput) tradeInValueInput.value = '';
         if (manualMonthlyInput) manualMonthlyInput.value = '';
         if (balloonPaymentInput) balloonPaymentInput.value = '';
+        if (earlyCancelMonthInput) earlyCancelMonthInput.value = '24';
+        if (earlyCancelPenaltyInput) earlyCancelPenaltyInput.value = '1,0';
+        if (cancelMonthsPills) {
+          cancelMonthsPills.querySelectorAll('.months-pill-btn').forEach(b => b.classList.toggle('active', b.dataset.cancel === '24'));
+        }
+        if (penaltyQuickPills) {
+          penaltyQuickPills.querySelectorAll('.months-pill-btn').forEach(b => b.classList.toggle('active', b.dataset.penalty === '1'));
+        }
         linkedProductsState = [];
         includedServicesState = [];
 
@@ -458,6 +572,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
 
         updateModalityUI(OFFER_MODALITIES.STANDARD_FINANCE);
         updateNetCalcPriceUI();
+        updateEarlyCancelLiveSummary();
       }
       renderProductsList();
       renderIncludedServicesList();

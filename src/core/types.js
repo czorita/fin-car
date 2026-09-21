@@ -10,19 +10,22 @@ export { generateId };
 export const OFFER_MODALITIES = {
   CASH: 'cash',
   STANDARD_FINANCE: 'standard_finance',
-  FLEXIBLE_FINANCE: 'flexible_finance'
+  FLEXIBLE_FINANCE: 'flexible_finance',
+  EARLY_CANCELLATION: 'early_cancellation'
 };
 
 export const MODALITY_LABELS = {
   [OFFER_MODALITIES.CASH]: 'Pago al contado',
   [OFFER_MODALITIES.STANDARD_FINANCE]: 'Financiación lineal estándar',
-  [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 'Financiación flexible (multiopción / balloon)'
+  [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 'Financiación flexible (multiopción / balloon)',
+  [OFFER_MODALITIES.EARLY_CANCELLATION]: 'Financiación con cancelación anticipada'
 };
 
 export const MODALITY_SHORT_NAMES = {
   [OFFER_MODALITIES.CASH]: 'Al contado',
   [OFFER_MODALITIES.STANDARD_FINANCE]: 'Financiación lineal',
-  [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 'Compra flexible'
+  [OFFER_MODALITIES.FLEXIBLE_FINANCE]: 'Compra flexible',
+  [OFFER_MODALITIES.EARLY_CANCELLATION]: 'Cancelación anticipada'
 };
 
 /**
@@ -37,6 +40,11 @@ export function getOfferFinanceSubtitle(offer) {
 
   if (modality === OFFER_MODALITIES.CASH) {
     return modLabel;
+  }
+  if (modality === OFFER_MODALITIES.EARLY_CANCELLATION) {
+    const cancelMonth = offer?.earlyCancellationMonth || 24;
+    const contract = offer?.contractMonths || offer?.months || 84;
+    return `Cancelación mes ${cancelMonth} (de ${contract}m)`;
   }
   const months = offer?.months || offer?.totalMonths;
   return months ? `${modLabel} (${months}m)` : modLabel;
@@ -145,7 +153,10 @@ export function createDefaultOffer(overrides = {}) {
     // Parámetros de préstamo
     months: overrides.months !== undefined 
       ? Number(overrides.months) 
-      : DEFAULTS.months,
+      : (overrides.modality === OFFER_MODALITIES.EARLY_CANCELLATION ? DEFAULTS.contractMonths : DEFAULTS.months),
+    contractMonths: overrides.contractMonths !== undefined
+      ? Number(overrides.contractMonths)
+      : (overrides.months !== undefined ? Number(overrides.months) : (overrides.modality === OFFER_MODALITIES.EARLY_CANCELLATION ? DEFAULTS.contractMonths : DEFAULTS.months)),
     tin: overrides.tin !== undefined 
       ? Number(overrides.tin) 
       : DEFAULTS.tin,
@@ -157,6 +168,14 @@ export function createDefaultOffer(overrides = {}) {
     balloonPayment: overrides.balloonPayment !== undefined 
       ? Number(overrides.balloonPayment) 
       : 0,
+
+    // Financiación con cancelación anticipada (permanencia)
+    earlyCancellationMonth: overrides.earlyCancellationMonth !== undefined
+      ? Number(overrides.earlyCancellationMonth)
+      : DEFAULTS.earlyCancellationMonth,
+    earlyCancellationPenaltyRate: overrides.earlyCancellationPenaltyRate !== undefined
+      ? Number(overrides.earlyCancellationPenaltyRate)
+      : DEFAULTS.earlyCancellationPenaltyRate,
 
     // Productos obligatorios vinculados a la financiación
     linkedProducts: Array.isArray(overrides.linkedProducts) ? overrides.linkedProducts : [],

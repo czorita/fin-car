@@ -1148,5 +1148,27 @@ dialog.app-modal[open] {
   object-fit: cover;
 }
 
+/* Fila destacada de cancelación anticipada en el cuadro de amortización */
+.table-row--cancellation {
+  background: rgba(16, 185, 129, 0.12) !important;
+  font-weight: 600;
+  border-left: 3px solid var(--accent-emerald, #10b981);
+}
 
+.table-row--cancellation td {
+  border-top: 1px solid rgba(16, 185, 129, 0.3) !important;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
 
+.cancellation-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--accent-emerald, #10b981);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  margin-left: 0.4rem;
+}

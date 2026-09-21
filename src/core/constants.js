@@ -64,6 +64,9 @@ export const DEFAULTS = {
   offerPrice: 22500,
   downPayment: 4000,
   months: 60,
+  contractMonths: 84,
+  earlyCancellationMonth: 24,
+  earlyCancellationPenaltyRate: 1.0,
   tin: 8.5
 };
 

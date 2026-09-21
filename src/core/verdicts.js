@@ -30,6 +30,10 @@ import { AFFORDABLE_SURCHARGE_FACTOR } from './constants.js';
  */
 export function generateVerdict({
   isCash,
+  isEarlyCancellation = false,
+  cancelMonth = 0,
+  futureInterestSaved = 0,
+  cancellationPenalty = 0,
   netDifferenceVsCashRef = 0,
   advertisedDiscount = 0,
   monthlyPayment = 0,
@@ -49,6 +53,48 @@ export function generateVerdict({
       badge: 'Pago al contado',
       message: `Sin intereses ni comisiones de financiación.${srvText}`,
       isWinnerCandidate: true
+    };
+  }
+
+  // Veredicto específico para Financiación con Cancelación Anticipada
+  if (isEarlyCancellation) {
+    if (netDifferenceVsCashRef < 0) {
+      const srvText = includedServicesValue > 0 ? ` y sumas ${includedServicesValue.toLocaleString('es-ES')} € en servicios de serie.` : '.';
+      return {
+        status: 'success',
+        badge: '⚡ Ahorro neto cancelando',
+        message: `Estrategia rentable: al cancelar en el mes ${cancelMonth || 24} cumples la permanencia y ganas ${Math.abs(netDifferenceVsCashRef).toLocaleString('es-ES')} € netos frente al contado tras pagar intereses y comisión (evitándote ${futureInterestSaved.toLocaleString('es-ES')} € en intereses futuros)${srvText}`
+      };
+    }
+
+    if (equatedDiff < 0 && includedServicesValue > 0) {
+      return {
+        status: 'success',
+        badge: '💎 Ahorro equiparado cancelando',
+        message: `Cancelando en el mes ${cancelMonth || 24} y computando los ${includedServicesValue.toLocaleString('es-ES')} € en servicios incluidos, ahorras ${Math.abs(equatedDiff).toLocaleString('es-ES')} € reales frente al contado.`
+      };
+    }
+
+    if (equatedDiff === 0) {
+      return {
+        status: 'neutral',
+        badge: 'Mismo coste que contado',
+        message: `La cancelación en el mes ${cancelMonth || 24} iguala exactamente el coste al contado (los intereses y comisión neutralizan el descuento).`
+      };
+    }
+
+    if (equatedDiff < advertisedDiscount * AFFORDABLE_SURCHARGE_FACTOR) {
+      return {
+        status: 'info',
+        badge: 'Permanencia con sobrecoste mínimo',
+        message: `Al liquidar en el mes ${cancelMonth || 24} te ahorras ${futureInterestSaved.toLocaleString('es-ES')} € en intereses futuros. El sobrecoste final queda reducido a ${equatedDiff.toLocaleString('es-ES')} €.`
+      };
+    }
+
+    return {
+      status: 'danger',
+      badge: '⚠️ Ni cancelando compensa',
+      message: `El descuento de ${advertisedDiscount.toLocaleString('es-ES')} € no compensa: pese a cancelar en el mes ${cancelMonth || 24} y evitarte ${futureInterestSaved.toLocaleString('es-ES')} € en intereses futuros, los intereses de los ${cancelMonth || 24} meses y la comisión dejan un sobrecoste de ${equatedDiff.toLocaleString('es-ES')} € frente al contado.`
     };
   }
 

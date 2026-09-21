@@ -165,5 +165,33 @@ describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
     assert.equal(rav4Ranked.isTcoWinner, true, 'El RAV4 debe marcarse como ganador de TCO');
     assert.ok(result.summaryMessage.includes('TCO equiparado'), 'El resumen debe explicar que el RAV4 resulta más rentable en TCO');
   });
-});
 
+  test('getCrossVehicleOffers selecciona correctamente ofertas bajo modalidad early_cancellation', () => {
+    const corollaEC = normalizeOffer(createDefaultOffer({
+      id: 'corolla_ec',
+      vehicle: 'Toyota Corolla',
+      modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+      vehiclePrice: 27000,
+      financeDiscount: 3000,
+      downPayment: 4000,
+      months: 84,
+      earlyCancellationMonth: 24,
+      tin: 8.5
+    }));
+
+    const corollaStd = normalizeOffer(createDefaultOffer({
+      id: 'corolla_std',
+      vehicle: 'Toyota Corolla',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      vehiclePrice: 27000,
+      financeDiscount: 3000,
+      downPayment: 4000,
+      months: 60,
+      tin: 8.5
+    }));
+
+    const cross = getCrossVehicleOffers([corollaEC, corollaStd], OFFER_MODALITIES.EARLY_CANCELLATION);
+    assert.equal(cross.length, 1);
+    assert.equal(cross[0].id, 'corolla_ec');
+  });
+});

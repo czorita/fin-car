@@ -48,7 +48,8 @@
       <div class="segmented-control" id="modality-selector">
         <button type="button" class="segmented-btn" data-val="cash">Al contado</button>
         <button type="button" class="segmented-btn active" data-val="standard_finance">Financiación lineal</button>
-        <button type="button" class="segmented-btn" data-val="flexible_finance">Flexible / multiopción</button>
+        <button type="button" class="segmented-btn" data-val="flexible_finance">Flexible / balloon</button>
+        <button type="button" class="segmented-btn" data-val="early_cancellation">⚡ Cancelación anticipada</button>
       </div>
     </div>
 
@@ -161,6 +162,70 @@
           <div class="input-wrapper">
             <input type="text" inputmode="decimal" id="balloon-payment" class="form-input has-addon" placeholder="13000 o 13.000,00" />
             <span class="input-addon">€</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cancelación Anticipada (Permanencia con Penalización) -->
+      <div id="early-cancellation-container" style="display: none; background: rgba(16, 185, 129, 0.07); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px dashed rgba(16, 185, 129, 0.35);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h5 style="margin: 0; font-size: 0.88rem; color: var(--accent-emerald); font-weight: 600;">
+            ⚡ Parámetros de Permanencia y Cancelación
+          </h5>
+          <span class="badge badge-success" style="font-size: 0.72rem;">Permanencia y Finiquito</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="early-cancel-month">
+              Mes de cancelación (permanencia) *
+              <span class="helper-icon" title="Mes en el que la financiera permite cancelar sin penalizaciones comerciales de devolución del descuento (típicamente 18, 24 o 36 meses).">ⓘ</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="number" id="early-cancel-month" class="form-input has-addon" min="1" max="120" step="1" placeholder="24" value="24" />
+              <span class="input-addon">mes</span>
+            </div>
+            <div class="months-quick-pills" id="cancel-months-pills" style="margin-top: 0.35rem;">
+              <button type="button" class="months-pill-btn" data-cancel="12">12m</button>
+              <button type="button" class="months-pill-btn" data-cancel="18">18m</button>
+              <button type="button" class="months-pill-btn active" data-cancel="24">24m</button>
+              <button type="button" class="months-pill-btn" data-cancel="36">36m</button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="early-cancel-penalty">
+              Comisión de cancelación anticipada (%)
+              <span class="helper-icon" title="Comisión de amortización bancaria fijada en el contrato. Máximo legal en España (Ley 16/2011): 1.0% si queda > 1 año; 0.5% si queda ≤ 1 año.">ⓘ</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="text" inputmode="decimal" id="early-cancel-penalty" class="form-input has-addon" placeholder="1,0" value="1,0" />
+              <span class="input-addon">%</span>
+            </div>
+            <div class="months-quick-pills" id="penalty-quick-pills" style="margin-top: 0.35rem;">
+              <button type="button" class="months-pill-btn" data-penalty="0">0% (Gratis)</button>
+              <button type="button" class="months-pill-btn" data-penalty="0.5">0.5%</button>
+              <button type="button" class="months-pill-btn active" data-penalty="1">1.0% (Límite legal)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen dinámico en vivo del finiquito -->
+        <div id="early-cancel-live-summary" style="background: var(--bg-card); padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--text-secondary); border: 1px solid var(--border-subtle);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+            <span>Capital vivo a liquidar en mes <strong id="cancel-summary-month">24</strong>:</span>
+            <strong id="cancel-summary-capital" style="color: var(--text-primary);">-- €</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+            <span>Comisión bancaria de cancelación (<span id="cancel-summary-rate">1.0</span>%):</span>
+            <strong id="cancel-summary-penalty" style="color: var(--accent-rose);">+-- €</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--border-subtle); padding-top: 0.25rem; margin-top: 0.25rem;">
+            <span>Pago total finiquito (Capital + Comisión):</span>
+            <strong id="cancel-summary-settlement" style="color: var(--accent-emerald);">-- €</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 0.25rem; font-size: 0.78rem; color: var(--accent-cyan);">
+            <span>Intereses futuros que te ahorras de pagar:</span>
+            <strong id="cancel-summary-saved">-- €</strong>
           </div>
         </div>
       </div>

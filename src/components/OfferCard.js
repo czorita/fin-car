@@ -64,6 +64,7 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   const card = clone.querySelector('.offer-card');
   const isCash = offer.isCash;
   const isFlexible = offer.modality === OFFER_MODALITIES.FLEXIBLE_FINANCE;
+  const isEarlyCancel = offer.modality === OFFER_MODALITIES.EARLY_CANCELLATION;
 
   card.dataset.id = offer.id;
   if (isWinner) {
@@ -75,6 +76,10 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
   if (isWinner) {
     badgesContainer.appendChild(createBadge('🏆 Menor coste', 'badge-winner'));
+  }
+
+  if (isEarlyCancel) {
+    badgesContainer.appendChild(createBadge(`⚡ Cancelación mes ${offer.earlyCancellationMonth || 24}`, 'badge-info'));
   }
 
   if (offer.highlights && offer.highlights.length) {
@@ -98,7 +103,9 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
   let paymentPlanSubtext = '';
   if (!isCash) {
-    if (isFlexible) {
+    if (isEarlyCancel) {
+      paymentPlanSubtext = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas de ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} €`;
+    } else if (isFlexible) {
       paymentPlanSubtext = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas de ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Cuota final de ${offer.balloonPayment.toLocaleString('es-ES')} €`;
     } else {
       paymentPlanSubtext = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas de ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`;
@@ -179,6 +186,15 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
     if (isFlexible && offer.balloonPayment > 0) {
       specsList.appendChild(createSpecRow('Cuota final / VFG:', `${offer.balloonPayment.toLocaleString('es-ES')} €`));
+    }
+
+    if (isEarlyCancel) {
+      specsList.appendChild(createSpecRow('Plazo contrato original:', `${offer.contractMonths} meses`));
+      specsList.appendChild(createSpecRow(`Capital liquidado (mes ${offer.earlyCancellationMonth}):`, `${offer.settlementCapital.toLocaleString('es-ES')} €`));
+      specsList.appendChild(createSpecRow(`Comisión cancelación (${offer.earlyCancellationPenaltyRate}%):`, `+${offer.cancellationPenalty.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
+      if (offer.futureInterestSaved > 0) {
+        specsList.appendChild(createSpecRow('Intereses evitados (ahorro):', `-${offer.futureInterestSaved.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save', isEmphasized: true }));
+      }
     }
 
     const diffSign = offer.netDifferenceVsCashRef > 0 ? '+' : '';

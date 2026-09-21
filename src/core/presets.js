@@ -164,5 +164,32 @@ export const SAMPLE_OFFERS = [
       { id: 'srv_rav4_ins', name: 'Seguro a todo riesgo (1er año)', marketValue: 750, category: 'insurance' }
     ],
     createdAt: '2026-09-06T11:00:00.000Z'
+  },
+  {
+    id: 'sample_corolla_early_cancel_8',
+    vehicle: 'Toyota Corolla 140H Style',
+    imageUrl: getVehicleImageUrl('Toyota Corolla 140H Style'),
+    title: 'Toyota Corolla 140H Style - Cancelación anticipada (mes 24/84)',
+    dealer: 'Toyota Financial Services',
+    notes: 'Aprovecha los 3.300 € de descuento contratando a 84 meses, pero liquida al mes 24 cumpliendo la permanencia mínima legal.',
+    modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+    vehiclePrice: 27500,
+    financeDiscount: 3300,
+    cashPriceReference: 27500,
+    offerPrice: 24200,
+    downPayment: 4200,
+    tradeInValue: 0,
+    months: 84,
+    contractMonths: 84,
+    earlyCancellationMonth: 24,
+    earlyCancellationPenaltyRate: 1.0,
+    tin: 8.95,
+    manualMonthlyPayment: null,
+    balloonPayment: 0,
+    linkedProducts: [
+      { id: 'p_ec_1', name: 'Seguro de protección de pagos (obligatorio)', cost: 850, financed: true, required: true }
+    ],
+    includedServices: [],
+    createdAt: '2026-09-06T12:00:00.000Z'
   }
 ];

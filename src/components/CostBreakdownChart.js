@@ -46,6 +46,7 @@ export function renderCostBreakdownChart(canvas, offers, theme = 'dark', activeT
   const vehicleData = offers.map(o => o.costBreakdown.vehicleNet);
   const interestData = offers.map(o => o.costBreakdown.interests);
   const productsData = offers.map(o => o.costBreakdown.linkedProducts);
+  const penaltyData = offers.map(o => o.costBreakdown.earlyCancellationPenalty || 0);
 
   const datasets = [
     {
@@ -67,6 +68,15 @@ export function renderCostBreakdownChart(canvas, offers, theme = 'dark', activeT
       borderRadius: 4
     }
   ];
+
+  if (penaltyData.some(v => v > 0)) {
+    datasets.push({
+      label: 'Comisión cancelación (€)',
+      data: penaltyData,
+      backgroundColor: '#8b5cf6',
+      borderRadius: 4
+    });
+  }
 
   // Si ya existe instancia activa sobre el mismo canvas, actualizar in-place
   if (chartInstance && chartInstance.ctx && chartInstance.canvas === canvas) {

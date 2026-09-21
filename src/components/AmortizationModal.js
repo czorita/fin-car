@@ -35,14 +35,31 @@ export function initAmortizationModal() {
 
       offer.amortizationSchedule.forEach(row => {
         const tr = document.createElement('tr');
+        if (row.isCancellation) {
+          tr.className = 'table-row--cancellation';
+        }
 
         const tdMonth = document.createElement('td');
         tdMonth.textContent = `#${row.month}`;
+        if (row.isCancellation) {
+          const pill = document.createElement('span');
+          pill.className = 'cancellation-pill-tag';
+          pill.textContent = '⚡ Finiquito';
+          tdMonth.appendChild(pill);
+        }
 
         const tdPayment = document.createElement('td');
         const boldPayment = document.createElement('strong');
         boldPayment.textContent = `${row.payment.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`;
         tdPayment.appendChild(boldPayment);
+
+        if (row.isCancellation && row.cancellationDetails) {
+          const subDetails = document.createElement('div');
+          subDetails.style.fontSize = '0.72rem';
+          subDetails.style.color = 'var(--text-secondary)';
+          subDetails.textContent = `(${row.cancellationDetails.settlementCapital.toLocaleString('es-ES')} € saldo + ${row.cancellationDetails.penaltyAmount.toLocaleString('es-ES')} € comisión)`;
+          tdPayment.appendChild(subDetails);
+        }
 
         const tdPrincipal = document.createElement('td');
         tdPrincipal.style.color = 'var(--accent-emerald)';
@@ -54,6 +71,10 @@ export function initAmortizationModal() {
 
         const tdBalance = document.createElement('td');
         tdBalance.textContent = `${row.remainingBalance.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`;
+        if (row.isCancellation) {
+          tdBalance.style.color = 'var(--accent-emerald)';
+          tdBalance.style.fontWeight = '700';
+        }
 
         tr.appendChild(tdMonth);
         tr.appendChild(tdPayment);

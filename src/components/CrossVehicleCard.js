@@ -118,7 +118,11 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
   if (!offer.isCash) {
     const heroSub = document.createElement('div');
     heroSub.className = 'cost-hero-sub';
-    heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`;
+    if (offer.isEarlyCancellation) {
+      heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} €`;
+    } else {
+      heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`;
+    }
     hero.appendChild(heroSub);
   }
 
@@ -142,7 +146,12 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
     specs.appendChild(createSpecRow('Cuota mensual:', `${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`));
     specs.appendChild(createSpecRow('TIN / TAE:', `${offer.nominalTin}% / ${offer.effectiveApr}%`));
     specs.appendChild(createSpecRow('Total intereses:', `+${offer.totalInterest.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
-    if (offer.balloonPayment > 0) {
+    if (offer.isEarlyCancellation) {
+      specs.appendChild(createSpecRow(`Finiquito mes ${offer.earlyCancellationMonth}:`, `${offer.finalSettlementPayment.toLocaleString('es-ES')} €`));
+      if (offer.futureInterestSaved > 0) {
+        specs.appendChild(createSpecRow('Ahorro intereses:', `-${offer.futureInterestSaved.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save', isEmphasized: true }));
+      }
+    } else if (offer.balloonPayment > 0) {
       specs.appendChild(createSpecRow('Cuota final (VFG):', `${offer.balloonPayment.toLocaleString('es-ES')} €`));
     }
   }

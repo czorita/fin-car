@@ -37,15 +37,100 @@ export function calculateMonthlyPayment(principal, annualTin, months, balloonPay
 }
 
 /**
+ * Calcula la liquidación anticipada de un préstamo francés en el mes k con penalización.
+ * @param {number} principal - Capital financiado
+ * @param {number} annualTin - TIN anual (%)
+ * @param {number} contractMonths - Plazo original del contrato (ej: 84)
+ * @param {number} cancelMonth - Mes en el que se liquida totalmente (ej: 24)
+ * @param {number} [penaltyRate=1.0] - Comisión de cancelación anticipada en % (ej: 1.0)
+ * @returns {{
+ *   monthlyPayment: number,
+ *   contractMonths: number,
+ *   cancelMonth: number,
+ *   penaltyRate: number,
+ *   regularPaymentsTotal: number,
+ *   settlementCapital: number,
+ *   penaltyAmount: number,
+ *   finalSettlementPayment: number,
+ *   totalPaidLoan: number,
+ *   totalInterestPaid: number,
+ *   originalTotalInterest: number,
+ *   futureInterestSaved: number
+ * }}
+ */
+export function calculateEarlyCancellationSettlement(principal, annualTin, contractMonths, cancelMonth, penaltyRate = 1.0) {
+  if (principal <= 0 || contractMonths <= 0 || cancelMonth <= 0) {
+    return {
+      monthlyPayment: 0,
+      contractMonths: 0,
+      cancelMonth: 0,
+      penaltyRate: 0,
+      regularPaymentsTotal: 0,
+      settlementCapital: 0,
+      penaltyAmount: 0,
+      finalSettlementPayment: 0,
+      totalPaidLoan: 0,
+      totalInterestPaid: 0,
+      originalTotalInterest: 0,
+      futureInterestSaved: 0
+    };
+  }
+
+  const effectiveCancelMonth = Math.min(contractMonths, Math.max(1, cancelMonth));
+  const r = (annualTin / 100) / 12;
+  const monthlyPayment = calculateMonthlyPayment(principal, annualTin, contractMonths, 0);
+
+  let balance = principal;
+  let totalInterestPaid = 0;
+
+  for (let m = 1; m <= effectiveCancelMonth; m++) {
+    const interest = balance * r;
+    totalInterestPaid += interest;
+    const principalPaid = monthlyPayment - interest;
+    balance -= principalPaid;
+    if (balance < 0) balance = 0;
+  }
+
+  const settlementCapital = Number(balance.toFixed(2));
+  const penaltyAmount = Number((settlementCapital * (penaltyRate / 100)).toFixed(2));
+  const finalSettlementPayment = Number((settlementCapital + penaltyAmount).toFixed(2));
+  const regularPaymentsTotal = Number((monthlyPayment * effectiveCancelMonth).toFixed(2));
+  const totalPaidLoan = Number((regularPaymentsTotal + finalSettlementPayment).toFixed(2));
+
+  // Intereses originales que se habrían pagado en todo el contrato
+  const originalTotalPayments = monthlyPayment * contractMonths;
+  const originalTotalInterest = Math.max(0, originalTotalPayments - principal);
+
+  // Ahorro en intereses futuros al cortar en el mes k (restando la penalización que hubo que pagar)
+  const futureInterestSaved = Math.max(0, Number((originalTotalInterest - totalInterestPaid - penaltyAmount).toFixed(2)));
+
+  return {
+    monthlyPayment: Number(monthlyPayment.toFixed(2)),
+    contractMonths,
+    cancelMonth: effectiveCancelMonth,
+    penaltyRate,
+    regularPaymentsTotal,
+    settlementCapital,
+    penaltyAmount,
+    finalSettlementPayment,
+    totalPaidLoan,
+    totalInterestPaid: Number(totalInterestPaid.toFixed(2)),
+    originalTotalInterest: Number(originalTotalInterest.toFixed(2)),
+    futureInterestSaved
+  };
+}
+
+/**
  * Genera el cuadro de amortización mes a mes.
  * 
  * @param {number} principal - Capital financiado
  * @param {number} annualTin - TIN anual (%)
  * @param {number} months - Plazo en meses
- * @param {number} balloonPayment - Cuota final (VFG)
- * @returns {Array<{month: number, payment: number, principalPayment: number, interestPayment: number, remainingBalance: number}>}
+ * @param {number} [balloonPayment=0] - Cuota final (VFG)
+ * @param {object|null} [earlyCancellation=null] - Configuración de cancelación anticipada { cancelMonth, penaltyRate }
+ * @returns {Array<{month: number, payment: number, principalPayment: number, interestPayment: number, remainingBalance: number, isCancellation?: boolean, cancellationDetails?: object}>}
  */
-export function generateAmortizationSchedule(principal, annualTin, months, balloonPayment = 0) {
+export function generateAmortizationSchedule(principal, annualTin, months, balloonPayment = 0, earlyCancellation = null) {
   if (principal <= 0 || months <= 0) return [];
   
   const r = (annualTin / 100) / 12;
@@ -55,12 +140,45 @@ export function generateAmortizationSchedule(principal, annualTin, months, ballo
   const schedule = [];
   let balance = principal;
 
-  for (let m = 1; m <= months; m++) {
+  const isEarlyCancel = Boolean(earlyCancellation && earlyCancellation.cancelMonth && earlyCancellation.cancelMonth < months);
+  const limitMonths = isEarlyCancel ? Math.min(months, earlyCancellation.cancelMonth) : months;
+  const penaltyRate = (earlyCancellation && earlyCancellation.penaltyRate !== undefined) ? Number(earlyCancellation.penaltyRate) : 1.0;
+
+  for (let m = 1; m <= limitMonths; m++) {
     const interest = balance * r;
     let payment = monthlyPayment;
     let principalPaid = payment - interest;
 
-    // Si es el último mes y hay cuota final
+    // Caso de cancelación anticipada en el mes de corte
+    if (isEarlyCancel && m === limitMonths) {
+      balance -= principalPaid;
+      if (balance < 0) balance = 0;
+
+      const settlementCapital = Number(balance.toFixed(2));
+      const penaltyAmount = Number((settlementCapital * (penaltyRate / 100)).toFixed(2));
+      
+      // En este mes se paga la cuota normal + el saldo restante + la penalización
+      payment = Number((monthlyPayment + settlementCapital + penaltyAmount).toFixed(2));
+      principalPaid = Number((principalPaid + settlementCapital).toFixed(2));
+      balance = 0;
+
+      schedule.push({
+        month: m,
+        payment,
+        principalPayment: principalPaid,
+        interestPayment: Number(interest.toFixed(2)),
+        remainingBalance: 0,
+        isCancellation: true,
+        cancellationDetails: {
+          settlementCapital,
+          penaltyAmount,
+          penaltyRate
+        }
+      });
+      break;
+    }
+
+    // Si es el último mes estándar y hay cuota final
     if (m === months) {
       if (vf > 0) {
         payment = monthlyPayment + vf;
