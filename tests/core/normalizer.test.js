@@ -83,7 +83,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
   test('Test 5: Ranking de ofertas identifica al ganador y no premia cuotas engañosas', () => {
     const o1 = normalizeOffer(createDefaultOffer({
       id: 'o1',
-      title: 'Barata',
+      title: 'Menor coste',
       modality: OFFER_MODALITIES.CASH,
       offerPrice: 15000,
       cashPriceReference: 15000
@@ -102,7 +102,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     const ranked = rankOffers([o1, o2]);
     const winner = ranked.find(o => o.highlights.includes('🏆 Menor coste total'));
 
-    assert.equal(winner.id, 'o1', 'La oferta más barata debe ser la ganadora');
+    assert.equal(winner.id, 'o1', 'La oferta con menor coste debe ser la ganadora');
     assert.ok(
       !ranked.some(o => o.highlights.some(h => h.includes('Cuota Mensual Más Baja'))),
       'No debe incluirse la insignia de cuota mensual más baja'
@@ -207,7 +207,7 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     }));
 
     // Oferta 2: Financiada que cuesta 26.000 € en caja (1.000 € más que contado), pero incluye 1.800 € en servicios
-    // TCO Ajustado de o2 = 26.000 - 1.800 = 24.200 € (¡más barato en TCO que el contado!)
+    // TCO Ajustado de o2 = 26.000 - 1.800 = 24.200 € (¡menor coste en TCO que el contado!)
     const o2 = normalizeOffer(createDefaultOffer({
       id: 'o_fin',
       vehicle: 'Tucson',

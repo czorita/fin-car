@@ -92,15 +92,16 @@ export function createCrossVehicleTableElement(rankedCrossOffers) {
     offerSub.style.fontSize = '0.75rem';
     offerSub.style.color = 'var(--text-secondary)';
     offerSub.style.marginBottom = '0.35rem';
-    offerSub.textContent = o.title;
-
-    const badgeSpan = document.createElement('span');
-    badgeSpan.className = `badge ${index === 0 ? 'badge-winner' : 'badge-neutral'} badge--small`;
-    badgeSpan.textContent = index === 0 ? '🏆 Opción más barata' : `+${o.crossDiffVsWinner.toLocaleString('es-ES')} €`;
-
     th.appendChild(vehicleTitle);
     th.appendChild(offerSub);
-    th.appendChild(badgeSpan);
+
+    if (index > 0 && o.crossDiffVsWinner !== undefined) {
+      const badgeSpan = document.createElement('span');
+      badgeSpan.className = 'badge badge-neutral badge--small';
+      badgeSpan.textContent = `+${o.crossDiffVsWinner.toLocaleString('es-ES')} €`;
+      th.appendChild(badgeSpan);
+    }
+
     headerTr.appendChild(th);
   });
 

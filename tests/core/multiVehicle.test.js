@@ -139,7 +139,7 @@ describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
     }));
 
     // RAV4: financiado cuesta 31.000 € (1.000 € más en desembolso financiero), pero incluye 1.950 € en servicios
-    // TCO RAV4 = 31.000 - 1.950 = 29.050 € (¡más barato a igualdad de condiciones!)
+    // TCO RAV4 = 31.000 - 1.950 = 29.050 € (¡menor coste a igualdad de condiciones!)
     const rav4 = normalizeOffer(createDefaultOffer({
       id: 'rav4_1',
       vehicle: 'Toyota RAV4',

@@ -72,12 +72,6 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
   const badges = document.createElement('div');
   badges.className = 'offer-badges';
 
-  if (isWinner) {
-    const b = document.createElement('span');
-    b.className = 'badge badge-winner';
-    b.textContent = '🏆 Menor coste financiero';
-    badges.appendChild(b);
-  }
 
   if (offer.isTcoWinner && !isWinner) {
     const b = document.createElement('span');
