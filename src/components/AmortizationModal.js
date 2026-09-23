@@ -55,25 +55,23 @@ export function initAmortizationModal() {
 
         if (row.isCancellation && row.cancellationDetails) {
           const subDetails = document.createElement('div');
-          subDetails.style.fontSize = '0.72rem';
-          subDetails.style.color = 'var(--text-secondary)';
+          subDetails.className = 'amortization-cancel-details';
           subDetails.textContent = `(${row.cancellationDetails.settlementCapital.toLocaleString('es-ES')} € saldo + ${row.cancellationDetails.penaltyAmount.toLocaleString('es-ES')} € comisión)`;
           tdPayment.appendChild(subDetails);
         }
 
         const tdPrincipal = document.createElement('td');
-        tdPrincipal.style.color = 'var(--accent-emerald)';
+        tdPrincipal.className = 'amortization-principal';
         tdPrincipal.textContent = `${row.principalPayment.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`;
 
         const tdInterest = document.createElement('td');
-        tdInterest.style.color = 'var(--accent-rose)';
+        tdInterest.className = 'amortization-interest';
         tdInterest.textContent = `${row.interestPayment.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`;
 
         const tdBalance = document.createElement('td');
         tdBalance.textContent = `${row.remainingBalance.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`;
         if (row.isCancellation) {
-          tdBalance.style.color = 'var(--accent-emerald)';
-          tdBalance.style.fontWeight = '700';
+          tdBalance.className = 'amortization-balance-settled';
         }
 
         tr.appendChild(tdMonth);

@@ -141,7 +141,7 @@ async function handleRequest(req, res) {
   // ==========================================
   if (req.method === 'GET' || req.method === 'HEAD') {
     // Normalizar y eliminar barras iniciales para que sea una ruta relativa a DIST_DIR
-    const cleanPath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
+    const cleanPath = path.normalize(pathname).replace(/^(\.\.[/\\])+/, '');
     const relativePath = cleanPath.replace(/^[/\\]+/, '');
 
     let targetRelative = relativePath === '' ? 'index.html' : relativePath;

@@ -121,15 +121,15 @@ export function normalizeOffer(offer) {
 
   const originalBalloon = isFlexible ? (Number(offer.balloonPayment) || 0) : 0;
   let balloon = originalBalloon;
-  let monthlyPayment = 0;
-  let totalInterest = 0;
+  let monthlyPayment;
+  let totalInterest;
   let effectiveTin = tin;
   let settlementCapital = 0;
   let cancellationPenalty = 0;
   let finalSettlementPayment = 0;
   let futureInterestSaved = 0;
-  let totalInstallments = 0;
-  let totalOutOfPocketCost = 0;
+  let totalInstallments;
+  let totalOutOfPocketCost;
 
   // Desembolso inicial (de tu bolsillo al firmar)
   const initialCashOut = downPayment + productsUpfront;
@@ -273,6 +273,15 @@ export function normalizeOffer(offer) {
 }
 
 /**
+ * Etiquetas de los indicadores destacados que asigna rankOffers.
+ */
+export const OFFER_HIGHLIGHTS = {
+  LOWEST_TOTAL_COST: '🏆 Menor coste total',
+  BEST_TCO: '💎 Mejor valor equiparado (TCO)',
+  LEAST_INTEREST: '📉 Menos intereses pagados'
+};
+
+/**
  * Compara un array de ofertas normalizadas y marca los mejores indicadores.
  * @param {NormalizedOffer[]} normalizedOffers 
  * @returns {Array<NormalizedOffer & { bestIn: string[] }>}
@@ -304,13 +313,13 @@ export function rankOffers(normalizedOffers) {
   return sorted.map(offer => {
     const badges = [];
     if (offer.totalOutOfPocketCost === minTotalCost) {
-      badges.push('🏆 Menor coste total');
+      badges.push(OFFER_HIGHLIGHTS.LOWEST_TOTAL_COST);
     }
     if (hasIncludedServices && (offer.adjustedTcoCost ?? offer.totalOutOfPocketCost) === minTcoCost && offer.totalOutOfPocketCost !== minTotalCost) {
-      badges.push('💎 Mejor valor equiparado (TCO)');
+      badges.push(OFFER_HIGHLIGHTS.BEST_TCO);
     }
     if (offer.totalInterest === minInterest && offer.totalInterest > 0) {
-      badges.push('📉 Menos intereses pagados');
+      badges.push(OFFER_HIGHLIGHTS.LEAST_INTEREST);
     }
 
     return {

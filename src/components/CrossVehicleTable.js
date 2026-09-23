@@ -89,9 +89,7 @@ export function createCrossVehicleTableElement(rankedCrossOffers) {
     vehicleTitle.textContent = o.vehicle || o.title;
 
     const offerSub = document.createElement('div');
-    offerSub.style.fontSize = '0.75rem';
-    offerSub.style.color = 'var(--text-secondary)';
-    offerSub.style.marginBottom = '0.35rem';
+    offerSub.className = 'table-th-subtitle';
     th.appendChild(vehicleTitle);
     th.appendChild(offerSub);
 

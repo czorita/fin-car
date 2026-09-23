@@ -1,0 +1,33 @@
+/* Sección de Gráficos */
+.analytics-section {
+  background: var(--bg-surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.analytics-title h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.25rem;
+}
+
+.analytics-title p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.chart-canvas-container {
+  position: relative;
+  height: 340px;
+  width: 100%;
+}
