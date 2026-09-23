@@ -13,7 +13,7 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-import { handleApiRequest } from './src/server/apiHandlers.js';
+import { handleApiRequest, safeDecodePath } from './src/server/apiHandlers.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,8 +88,25 @@ function sendStreamResponse(req, res, statusCode, headers, filePath) {
 }
 
 const server = http.createServer(async (req, res) => {
+  try {
+    await handleRequest(req, res);
+  } catch (err) {
+    console.error('Error no controlado atendiendo la petición:', err);
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+    }
+    res.end('500 Internal Server Error');
+  }
+});
+
+/**
+ * Atiende una petición HTTP: API REST y archivos estáticos de dist.
+ * @param {import('node:http').IncomingMessage} req
+ * @param {import('node:http').ServerResponse} res
+ */
+async function handleRequest(req, res) {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const pathname = decodeURIComponent(parsedUrl.pathname);
+  const pathname = safeDecodePath(parsedUrl.pathname);
 
   // Cabeceras de seguridad y CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -113,6 +130,12 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (pathname === null) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('400 Bad Request');
+    return;
+  }
+
   // ==========================================
   // Servicio de Archivos Estáticos (dist)
   // ==========================================
@@ -127,7 +150,7 @@ const server = http.createServer(async (req, res) => {
       targetRelative = 'ejemplos.html';
     }
 
-    const filePath = path.resolve(DIST_DIR, targetRelative);
+    let filePath = path.resolve(DIST_DIR, targetRelative);
 
     // Evitar cualquier escape del directorio dist (Path Traversal)
     if (!filePath.startsWith(DIST_DIR + path.sep) && filePath !== DIST_DIR) {
@@ -218,7 +241,7 @@ const server = http.createServer(async (req, res) => {
 
   res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
   res.end('Method Not Allowed');
-});
+}
 
 // Cierre ordenado (Graceful Shutdown)
 function handleShutdown(signal) {

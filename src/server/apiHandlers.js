@@ -113,6 +113,19 @@ export function readJsonBody(req) {
 }
 
 /**
+ * Decodifica el pathname de una URL sin lanzar excepciones.
+ * @param {string} rawPathname
+ * @returns {string|null} Pathname decodificado o null si la codificación es inválida
+ */
+export function safeDecodePath(rawPathname) {
+  try {
+    return decodeURIComponent(rawPathname);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Procesa peticiones a la API REST (/api/offers y /api/examples).
  * @param {import('node:http').IncomingMessage} req
  * @param {import('node:http').ServerResponse} res
@@ -123,10 +136,15 @@ export function readJsonBody(req) {
  */
 export async function handleApiRequest(req, res, { offersDir, examplesDir }) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const pathname = decodeURIComponent(url.pathname);
-
-  if (!pathname.startsWith('/api/')) {
+  if (!url.pathname.startsWith('/api/')) {
     return false;
+  }
+
+  const pathname = safeDecodePath(url.pathname);
+  if (pathname === null) {
+    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ error: 'URL mal codificada' }));
+    return true;
   }
 
   // Rate Limiter
