@@ -21,10 +21,10 @@
     </div>
 
     <!-- Vista Previa Automática del Modelo Detectado -->
-    <div class="vehicle-auto-preview-container" id="vehicle-auto-preview" style="display: none;">
+    <div class="vehicle-auto-preview-container" id="vehicle-auto-preview">
       <div class="vehicle-image-preview-box" id="vehicle-image-preview" title="Vista previa del modelo">
         <div class="vehicle-image-placeholder" id="vehicle-image-placeholder">🚗</div>
-        <img id="vehicle-image-thumb" src="" alt="Vista previa del modelo" style="display: none;" />
+        <img id="vehicle-image-thumb" src="" alt="Vista previa del modelo" />
       </div>
       <div class="vehicle-auto-preview-info">
         <span class="vehicle-auto-preview-badge">✓ Foto oficial vinculada automáticamente</span>
@@ -32,7 +32,7 @@
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div class="form-grid-2">
       <div class="form-group">
         <label class="form-label" for="offer-dealer">Concesionario / vendedor</label>
         <input type="text" id="offer-dealer" class="form-input" placeholder="Ej: Concesionario Oficial Madrid" />
@@ -54,7 +54,7 @@
     </div>
 
     <div id="price-fields-container" class="price-fields">
-      <div class="form-group" id="group-vehicle-price" style="margin-bottom: 0.5rem;">
+      <div class="form-group" id="group-vehicle-price">
         <label class="form-label" for="offer-price">
           Precio del vehículo *
           <span class="helper-icon" title="Precio ofertado del vehículo con el descuento por financiar ya incluido (si aplica)">ⓘ</span>
@@ -65,7 +65,7 @@
         </div>
       </div>
 
-      <div class="form-group" id="group-finance-discount" style="margin-bottom: 0.5rem;">
+      <div class="form-group" id="group-finance-discount">
         <label class="form-label" for="finance-discount">
           Descuento por financiar aplicado
           <span class="helper-icon" title="Descuento que promete el concesionario respecto al precio al contado (se suma al precio financiado para obtener el equivalente al contado)">ⓘ</span>
@@ -78,49 +78,49 @@
     </div>
 
     <!-- Indicador dinámico del Precio Resultante para Cálculos -->
-    <div id="net-calc-price-indicator" class="calc-price-summary" style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+    <div id="net-calc-price-indicator" class="calc-price-summary">
       <div>
         <span class="calc-price-label" id="net-calc-price-label">Precio base financiado:</span>
         <span class="calc-price-val" id="net-calc-price-val">24.200 €</span>
       </div>
-      <div id="cash-ref-summary-box" style="font-size: 0.8rem; color: var(--text-muted);">
+      <div id="cash-ref-summary-box">
         <span id="cash-ref-summary-text">Equivalente al contado: 27.500 €</span>
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;" id="down-payment-fields-container">
+    <div id="down-payment-fields-container">
       <div class="form-group" id="group-down-payment">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-          <label class="form-label" for="down-payment" style="margin-bottom: 0;">
+        <div class="form-label-row">
+          <label class="form-label form-label--flush" for="down-payment">
             Entrada (€)
             <span class="helper-icon" title="Dinero aportado de tu bolsillo al inicio">ⓘ</span>
           </label>
-          <button type="button" id="btn-unlock-down" class="btn-link-action" style="display: none; font-size: 0.72rem; color: var(--accent-cyan); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline;" title="Permite introducir la entrada en lugar de la cantidad a financiar">Editar entrada</button>
+          <button type="button" id="btn-unlock-down" class="btn-link-action" title="Permite introducir la entrada en lugar de la cantidad a financiar">Editar entrada</button>
         </div>
         <div class="input-wrapper">
           <input type="text" inputmode="decimal" id="down-payment" class="form-input has-addon" placeholder="4000 o 4.000,00" />
           <span class="input-addon">€</span>
         </div>
-        <span class="form-helper" id="down-payment-helper" style="font-size: 0.73rem; color: var(--text-muted); display: block; margin-top: 0.2rem; min-height: 1rem;"></span>
+        <span class="form-helper" id="down-payment-helper"></span>
       </div>
 
       <div class="form-group" id="group-financed-amount">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-          <label class="form-label" for="financed-amount" style="margin-bottom: 0;">
+        <div class="form-label-row">
+          <label class="form-label form-label--flush" for="financed-amount">
             O cantidad a financiar (€)
             <span class="helper-icon" title="Importe neto del préstamo solicitado a la entidad">ⓘ</span>
           </label>
-          <button type="button" id="btn-unlock-financed" class="btn-link-action" style="display: none; font-size: 0.72rem; color: var(--accent-cyan); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline;" title="Permite fijar la cantidad total a financiar">Editar financiado</button>
+          <button type="button" id="btn-unlock-financed" class="btn-link-action" title="Permite fijar la cantidad total a financiar">Editar financiado</button>
         </div>
         <div class="input-wrapper">
           <input type="text" inputmode="decimal" id="financed-amount" class="form-input has-addon" placeholder="Autocalcular (ej: 20.200)" />
           <span class="input-addon">€</span>
         </div>
-        <span class="form-helper" id="financed-amount-helper" style="font-size: 0.73rem; color: var(--text-muted); display: block; margin-top: 0.2rem; min-height: 1rem;"></span>
+        <span class="form-helper" id="financed-amount-helper"></span>
       </div>
 
       <div class="form-group" id="group-trade-in">
-        <label class="form-label" for="trade-in-value" style="margin-bottom: 0.25rem;">
+        <label class="form-label form-label--tight" for="trade-in-value">
           Tasación coche usado
           <span class="helper-icon" title="Valor del vehículo antiguo entregado a cambio">ⓘ</span>
         </label>
@@ -133,13 +133,13 @@
 
     <!-- Campos Específicos de Financiación -->
     <div id="finance-fields-container">
-      <div style="border-top: 1px solid var(--border-subtle); padding-top: 1rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">
-        <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--accent-cyan);">Parámetros de financiación</h4>
+      <div class="form-section-divider">
+        <h4 class="form-section-title">Parámetros de financiación</h4>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+      <div class="form-grid-3">
         <div class="form-group">
-          <label class="form-label" for="loan-months" style="display: flex; justify-content: space-between; align-items: center;">
+          <label class="form-label form-label--split" for="loan-months">
             <span>Plazo (meses)</span>
             <span id="loan-months-badge" class="months-duration-badge">5 años</span>
           </label>
@@ -160,44 +160,44 @@
         </div>
 
         <div class="form-group" id="group-loan-tin">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-            <label class="form-label" for="loan-tin" style="margin-bottom: 0;">
+          <div class="form-label-row">
+            <label class="form-label form-label--flush" for="loan-tin">
               TIN anual (%)
               <span class="helper-icon" title="Tipo de Interés Nominal fijado en el contrato">ⓘ</span>
             </label>
-            <button type="button" id="btn-unlock-tin" class="btn-link-action" style="display: none; font-size: 0.72rem; color: var(--accent-cyan); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline;" title="Permite introducir el TIN en lugar de la cuota">Editar TIN</button>
+            <button type="button" id="btn-unlock-tin" class="btn-link-action" title="Permite introducir el TIN en lugar de la cuota">Editar TIN</button>
           </div>
           <div class="input-wrapper">
             <input type="text" inputmode="decimal" id="loan-tin" class="form-input has-addon" placeholder="8,5" />
             <span class="input-addon">%</span>
           </div>
-          <span class="form-helper" id="loan-tin-helper" style="font-size: 0.73rem; color: var(--text-muted); display: block; margin-top: 0.2rem; min-height: 1rem;"></span>
+          <span class="form-helper" id="loan-tin-helper"></span>
         </div>
 
         <div class="form-group" id="group-manual-monthly">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-            <label class="form-label" for="manual-monthly" style="margin-bottom: 0;">
+          <div class="form-label-row">
+            <label class="form-label form-label--flush" for="manual-monthly">
               O cuota ofertada (€)
               <span class="helper-icon" title="Opcional: Si el comercial te fijó la cuota mensual exacta">ⓘ</span>
             </label>
-            <button type="button" id="btn-unlock-monthly" class="btn-link-action" style="display: none; font-size: 0.72rem; color: var(--accent-cyan); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline;" title="Permite fijar la cuota mensual exacta">Editar cuota</button>
+            <button type="button" id="btn-unlock-monthly" class="btn-link-action" title="Permite fijar la cuota mensual exacta">Editar cuota</button>
           </div>
           <div class="input-wrapper">
             <input type="text" inputmode="decimal" id="manual-monthly" class="form-input has-addon" placeholder="Autocalcular (ej: 345,50)" />
             <span class="input-addon">€/mes</span>
           </div>
-          <span class="form-helper" id="manual-monthly-helper" style="font-size: 0.73rem; color: var(--text-muted); display: block; margin-top: 0.2rem; min-height: 1rem;"></span>
+          <span class="form-helper" id="manual-monthly-helper"></span>
         </div>
       </div>
 
       <!-- Feedback dinámico de sincronización entre TIN y cuota -->
-      <div id="finance-calc-feedback" style="display: none; font-size: 0.78rem; border-radius: var(--radius-sm); padding: 0.45rem 0.75rem; margin-bottom: 0.75rem; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); color: var(--text-secondary);">
+      <div id="finance-calc-feedback">
         <span id="finance-calc-feedback-text"></span>
       </div>
 
       <!-- Cuota Final (Multiopción) -->
-      <div id="flexible-balloon-container" style="display: none; background: rgba(59, 130, 246, 0.07); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px dashed rgba(59, 130, 246, 0.3);">
-        <div class="form-group" style="margin-bottom: 0;">
+      <div id="flexible-balloon-container">
+        <div class="form-group form-group--flush">
           <label class="form-label" for="balloon-payment">
             Cuota final / valor futuro (VFG) *
             <span class="helper-icon" title="Último pago balloon de la financiación flexible">ⓘ</span>
@@ -208,27 +208,27 @@
           </div>
         </div>
 
-        <div style="margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed rgba(59, 130, 246, 0.25);">
-          <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.84rem; font-weight: 500; color: var(--text-primary); user-select: none;">
-            <input type="checkbox" id="flexible-cancel-early" style="width: 1.1rem; height: 1.1rem; accent-color: var(--accent-emerald); cursor: pointer;" />
+        <div class="flexible-cancel-option">
+          <label class="checkbox-inline-label">
+            <input type="checkbox" id="flexible-cancel-early" />
             <span>⚡ Planear cancelación anticipada en permanencia (ahorrarte los intereses del balloon)</span>
           </label>
-          <span style="display: block; font-size: 0.74rem; color: var(--text-muted); margin-top: 0.25rem; margin-left: 1.7rem;">
+          <span class="checkbox-inline-help">
             Cancela el préstamo al cumplir la permanencia obligatoria (ej. mes 24) para quedarte el coche con el descuento y evitar devengar intereses sobre la cuota final.
           </span>
         </div>
       </div>
 
       <!-- Cancelación Anticipada (Permanencia con Penalización) -->
-      <div id="early-cancellation-container" style="display: none; background: rgba(16, 185, 129, 0.07); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px dashed rgba(16, 185, 129, 0.35);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-          <h5 style="margin: 0; font-size: 0.88rem; color: var(--accent-emerald); font-weight: 600;">
+      <div id="early-cancellation-container">
+        <div class="early-cancel-header">
+          <h5 class="early-cancel-title">
             ⚡ Parámetros de Permanencia y Cancelación
           </h5>
-          <span class="badge badge-success" style="font-size: 0.72rem;">Permanencia y Finiquito</span>
+          <span class="badge badge-success badge--xs">Permanencia y Finiquito</span>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
-          <div class="form-group" style="margin-bottom: 0;">
+        <div class="form-grid-2--spaced">
+          <div class="form-group form-group--flush">
             <label class="form-label" for="early-cancel-month">
               Mes de cancelación (permanencia) *
               <span class="helper-icon" title="Mes en el que la financiera permite cancelar sin penalizaciones comerciales de devolución del descuento (típicamente 18, 24 o 36 meses).">ⓘ</span>
@@ -237,7 +237,7 @@
               <input type="number" id="early-cancel-month" class="form-input has-addon" min="1" max="120" step="1" placeholder="24" value="24" />
               <span class="input-addon">mes</span>
             </div>
-            <div class="months-quick-pills" id="cancel-months-pills" style="margin-top: 0.35rem;">
+            <div class="months-quick-pills" id="cancel-months-pills">
               <button type="button" class="months-pill-btn" data-cancel="12">12m</button>
               <button type="button" class="months-pill-btn" data-cancel="18">18m</button>
               <button type="button" class="months-pill-btn active" data-cancel="24">24m</button>
@@ -245,7 +245,7 @@
             </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 0;">
+          <div class="form-group form-group--flush">
             <label class="form-label" for="early-cancel-penalty">
               Comisión de cancelación anticipada (%)
               <span class="helper-icon" title="Comisión de amortización bancaria fijada en el contrato. Máximo legal en España (Ley 16/2011): 1.0% si queda > 1 año; 0.5% si queda ≤ 1 año.">ⓘ</span>
@@ -254,7 +254,7 @@
               <input type="text" inputmode="decimal" id="early-cancel-penalty" class="form-input has-addon" placeholder="1,0" value="1,0" />
               <span class="input-addon">%</span>
             </div>
-            <div class="months-quick-pills" id="penalty-quick-pills" style="margin-top: 0.35rem;">
+            <div class="months-quick-pills" id="penalty-quick-pills">
               <button type="button" class="months-pill-btn" data-penalty="0">0% (Gratis)</button>
               <button type="button" class="months-pill-btn" data-penalty="0.5">0.5%</button>
               <button type="button" class="months-pill-btn active" data-penalty="1">1.0% (Límite legal)</button>
@@ -263,20 +263,20 @@
         </div>
 
         <!-- Resumen dinámico en vivo del finiquito -->
-        <div id="early-cancel-live-summary" style="background: var(--bg-card); padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--text-secondary); border: 1px solid var(--border-subtle);">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+        <div id="early-cancel-live-summary">
+          <div class="summary-row">
             <span>Capital vivo a liquidar en mes <strong id="cancel-summary-month">24</strong>:</span>
-            <strong id="cancel-summary-capital" style="color: var(--text-primary);">-- €</strong>
+            <strong id="cancel-summary-capital">-- €</strong>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+          <div class="summary-row">
             <span>Comisión bancaria de cancelación (<span id="cancel-summary-rate">1.0</span>%):</span>
-            <strong id="cancel-summary-penalty" style="color: var(--accent-rose);">+-- €</strong>
+            <strong id="cancel-summary-penalty">+-- €</strong>
           </div>
-          <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--border-subtle); padding-top: 0.25rem; margin-top: 0.25rem;">
+          <div class="summary-row--total">
             <span>Pago total finiquito (Capital + Comisión):</span>
-            <strong id="cancel-summary-settlement" style="color: var(--accent-emerald);">-- €</strong>
+            <strong id="cancel-summary-settlement">-- €</strong>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-top: 0.25rem; font-size: 0.78rem; color: var(--accent-cyan);">
+          <div class="summary-row--highlight">
             <span>Intereses futuros que te ahorras de pagar:</span>
             <strong id="cancel-summary-saved">-- €</strong>
           </div>
@@ -284,37 +284,37 @@
       </div>
 
       <!-- Productos Vinculados -->
-      <div style="margin-top: 1rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          <label class="form-label" style="margin: 0;">
+      <div class="form-section">
+        <div class="section-header-row">
+          <label class="form-label form-label--no-margin">
             Productos obligatorios vinculados
             <span class="helper-icon" title="Seguros de vida, packs de mantenimiento, etc. exigidos para obtener el descuento">ⓘ</span>
           </label>
           <button type="button" id="btn-add-product" class="btn btn-secondary btn-sm">+ Añadir seguro/pack</button>
         </div>
-        <div id="linked-products-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div id="linked-products-list">
           <!-- Se inyectan filas con tmpl-linked-product -->
         </div>
       </div>
     </div>
 
     <!-- Servicios y ventajas incluidas de serie / bonificadas (TCO Equiparado) -->
-    <div style="margin-top: 1.25rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
+    <div class="form-section-divider--wide">
+      <div class="services-header">
         <div>
-          <label class="form-label" style="margin: 0; display: flex; align-items: center; gap: 0.35rem;">
+          <label class="form-label services-label">
             <span>🎁 Servicios y ventajas incluidas (bonificados / de serie)</span>
             <span class="helper-icon" title="Mantenimiento, seguro, extensión de garantía, etc. incluidos en la oferta a coste 0 € en factura. Permite comparar a igualdad de condiciones frente al contado u otros coches.">ⓘ</span>
           </label>
-          <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0.2rem 0 0 0;">
+          <p class="services-help">
             Coste estimado si tuvieras que pagarlo por tu cuenta (a mano). Se deduce del coste total para comparar en igualdad de condiciones (TCO).
           </p>
         </div>
-        <span id="included-services-total-badge" class="badge badge-info" style="display: none;">0 € en servicios</span>
+        <span id="included-services-total-badge" class="badge badge-info">0 € en servicios</span>
       </div>
 
       <!-- Presets rápidos calibrados con RAV4 / Tucson -->
-      <div class="service-quick-presets" style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+      <div class="service-quick-presets">
         <button type="button" class="btn btn-secondary btn-sm btn-add-preset-service" data-name="Mantenimiento oficial (4-5 años)" data-value="1200" title="Coste conservador de 4-5 revisiones oficiales para SUV (RAV4/Tucson)">
           + Mantenimiento (1.200 €)
         </button>
@@ -324,17 +324,17 @@
         <button type="button" class="btn btn-secondary btn-sm btn-add-preset-service" data-name="Extensión de garantía oficial (+2-3 años)" data-value="600" title="Extensión de garantía oficial">
           + Garantía (+600 €)
         </button>
-        <button type="button" id="btn-add-custom-service" class="btn btn-ghost btn-sm" style="border: 1px dashed var(--border-medium);">
+        <button type="button" id="btn-add-custom-service" class="btn btn-ghost btn-sm">
           + Personalizado
         </button>
       </div>
 
-      <div id="included-services-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+      <div id="included-services-list">
         <!-- Se inyectan filas con tmpl-included-service -->
       </div>
     </div>
 
-    <div class="modal-footer" style="margin: 1.5rem -1.5rem -1.5rem -1.5rem;">
+    <div class="modal-footer modal-footer--bleed">
       <button type="button" id="btn-cancel-offer" class="btn btn-ghost">Cancelar</button>
       <button type="submit" class="btn btn-primary">Guardar oferta</button>
     </div>

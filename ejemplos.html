@@ -23,7 +23,7 @@
           <div>
             <h1 class="brand-title">
               FinCar
-              <span class="badge badge-info" style="font-size: 0.65rem;">EJEMPLOS</span>
+              <span class="badge badge-info badge--xxs">EJEMPLOS</span>
             </h1>
             <p class="brand-subtitle">3 ofertas reales precargadas en el volumen Docker</p>
           </div>
@@ -42,7 +42,7 @@
         </nav>
 
         <nav class="header-actions" aria-label="Acciones de navegación">
-          <a href="/" class="btn btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.45rem;">
+          <a href="/" class="btn btn-secondary btn-link-inline">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Mis presupuestos
           </a>
@@ -54,12 +54,12 @@
       </header>
 
       <!-- Banner explicativo de la web de ejemplos -->
-      <aside style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-lg); padding: 1.1rem 1.4rem; margin-bottom: 1.5rem;">
-        <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
-          <span style="font-size: 1.6rem; line-height: 1;">💡</span>
+      <aside class="examples-intro">
+        <div class="examples-intro-body">
+          <span class="examples-intro-icon">💡</span>
           <div>
-            <h2 style="font-size: 1rem; font-weight: 700; color: var(--accent-cyan); margin: 0 0 0.35rem 0;">Web de ejemplos precargados</h2>
-            <p style="font-size: 0.86rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+            <h2 class="examples-intro-title">Web de ejemplos precargados</h2>
+            <p class="examples-intro-text">
               Estas ofertas de ejemplo provienen de documentos estructurados en JSON ubicados en el volumen Docker (<code>/app/data/examples/</code>).
               Puedes analizarlas para un mismo vehículo o comparar diferentes modelos en la pestaña <strong>"Coches diferentes"</strong>.
             </p>
@@ -96,12 +96,12 @@
 
 
         <!-- Barra de Control de Vistas -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
-          <div id="offers-count-label" style="font-size: 0.9rem; color: var(--text-secondary);">
+        <div class="toolbar-row">
+          <div id="offers-count-label">
             Cargando ejemplos...
           </div>
 
-          <div class="segmented-control" style="width: 220px;">
+          <div class="segmented-control view-switcher">
             <button id="view-cards-btn" class="segmented-btn active" title="Ver como tarjetas detalladas" type="button">
               🗂️ Tarjetas
             </button>
@@ -113,7 +113,7 @@
 
         <!-- Espacio donde se inyectan las tarjetas o tabla -->
         <main id="offers-display-slot" aria-live="polite">
-          <div style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando ofertas de ejemplo...</div>
+          <div class="loading-message">Cargando ofertas de ejemplo...</div>
         </main>
       </section>
 
@@ -130,7 +130,7 @@
               <button type="button" class="segmented-btn" data-modality="early_cancellation">⚡ Cancelación anticipada</button>
             </div>
           </div>
-          <div class="segmented-control cross-view-switcher" style="width: 200px;">
+          <div class="segmented-control cross-view-switcher">
             <button id="cross-view-cards-btn" class="segmented-btn active" type="button">
               🗂️ Tarjetas
             </button>
@@ -141,7 +141,7 @@
         </div>
 
 
-        <div style="font-size: 0.92rem; color: var(--text-secondary); margin-bottom: 1.25rem;" id="cross-count-label">
+        <div id="cross-count-label">
           Comparando <strong>0</strong> vehículos
         </div>
 
@@ -152,10 +152,10 @@
       <!-- @include partials/analytics-section.html -->
 
       <!-- Footer Semántico -->
-      <footer class="app-footer" style="margin-top: 3rem; text-align: center; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 0.82rem;">
+      <footer class="app-footer">
         <p>FinCar &copy; 2026 — Finanzas transparentes sin trampas de concesionario.</p>
-        <p style="margin-top: 0.35rem; font-size: 0.75rem;">
-          <a href="/" style="color: var(--accent-cyan); text-decoration: none;">Volver a mis presupuestos</a>
+        <p class="app-footer-note">
+          <a class="app-footer-link" href="/">Volver a mis presupuestos</a>
         </p>
       </footer>
     </div>

@@ -1,0 +1,375 @@
+/* Parcial modal-offer.html: estilos antes inline en el HTML */
+
+#vehicle-auto-preview {
+  display: none;
+}
+
+#vehicle-image-thumb {
+  display: none;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+#group-vehicle-price {
+  margin-bottom: 0.5rem;
+}
+
+#group-finance-discount {
+  margin-bottom: 0.5rem;
+}
+
+#net-calc-price-indicator {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#cash-ref-summary-box {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+#down-payment-fields-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.form-label--flush {
+  margin-bottom: 0;
+}
+
+#btn-unlock-down {
+  display: none;
+  font-size: 0.72rem;
+  color: var(--accent-cyan);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+#down-payment-helper {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 0.2rem;
+  min-height: 1rem;
+}
+
+#btn-unlock-financed {
+  display: none;
+  font-size: 0.72rem;
+  color: var(--accent-cyan);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+#financed-amount-helper {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 0.2rem;
+  min-height: 1rem;
+}
+
+.form-label--tight {
+  margin-bottom: 0.25rem;
+}
+
+.form-section-divider {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-section-title {
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  color: var(--accent-cyan);
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-label--split {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#btn-unlock-tin {
+  display: none;
+  font-size: 0.72rem;
+  color: var(--accent-cyan);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+#loan-tin-helper {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 0.2rem;
+  min-height: 1rem;
+}
+
+#btn-unlock-monthly {
+  display: none;
+  font-size: 0.72rem;
+  color: var(--accent-cyan);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+#manual-monthly-helper {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 0.2rem;
+  min-height: 1rem;
+}
+
+#finance-calc-feedback {
+  display: none;
+  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.75rem;
+  margin-bottom: 0.75rem;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: var(--text-secondary);
+}
+
+#flexible-balloon-container {
+  display: none;
+  background: rgba(59, 130, 246, 0.07);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  border: 1px dashed rgba(59, 130, 246, 0.3);
+}
+
+.form-group--flush {
+  margin-bottom: 0;
+}
+
+.flexible-cancel-option {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(59, 130, 246, 0.25);
+}
+
+.checkbox-inline-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+#flexible-cancel-early {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--accent-emerald);
+  cursor: pointer;
+}
+
+.checkbox-inline-help {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  margin-left: 1.7rem;
+}
+
+#early-cancellation-container {
+  display: none;
+  background: rgba(16, 185, 129, 0.07);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  border: 1px dashed rgba(16, 185, 129, 0.35);
+}
+
+.early-cancel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.early-cancel-title {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--accent-emerald);
+  font-weight: 600;
+}
+
+.badge--xs {
+  font-size: 0.72rem;
+}
+
+.form-grid-2--spaced {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+#cancel-months-pills {
+  margin-top: 0.35rem;
+}
+
+#penalty-quick-pills {
+  margin-top: 0.35rem;
+}
+
+#early-cancel-live-summary {
+  background: var(--bg-card);
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+#cancel-summary-capital {
+  color: var(--text-primary);
+}
+
+#cancel-summary-penalty {
+  color: var(--accent-rose);
+}
+
+.summary-row--total {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px dashed var(--border-subtle);
+  padding-top: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+#cancel-summary-settlement {
+  color: var(--accent-emerald);
+}
+
+.summary-row--highlight {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--accent-cyan);
+}
+
+.form-section {
+  margin-top: 1rem;
+}
+
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.form-label--no-margin {
+  margin: 0;
+}
+
+#linked-products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-section-divider--wide {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1rem;
+}
+
+.services-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.services-label {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.services-help {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0.2rem 0 0 0;
+}
+
+#included-services-total-badge {
+  display: none;
+}
+
+.service-quick-presets {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+#btn-add-custom-service {
+  border: 1px dashed var(--border-medium);
+}
+
+#included-services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-footer--bleed {
+  margin: 1.5rem -1.5rem -1.5rem -1.5rem;
+}

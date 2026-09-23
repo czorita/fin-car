@@ -1,15 +1,15 @@
 <!-- Plantilla de Producto Vinculado en Formulario -->
 <template id="tmpl-linked-product">
-  <div class="linked-product-row" style="display: grid; grid-template-columns: 2fr 1fr auto auto; gap: 0.5rem; align-items: center; background: var(--bg-surface); padding: 0.45rem 0.65rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-    <input type="text" class="form-input btn-sm prod-name" placeholder="Nombre (ej. Seguro Vida)" style="padding: 0.35rem 0.5rem;" />
+  <div class="linked-product-row">
+    <input type="text" class="form-input btn-sm prod-name list-row-input" placeholder="Nombre (ej. Seguro Vida)" />
     <div class="input-wrapper">
-      <input type="text" inputmode="decimal" class="form-input btn-sm prod-cost has-addon" placeholder="Coste" style="padding: 0.35rem 0.5rem;" />
+      <input type="text" inputmode="decimal" class="form-input btn-sm prod-cost has-addon list-row-input" placeholder="Coste" />
       <span class="input-addon">€</span>
     </div>
-    <label class="checkbox-label" style="font-size: 0.75rem;">
+    <label class="checkbox-label checkbox-label--small">
       <input type="checkbox" class="prod-financed" checked />
       ¿Financiado?
     </label>
-    <button type="button" class="btn btn-ghost btn-sm btn-remove-prod" style="padding: 0.25rem 0.5rem; color: var(--accent-rose);">&times;</button>
+    <button type="button" class="btn btn-ghost btn-sm btn-remove-prod list-row-remove">&times;</button>
   </div>
 </template>

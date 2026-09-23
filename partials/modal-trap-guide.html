@@ -1,16 +1,16 @@
 <!-- Modal de Consejos de Negociación ante Trampa de Financiación -->
-<dialog id="modal-trap-guide" class="app-modal" style="max-width: 660px;">
+<dialog id="modal-trap-guide" class="app-modal">
   <div class="modal-header">
-    <h2 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.12rem; color: var(--accent-cyan); margin: 0;">
+    <h2 class="trap-guide-title">
       <span aria-hidden="true">💡</span>
       ¿Cómo detectar la "trampa del descuento" en el concesionario?
     </h2>
     <button id="btn-close-trap-guide" class="btn btn-ghost btn-icon" type="button" aria-label="Cerrar">&times;</button>
   </div>
 
-  <div class="modal-body" style="padding: 1.25rem 1.5rem;">
+  <div class="modal-body modal-body--trap-guide">
     <!-- Alerta dinámica con las ofertas afectadas -->
-    <div id="trap-guide-offers-alert" class="trap-detected-box" style="display: none;">
+    <div id="trap-guide-offers-alert" class="trap-detected-box">
       <div class="trap-detected-header">
         <span aria-hidden="true">⚠️</span>
         <strong>Sobrecoste detectado en tus ofertas:</strong>
@@ -48,7 +48,7 @@
     </div>
   </div>
 
-  <div class="modal-footer" style="display: flex; justify-content: flex-end; padding: 0.9rem 1.5rem; border-top: 1px solid var(--border-subtle);">
+  <div class="modal-footer modal-footer--trap-guide">
     <button id="btn-understood-trap-guide" type="button" class="btn btn-primary">Entendido</button>
   </div>
 </dialog>

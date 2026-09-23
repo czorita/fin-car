@@ -1,0 +1,5 @@
+/* Parcial analytics-section.html: estilos antes inline en el HTML */
+
+#analytics-section {
+  display: none;
+}

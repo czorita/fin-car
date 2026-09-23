@@ -1,0 +1,30 @@
+/* Parcial modal-amortization.html: estilos antes inline en el HTML */
+
+#modal-amortization {
+  max-width: 800px;
+}
+
+.amortization-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card--compact {
+  padding: 0.85rem;
+}
+
+#amort-principal {
+  font-size: 1.35rem;
+}
+
+#amort-interests {
+  font-size: 1.35rem;
+  color: var(--accent-rose);
+}
+
+#amort-monthly {
+  font-size: 1.35rem;
+  color: var(--accent-cyan);
+}

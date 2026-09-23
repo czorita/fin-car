@@ -1,0 +1,20 @@
+/* Parcial tmpl-offer-card.html: estilos antes inline en el HTML */
+
+.verdict-trap-link {
+  display: none;
+}
+
+.offer-notes-box {
+  display: none;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  font-style: italic;
+  background: var(--bg-surface);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-schedule {
+  display: none;
+}

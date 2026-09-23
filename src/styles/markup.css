@@ -1,0 +1,11 @@
+/* Estilos de la maquetación HTML (antes atributos style="" en index.html, ejemplos.html y partials/).
+   Se importa el último para conservar la precedencia que tenían los estilos inline. */
+@import './markup/analytics-section.css';
+@import './markup/modal-amortization.css';
+@import './markup/modal-offer.css';
+@import './markup/modal-trap-guide.css';
+@import './markup/tmpl-included-service.css';
+@import './markup/tmpl-linked-product.css';
+@import './markup/tmpl-offer-card.css';
+@import './markup/page-index.css';
+@import './markup/page-ejemplos.css';

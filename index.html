@@ -49,7 +49,7 @@
             Ingeniería inversa
           </button>
 
-          <a href="/ejemplos.html" class="btn btn-ghost btn-sm" title="Ver web con 3 ofertas de ejemplo precargadas" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.45rem;">
+          <a href="/ejemplos.html" class="btn btn-ghost btn-sm btn-link-inline" title="Ver web con 3 ofertas de ejemplo precargadas">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             Ejemplos
           </a>
@@ -93,13 +93,13 @@
 
 
         <!-- Barra de Control de Vistas -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
-          <div style="font-size: 0.92rem; color: var(--text-secondary);" id="offers-count-label">
+        <div class="toolbar-row">
+          <div id="offers-count-label">
             Mostrando <strong>0</strong> ofertas
           </div>
 
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <div class="segmented-control" style="width: 220px;">
+          <div class="toolbar-actions">
+            <div class="segmented-control view-switcher">
               <button id="view-cards-btn" class="segmented-btn active" type="button">
                 🗂️ Tarjetas
               </button>
@@ -127,7 +127,7 @@
               <button type="button" class="segmented-btn" data-modality="early_cancellation">⚡ Cancelación anticipada</button>
             </div>
           </div>
-          <div class="segmented-control cross-view-switcher" style="width: 200px;">
+          <div class="segmented-control cross-view-switcher">
             <button id="cross-view-cards-btn" class="segmented-btn active" type="button">
               🗂️ Tarjetas
             </button>
@@ -138,7 +138,7 @@
         </div>
 
 
-        <div style="font-size: 0.92rem; color: var(--text-secondary); margin-bottom: 1.25rem;" id="cross-count-label">
+        <div id="cross-count-label">
           Comparando <strong>0</strong> vehículos
         </div>
 
@@ -150,7 +150,7 @@
 
       <!-- Botón Flotante para Móvil -->
       <div class="mobile-fab">
-        <button id="fab-new-offer" class="btn btn-primary btn-icon" style="width: 52px; height: 52px; border-radius: 50%; box-shadow: var(--shadow-xl);" title="Añadir oferta" type="button">
+        <button id="fab-new-offer" class="btn btn-primary btn-icon" title="Añadir oferta" type="button">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
@@ -172,12 +172,12 @@
       </div>
 
       <div class="modal-body">
-        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        <p class="reverse-intro">
           ¿El comercial solo te ha dicho cuánto pagarías al mes sin detallarte el interés? Introduce aquí las cifras del presupuesto y el sistema deducirá el <strong>TIN real, la TAE y los intereses ocultos</strong>.
         </p>
 
         <form id="form-reverse-calc">
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+          <div class="form-grid-3">
             <div class="form-group">
               <label class="form-label" for="rev-price">Precio del vehículo</label>
               <div class="input-wrapper">
@@ -203,7 +203,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label" for="rev-monthly">Cuota mensual prometida</label>
               <div class="input-wrapper">
@@ -213,7 +213,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="rev-months" style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="form-label form-label--split" for="rev-months">
                 <span>Número de meses</span>
                 <span id="rev-months-badge" class="months-duration-badge">5 años</span>
               </label>
@@ -241,35 +241,35 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+          <button type="submit" class="btn btn-primary btn-block">
             🔍 Descubrir intereses ocultos
           </button>
         </form>
 
-        <div id="reverse-results-container" style="display: none;">
+        <div id="reverse-results-container">
           <div class="reverse-result-box">
-            <h4 style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 0.5rem;">Resultado del análisis financiero:</h4>
+            <h4 class="reverse-results-title">Resultado del análisis financiero:</h4>
             <div class="reverse-result-grid">
               <div>
                 <div class="kpi-label">TIN anual implícito</div>
-                <div class="kpi-value" id="rev-out-tin" style="font-size: 1.5rem; color: var(--accent-rose);">0%</div>
+                <div class="kpi-value" id="rev-out-tin">0%</div>
               </div>
               <div>
                 <div class="kpi-label">TAE anual estimada</div>
-                <div class="kpi-value" id="rev-out-apr" style="font-size: 1.5rem; color: var(--accent-amber);">0%</div>
+                <div class="kpi-value" id="rev-out-apr">0%</div>
               </div>
               <div>
                 <div class="kpi-label">Intereses totales</div>
-                <div class="kpi-value" id="rev-out-interest" style="font-size: 1.5rem; color: var(--accent-rose);">0 €</div>
+                <div class="kpi-value" id="rev-out-interest">0 €</div>
               </div>
               <div>
                 <div class="kpi-label">Coste total pagado</div>
-                <div class="kpi-value" id="rev-out-total" style="font-size: 1.5rem;">0 €</div>
+                <div class="kpi-value" id="rev-out-total">0 €</div>
               </div>
             </div>
           </div>
 
-          <div style="margin-top: 1rem; text-align: right;">
+          <div class="reverse-actions">
             <button type="button" id="btn-apply-reverse-as-offer" class="btn btn-secondary">
               ➕ Convertir en oferta para comparar
             </button>
@@ -289,18 +289,18 @@
 
     <!-- Plantilla de Estado Vacío -->
     <template id="tmpl-empty-state">
-      <div class="empty-state-card" style="text-align: center; padding: 4rem 1.5rem; background: var(--bg-surface-card); border-radius: var(--radius-xl); border: 1px dashed var(--border-medium); max-width: 640px; margin: 2rem auto;">
-        <div style="font-size: 3.5rem; margin-bottom: 1rem;" aria-hidden="true">🚗</div>
-        <h3 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">No tienes ningún presupuesto guardado</h3>
-        <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6;">
+      <div class="empty-state-card">
+        <div class="empty-state-icon" aria-hidden="true">🚗</div>
+        <h3 class="empty-state-title">No tienes ningún presupuesto guardado</h3>
+        <p class="empty-state-text">
           Comienza creando tu primera oferta personalizada o explora las <strong>ofertas de ejemplo precargadas</strong> para ver cómo funciona el comparador.
         </p>
-        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-          <button class="btn btn-primary empty-add-btn" type="button" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+        <div class="empty-state-actions">
+          <button class="btn btn-primary empty-add-btn" type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Nueva oferta
           </button>
-          <a href="/ejemplos.html" class="btn btn-secondary empty-examples-link" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <a href="/ejemplos.html" class="btn btn-secondary empty-examples-link">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             👀 Ver ejemplos
           </a>

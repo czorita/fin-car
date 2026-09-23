@@ -1,11 +1,11 @@
 <!-- Plantilla de Servicio Incluido / Ventaja en Formulario -->
 <template id="tmpl-included-service">
-  <div class="included-service-row" style="display: grid; grid-template-columns: 2fr 1.2fr auto; gap: 0.5rem; align-items: center; background: rgba(16, 185, 129, 0.05); padding: 0.45rem 0.65rem; border-radius: var(--radius-sm); border: 1px solid rgba(16, 185, 129, 0.25);">
-    <input type="text" class="form-input btn-sm service-name" placeholder="Servicio (ej. Mantenimiento 4 años)" style="padding: 0.35rem 0.5rem;" />
+  <div class="included-service-row">
+    <input type="text" class="form-input btn-sm service-name list-row-input" placeholder="Servicio (ej. Mantenimiento 4 años)" />
     <div class="input-wrapper">
-      <input type="text" inputmode="decimal" class="form-input btn-sm service-value has-addon" placeholder="Valor si pagas a mano" style="padding: 0.35rem 0.5rem;" title="Coste de contratarlo por tu cuenta para comparar a igualdad de condiciones" />
+      <input type="text" inputmode="decimal" class="form-input btn-sm service-value has-addon list-row-input" placeholder="Valor si pagas a mano" title="Coste de contratarlo por tu cuenta para comparar a igualdad de condiciones" />
       <span class="input-addon">€ valor</span>
     </div>
-    <button type="button" class="btn btn-ghost btn-sm btn-remove-service" title="Eliminar servicio" style="padding: 0.25rem 0.5rem; color: var(--accent-rose);">&times;</button>
+    <button type="button" class="btn btn-ghost btn-sm btn-remove-service list-row-remove" title="Eliminar servicio">&times;</button>
   </div>
 </template>
