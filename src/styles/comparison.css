@@ -572,3 +572,14 @@
 .btn-copy-example {
   flex: 1.2;
 }
+
+/* Campos de precio del modal de oferta (una columna en contado) */
+.price-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.price-fields--single {
+  grid-template-columns: 1fr;
+}
