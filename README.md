@@ -35,11 +35,12 @@ Acceso: [http://localhost:8080](http://localhost:8080) (y [http://localhost:8080
 | `npm run dev`           | Servidor de desarrollo Vite (con la API local en `/api`).                               |
 | `npm run build`         | Genera el bundle de producción en `dist/`.                                              |
 | `npm start`             | Arranca el servidor Node nativo (`server.js`) sirviendo `dist/` y la API.               |
-| `npm test`              | Ejecuta los tests con `node --test`.                                                    |
+| `npm test`              | Ejecuta los tests con `node --test` (lógica, servidor e interfaz con happy-dom).        |
 | `npm run test:coverage` | Ejecuta los tests con el informe de cobertura de Node (`--experimental-test-coverage`). |
 | `npm run lint`          | Analiza el código con ESLint (`eslint.config.js`).                                      |
 | `npm run format`        | Formatea el código con Prettier (`.prettierrc.json`).                                   |
 | `npm run format:check`  | Comprueba el formato con Prettier sin modificar archivos.                               |
+| `npm run typecheck`     | Comprueba los tipos JSDoc con TypeScript (`jsconfig.json`: core, servicios y servidor). |
 
 ### Variables de entorno (`server.js`)
 
@@ -58,8 +59,10 @@ El workflow `CI` (`.github/workflows/ci.yml`) se ejecuta en cada _push_ a cualqu
 
 1. `npm ci`
 2. `npm run lint`
-3. `npm test`
-4. `npm run build`
+3. `npm run format:check`
+4. `npm run typecheck`
+5. `npm test`
+6. `npm run build`
 
 ---
 
