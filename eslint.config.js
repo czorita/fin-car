@@ -15,7 +15,8 @@ export default [
     rules: {
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrors: 'none' }],
       // Nada de innerHTML/outerHTML: construir nodos con ui/dom.js o <template>
-      'no-restricted-properties': ['error',
+      'no-restricted-properties': [
+        'error',
         { property: 'innerHTML', message: 'Usa ui/dom.js (el, createIcon) o <template> en lugar de innerHTML.' },
         { property: 'outerHTML', message: 'Usa ui/dom.js (el, createIcon) o <template> en lugar de outerHTML.' }
       ]

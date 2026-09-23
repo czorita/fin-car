@@ -3,7 +3,7 @@
  * Alterna entre:
  * 1. 'same_vehicle': Comparativa de fórmulas de pago para el mismo vehículo.
  * 2. 'cross_vehicle': Comparativa entre diferentes modelos de coches bajo una misma modalidad.
- * 
+ *
  * Implementa accesibilidad WAI-ARIA (role="tablist", role="tab", role="tabpanel").
  */
 
@@ -74,12 +74,10 @@ export function initMainTabsNav({ initialTab, onTabChange } = {}) {
 
   // Navegación por teclado accesible (flechas izquierda / derecha)
   const tabsList = document.querySelector('.main-tabs-nav');
-  tabsList?.addEventListener('keydown', (e) => {
+  tabsList?.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
       e.preventDefault();
-      const nextTab = currentTab === MAIN_TABS.SAME_VEHICLE 
-        ? MAIN_TABS.CROSS_VEHICLE 
-        : MAIN_TABS.SAME_VEHICLE;
+      const nextTab = currentTab === MAIN_TABS.SAME_VEHICLE ? MAIN_TABS.CROSS_VEHICLE : MAIN_TABS.SAME_VEHICLE;
       setActiveTab(nextTab);
       const nextBtn = nextTab === MAIN_TABS.SAME_VEHICLE ? btnSame : btnCross;
       nextBtn?.focus();

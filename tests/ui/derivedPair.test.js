@@ -13,15 +13,30 @@ function buildPair() {
     <input id="a"><button id="unlock-a"></button><span id="help-a"></span>
     <input id="b"><button id="unlock-b"></button><span id="help-b"></span>`;
   const $ = id => document.getElementById(id);
-  els = { a: $('a'), b: $('b'), unlockA: $('unlock-a'), unlockB: $('unlock-b'), helpA: $('help-a'), helpB: $('help-b') };
+  els = {
+    a: $('a'),
+    b: $('b'),
+    unlockA: $('unlock-a'),
+    unlockB: $('unlock-b'),
+    helpA: $('help-a'),
+    helpB: $('help-b')
+  };
   changes = 0;
   pair = createDerivedPair({
     first: {
-      mode: 'a', input: els.a, unlockBtn: els.unlockA, helper: els.helpA, activeHelperText: 'Manda A',
+      mode: 'a',
+      input: els.a,
+      unlockBtn: els.unlockA,
+      helper: els.helpA,
+      activeHelperText: 'Manda A',
       derive: () => (els.a.value ? { value: String(Number(els.a.value) * 2), helperText: 'B calculado' } : null)
     },
     second: {
-      mode: 'b', input: els.b, unlockBtn: els.unlockB, helper: els.helpB, activeHelperText: 'Manda B',
+      mode: 'b',
+      input: els.b,
+      unlockBtn: els.unlockB,
+      helper: els.helpB,
+      activeHelperText: 'Manda B',
       derive: () => (els.b.value ? { value: String(Number(els.b.value) / 2), helperText: 'A calculado' } : null)
     },
     onChange: () => changes++

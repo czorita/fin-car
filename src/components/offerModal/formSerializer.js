@@ -115,13 +115,20 @@ export function formValuesToOffer(values, { modality, financingMode, linkedProdu
   }
 
   const downPayment = isCash ? 0 : parseLocaleNumber(values.downPayment);
-  const financedAmount = isCash ? 0 : (values.financedAmount ? parseLocaleNumber(values.financedAmount) : principal);
+  const financedAmount = isCash ? 0 : values.financedAmount ? parseLocaleNumber(values.financedAmount) : principal;
 
   return {
     id: values.id || generateId(ID_PREFIX_OFFER),
     vehicle: vName || 'Vehículo sin especificar',
     imageUrl: getVehicleImageUrl(vName) || '',
-    title: getOfferDisplayTitle({ vehicle: vName, modality, months, contractMonths: months, earlyCancellationMonth: cancelMonth, cancelEarly }),
+    title: getOfferDisplayTitle({
+      vehicle: vName,
+      modality,
+      months,
+      contractMonths: months,
+      earlyCancellationMonth: cancelMonth,
+      cancelEarly
+    }),
     dealer: (values.dealer || '').trim(),
     notes: (values.notes || '').trim(),
     modality,
@@ -160,14 +167,17 @@ export function formValuesToOffer(values, { modality, financingMode, linkedProdu
  */
 export function offerToFormValues(offer) {
   const isCash = offer.modality === OFFER_MODALITIES.CASH;
-  const hasOnlyFinancedAmount = Boolean(offer.financedAmount) && (offer.downPayment === undefined || offer.downPayment === null);
+  const hasOnlyFinancedAmount =
+    Boolean(offer.financedAmount) && (offer.downPayment === undefined || offer.downPayment === null);
 
   const price = offer.offerPrice || offer.vehiclePrice || offer.cashPriceReference || '';
-  const discount = offer.financeDiscount !== undefined
-    ? offer.financeDiscount
-    : (offer.advertisedDiscount || (offer.cashPriceReference && offer.offerPrice && Number(offer.cashPriceReference) > Number(offer.offerPrice)
-      ? Number(offer.cashPriceReference) - Number(offer.offerPrice)
-      : ''));
+  const discount =
+    offer.financeDiscount !== undefined
+      ? offer.financeDiscount
+      : offer.advertisedDiscount ||
+        (offer.cashPriceReference && offer.offerPrice && Number(offer.cashPriceReference) > Number(offer.offerPrice)
+          ? Number(offer.cashPriceReference) - Number(offer.offerPrice)
+          : '');
 
   let downPayment;
   let financedAmount;
@@ -200,21 +210,30 @@ export function offerToFormValues(offer) {
       financedAmount,
       tradeInValue: formatLocaleNumber(offer.tradeInValue || ''),
       months: String(offer.contractMonths || offer.months || DEFAULTS.months),
-      tin: hasManualMonthly ? '' : (offer.tin !== undefined ? formatLocaleNumber(offer.tin) : formatLocaleNumber(DEFAULTS.tin)),
+      tin: hasManualMonthly
+        ? ''
+        : offer.tin !== undefined
+          ? formatLocaleNumber(offer.tin)
+          : formatLocaleNumber(DEFAULTS.tin),
       manualMonthly: hasManualMonthly ? formatLocaleNumber(offer.manualMonthlyPayment) : '',
       balloonPayment: offer.balloonPayment ? formatLocaleNumber(offer.balloonPayment) : '',
       cancelEarly: Boolean(offer.cancelEarly),
       earlyCancelMonth: String(offer.earlyCancellationMonth || DEFAULTS.earlyCancellationMonth),
-      earlyCancelPenalty: offer.earlyCancellationPenaltyRate !== undefined
-        ? formatLocaleNumber(offer.earlyCancellationPenaltyRate)
-        : '1,0'
+      earlyCancelPenalty:
+        offer.earlyCancellationPenaltyRate !== undefined
+          ? formatLocaleNumber(offer.earlyCancellationPenaltyRate)
+          : '1,0'
     },
     modality: offer.modality || OFFER_MODALITIES.STANDARD_FINANCE,
     downPaymentMode,
     financingMode: hasManualMonthly ? 'monthly' : 'tin',
     linkedProducts: (offer.linkedProducts || []).map(p => ({ id: p.id || generateId(ID_PREFIX_PRODUCT), ...p })),
     includedServices: Array.isArray(offer.includedServices)
-      ? offer.includedServices.map(s => ({ id: s.id || generateId(ID_PREFIX_SERVICE), ...s, marketValue: parseLocaleNumber(s.marketValue) }))
+      ? offer.includedServices.map(s => ({
+          id: s.id || generateId(ID_PREFIX_SERVICE),
+          ...s,
+          marketValue: parseLocaleNumber(s.marketValue)
+        }))
       : []
   };
 }

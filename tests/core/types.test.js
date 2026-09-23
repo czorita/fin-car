@@ -1,6 +1,13 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createDefaultOffer, OFFER_MODALITIES, MODALITY_LABELS, MODALITY_SHORT_NAMES, getOfferDisplayTitle, getOfferFinanceSubtitle } from '../../src/core/types.js';
+import {
+  createDefaultOffer,
+  OFFER_MODALITIES,
+  MODALITY_LABELS,
+  MODALITY_SHORT_NAMES,
+  getOfferDisplayTitle,
+  getOfferFinanceSubtitle
+} from '../../src/core/types.js';
 import { generateId, ID_PREFIX_OFFER, ID_PREFIX_PRODUCT, DEFAULTS } from '../../src/core/constants.js';
 
 describe('Tipos y Estructuras de Datos (types.js)', () => {
@@ -80,10 +87,7 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
     );
 
     // Subtítulo / Tipo de financiación a la derecha del guion para tarjetas en "Mismo vehículo"
-    assert.equal(
-      getOfferFinanceSubtitle({ vehicle: 'Toyota RAV4', modality: OFFER_MODALITIES.CASH }),
-      'Al contado'
-    );
+    assert.equal(getOfferFinanceSubtitle({ vehicle: 'Toyota RAV4', modality: OFFER_MODALITIES.CASH }), 'Al contado');
     assert.equal(
       getOfferFinanceSubtitle({ vehicle: 'Toyota RAV4', modality: OFFER_MODALITIES.STANDARD_FINANCE, months: 60 }),
       'Financiación lineal (60m)'
@@ -217,5 +221,3 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
     assert.equal(title, 'Cupra Formentor - Compra flexible (cancelación mes 24 de 48m)');
   });
 });
-
-

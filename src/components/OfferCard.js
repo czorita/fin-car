@@ -9,8 +9,8 @@ import { OFFER_HIGHLIGHTS } from '../core/normalizer.js';
 
 /**
  * Crea una fila de especificación en el desglose de la tarjeta.
- * @param {string} label 
- * @param {string} value 
+ * @param {string} label
+ * @param {string} value
  * @param {object} [options]
  * @param {string} [options.highlightClass]
  * @param {boolean} [options.isEmphasized]
@@ -35,8 +35,8 @@ function createSpecRow(label, value, options = {}) {
 
 /**
  * Crea una insignia (badge) DOM.
- * @param {string} text 
- * @param {string} className 
+ * @param {string} text
+ * @param {string} className
  * @returns {HTMLSpanElement}
  */
 function createBadge(text, className) {
@@ -48,8 +48,8 @@ function createBadge(text, className) {
 
 /**
  * Renderiza una tarjeta de oferta clonando la plantilla HTML5.
- * @param {import('../core/normalizer.js').NormalizedOffer} offer 
- * @param {boolean} isWinner 
+ * @param {import('../core/normalizer.js').NormalizedOffer} offer
+ * @param {boolean} isWinner
  * @param {object} handlers
  * @param {Function} handlers.onEdit
  * @param {Function} handlers.onSchedule
@@ -93,7 +93,9 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   }
 
   if (offer.includedServicesValue > 0) {
-    badgesContainer.appendChild(createBadge(`🎁 +${offer.includedServicesValue.toLocaleString('es-ES')} € servicios`, 'badge-info'));
+    badgesContainer.appendChild(
+      createBadge(`🎁 +${offer.includedServicesValue.toLocaleString('es-ES')} € servicios`, 'badge-info')
+    );
   }
 
   // 2. Título (fórmula de financiación y meses) y Concesionario
@@ -127,7 +129,11 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   const isEquatedSuccess = offer.verdict?.status === 'success' && offer.verdict?.badge?.includes('equiparado');
   const isDirectSuccess = offer.verdict?.status === 'success' && !isEquatedSuccess;
   const isMitigated = offer.verdict?.status === 'info';
-  const isNeutralOrWarning = isCash || !offer.verdict || offer.verdict.status === 'neutral' || (offer.verdict.status === 'warning' && !offer.includedServicesValue);
+  const isNeutralOrWarning =
+    isCash ||
+    !offer.verdict ||
+    offer.verdict.status === 'neutral' ||
+    (offer.verdict.status === 'warning' && !offer.includedServicesValue);
 
   if ((isNeutralOrWarning || isDirectSuccess) && !isEquatedSuccess) {
     if (alertEl) alertEl.style.display = 'none';
@@ -165,10 +171,16 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   const vPrice = offer.vehiclePrice || offer.cashPriceReference || offer.offerPrice;
   specsList.appendChild(createSpecRow('Precio del vehículo:', `${vPrice.toLocaleString('es-ES')} €`));
 
-  const disc = offer.financeDiscount !== undefined ? offer.financeDiscount : (offer.advertisedDiscount || 0);
+  const disc = offer.financeDiscount !== undefined ? offer.financeDiscount : offer.advertisedDiscount || 0;
   if (!isCash && disc > 0) {
-    specsList.appendChild(createSpecRow('Descuento por financiar:', `-${disc.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
-    specsList.appendChild(createSpecRow('Precio base de cálculo:', `${offer.offerPrice.toLocaleString('es-ES')} €`, { isEmphasized: true }));
+    specsList.appendChild(
+      createSpecRow('Descuento por financiar:', `-${disc.toLocaleString('es-ES')} €`, {
+        highlightClass: 'highlight-save'
+      })
+    );
+    specsList.appendChild(
+      createSpecRow('Precio base de cálculo:', `${offer.offerPrice.toLocaleString('es-ES')} €`, { isEmphasized: true })
+    );
   }
 
   if (!isCash && offer.downPayment > 0) {
@@ -176,21 +188,41 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   }
 
   if (offer.tradeInValue > 0) {
-    specsList.appendChild(createSpecRow('Tasación coche usado:', `-${offer.tradeInValue.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
+    specsList.appendChild(
+      createSpecRow('Tasación coche usado:', `-${offer.tradeInValue.toLocaleString('es-ES')} €`, {
+        highlightClass: 'highlight-save'
+      })
+    );
   }
 
   if (!isCash) {
     specsList.appendChild(createSpecRow('Capital financiado:', `${offer.principalFinanced.toLocaleString('es-ES')} €`));
-    specsList.appendChild(createSpecRow('TIN nominal / TAE real:', `${offer.nominalTin}% TIN / ${formatAprPercent(offer.effectiveApr)} TAE`));
-    specsList.appendChild(createSpecRow('Total intereses banco:', `+${offer.totalInterest.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
+    specsList.appendChild(
+      createSpecRow('TIN nominal / TAE real:', `${offer.nominalTin}% TIN / ${formatAprPercent(offer.effectiveApr)} TAE`)
+    );
+    specsList.appendChild(
+      createSpecRow('Total intereses banco:', `+${offer.totalInterest.toLocaleString('es-ES')} €`, {
+        highlightClass: 'highlight-trap'
+      })
+    );
 
     if (offer.costBreakdown.linkedProducts > 0) {
-      specsList.appendChild(createSpecRow('Seguros y extras obligatorios:', `+${offer.costBreakdown.linkedProducts.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
+      specsList.appendChild(
+        createSpecRow(
+          'Seguros y extras obligatorios:',
+          `+${offer.costBreakdown.linkedProducts.toLocaleString('es-ES')} €`,
+          { highlightClass: 'highlight-trap' }
+        )
+      );
     }
 
     if (isFlexible && offer.balloonPayment > 0) {
       if (isEarlyCancel) {
-        specsList.appendChild(createSpecRow('Cuota final evitada (VFG):', `${offer.balloonPayment.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
+        specsList.appendChild(
+          createSpecRow('Cuota final evitada (VFG):', `${offer.balloonPayment.toLocaleString('es-ES')} €`, {
+            highlightClass: 'highlight-save'
+          })
+        );
       } else {
         specsList.appendChild(createSpecRow('Cuota final / VFG:', `${offer.balloonPayment.toLocaleString('es-ES')} €`));
       }
@@ -198,25 +230,64 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
     if (isEarlyCancel) {
       specsList.appendChild(createSpecRow('Plazo contrato original:', `${offer.contractMonths} meses`));
-      specsList.appendChild(createSpecRow(`Capital liquidado (mes ${offer.earlyCancellationMonth}):`, `${offer.settlementCapital.toLocaleString('es-ES')} €`));
-      specsList.appendChild(createSpecRow(`Comisión cancelación (${offer.earlyCancellationPenaltyRate}%):`, `+${offer.cancellationPenalty.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
+      specsList.appendChild(
+        createSpecRow(
+          `Capital liquidado (mes ${offer.earlyCancellationMonth}):`,
+          `${offer.settlementCapital.toLocaleString('es-ES')} €`
+        )
+      );
+      specsList.appendChild(
+        createSpecRow(
+          `Comisión cancelación (${offer.earlyCancellationPenaltyRate}%):`,
+          `+${offer.cancellationPenalty.toLocaleString('es-ES')} €`,
+          { highlightClass: 'highlight-trap' }
+        )
+      );
       if (offer.futureInterestSaved > 0) {
-        specsList.appendChild(createSpecRow('Intereses evitados (ahorro):', `-${offer.futureInterestSaved.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save', isEmphasized: true }));
+        specsList.appendChild(
+          createSpecRow('Intereses evitados (ahorro):', `-${offer.futureInterestSaved.toLocaleString('es-ES')} €`, {
+            highlightClass: 'highlight-save',
+            isEmphasized: true
+          })
+        );
       }
     }
 
     const diffSign = offer.netDifferenceVsCashRef > 0 ? '+' : '';
     const diffClass = offer.netDifferenceVsCashRef > 0 ? 'highlight-trap' : 'highlight-save';
-    specsList.appendChild(createSpecRow('Diferencia financiera vs contado:', `${diffSign}${offer.netDifferenceVsCashRef.toLocaleString('es-ES')} €`, { highlightClass: diffClass }));
+    specsList.appendChild(
+      createSpecRow(
+        'Diferencia financiera vs contado:',
+        `${diffSign}${offer.netDifferenceVsCashRef.toLocaleString('es-ES')} €`,
+        { highlightClass: diffClass }
+      )
+    );
   }
 
   if (offer.includedServicesValue > 0) {
-    specsList.appendChild(createSpecRow('Servicios incluidos (valor mercado):', `-${offer.includedServicesValue.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
-    specsList.appendChild(createSpecRow('Coste total equiparado (TCO):', `${offer.adjustedTcoCost.toLocaleString('es-ES')} €`, { isEmphasized: true, highlightClass: 'highlight-save' }));
+    specsList.appendChild(
+      createSpecRow(
+        'Servicios incluidos (valor mercado):',
+        `-${offer.includedServicesValue.toLocaleString('es-ES')} €`,
+        { highlightClass: 'highlight-save' }
+      )
+    );
+    specsList.appendChild(
+      createSpecRow('Coste total equiparado (TCO):', `${offer.adjustedTcoCost.toLocaleString('es-ES')} €`, {
+        isEmphasized: true,
+        highlightClass: 'highlight-save'
+      })
+    );
     if (!isCash && offer.netEquatedDifferenceVsCashRef !== undefined) {
       const eqSign = offer.netEquatedDifferenceVsCashRef > 0 ? '+' : '';
       const eqClass = offer.netEquatedDifferenceVsCashRef > 0 ? 'highlight-trap' : 'highlight-save';
-      specsList.appendChild(createSpecRow('Diferencia real equiparada:', `${eqSign}${offer.netEquatedDifferenceVsCashRef.toLocaleString('es-ES')} €`, { highlightClass: eqClass, isEmphasized: true }));
+      specsList.appendChild(
+        createSpecRow(
+          'Diferencia real equiparada:',
+          `${eqSign}${offer.netEquatedDifferenceVsCashRef.toLocaleString('es-ES')} €`,
+          { highlightClass: eqClass, isEmphasized: true }
+        )
+      );
     }
   }
 

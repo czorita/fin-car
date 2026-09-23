@@ -66,7 +66,10 @@ describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
   test('getUniqueVehicles devuelve la lista ordenada de vehículos con sus recuentos', () => {
     const vehicles = getUniqueVehicles(rawList);
     assert.equal(vehicles.length, 3);
-    assert.deepEqual(vehicles.map(v => v.name), ['Hyundai Tucson', 'RAV4', 'Toyota Corolla']);
+    assert.deepEqual(
+      vehicles.map(v => v.name),
+      ['Hyundai Tucson', 'RAV4', 'Toyota Corolla']
+    );
 
     const corolla = vehicles.find(v => v.name === 'Toyota Corolla');
     assert.equal(corolla.count, 2);
@@ -126,34 +129,38 @@ describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
 
   test('rankCrossVehicleOffers detecta ganador TCO equiparado con servicios incluidos entre RAV4 y Tucson', () => {
     // Tucson: financiado cuesta 30.000 € (sin servicios incluidos, TCO = 30.000 €)
-    const tucson = normalizeOffer(createDefaultOffer({
-      id: 'tucson_1',
-      vehicle: 'Hyundai Tucson',
-      modality: OFFER_MODALITIES.STANDARD_FINANCE,
-      vehiclePrice: 30000,
-      offerPrice: 30000,
-      downPayment: 30000, // para fijar totalOutOfPocketCost = 30.000
-      months: 60,
-      tin: 0,
-      includedServices: []
-    }));
+    const tucson = normalizeOffer(
+      createDefaultOffer({
+        id: 'tucson_1',
+        vehicle: 'Hyundai Tucson',
+        modality: OFFER_MODALITIES.STANDARD_FINANCE,
+        vehiclePrice: 30000,
+        offerPrice: 30000,
+        downPayment: 30000, // para fijar totalOutOfPocketCost = 30.000
+        months: 60,
+        tin: 0,
+        includedServices: []
+      })
+    );
 
     // RAV4: financiado cuesta 31.000 € (1.000 € más en desembolso financiero), pero incluye 1.950 € en servicios
     // TCO RAV4 = 31.000 - 1.950 = 29.050 € (¡menor coste a igualdad de condiciones!)
-    const rav4 = normalizeOffer(createDefaultOffer({
-      id: 'rav4_1',
-      vehicle: 'Toyota RAV4',
-      modality: OFFER_MODALITIES.STANDARD_FINANCE,
-      vehiclePrice: 31000,
-      offerPrice: 31000,
-      downPayment: 31000,
-      months: 60,
-      tin: 0,
-      includedServices: [
-        { id: 's1', name: 'Mantenimiento 4 años', marketValue: 1200 },
-        { id: 's2', name: 'Seguro todo riesgo', marketValue: 750 }
-      ]
-    }));
+    const rav4 = normalizeOffer(
+      createDefaultOffer({
+        id: 'rav4_1',
+        vehicle: 'Toyota RAV4',
+        modality: OFFER_MODALITIES.STANDARD_FINANCE,
+        vehiclePrice: 31000,
+        offerPrice: 31000,
+        downPayment: 31000,
+        months: 60,
+        tin: 0,
+        includedServices: [
+          { id: 's1', name: 'Mantenimiento 4 años', marketValue: 1200 },
+          { id: 's2', name: 'Seguro todo riesgo', marketValue: 750 }
+        ]
+      })
+    );
 
     const result = rankCrossVehicleOffers([tucson, rav4]);
     // Ganador financiero en caja: Tucson (30.000 € < 31.000 €)
@@ -163,32 +170,39 @@ describe('Gestión Multi-Vehículo (multiVehicle.js)', () => {
 
     const rav4Ranked = result.rankedOffers.find(o => o.id === 'rav4_1');
     assert.equal(rav4Ranked.isTcoWinner, true, 'El RAV4 debe marcarse como ganador de TCO');
-    assert.ok(result.summaryMessage.includes('TCO equiparado'), 'El resumen debe explicar que el RAV4 resulta más rentable en TCO');
+    assert.ok(
+      result.summaryMessage.includes('TCO equiparado'),
+      'El resumen debe explicar que el RAV4 resulta más rentable en TCO'
+    );
   });
 
   test('getCrossVehicleOffers selecciona correctamente ofertas bajo modalidad early_cancellation', () => {
-    const corollaEC = normalizeOffer(createDefaultOffer({
-      id: 'corolla_ec',
-      vehicle: 'Toyota Corolla',
-      modality: OFFER_MODALITIES.EARLY_CANCELLATION,
-      vehiclePrice: 27000,
-      financeDiscount: 3000,
-      downPayment: 4000,
-      months: 84,
-      earlyCancellationMonth: 24,
-      tin: 8.5
-    }));
+    const corollaEC = normalizeOffer(
+      createDefaultOffer({
+        id: 'corolla_ec',
+        vehicle: 'Toyota Corolla',
+        modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+        vehiclePrice: 27000,
+        financeDiscount: 3000,
+        downPayment: 4000,
+        months: 84,
+        earlyCancellationMonth: 24,
+        tin: 8.5
+      })
+    );
 
-    const corollaStd = normalizeOffer(createDefaultOffer({
-      id: 'corolla_std',
-      vehicle: 'Toyota Corolla',
-      modality: OFFER_MODALITIES.STANDARD_FINANCE,
-      vehiclePrice: 27000,
-      financeDiscount: 3000,
-      downPayment: 4000,
-      months: 60,
-      tin: 8.5
-    }));
+    const corollaStd = normalizeOffer(
+      createDefaultOffer({
+        id: 'corolla_std',
+        vehicle: 'Toyota Corolla',
+        modality: OFFER_MODALITIES.STANDARD_FINANCE,
+        vehiclePrice: 27000,
+        financeDiscount: 3000,
+        downPayment: 4000,
+        months: 60,
+        tin: 8.5
+      })
+    );
 
     const cross = getCrossVehicleOffers([corollaEC, corollaStd], OFFER_MODALITIES.EARLY_CANCELLATION);
     assert.equal(cross.length, 1);

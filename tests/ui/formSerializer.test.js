@@ -12,9 +12,22 @@ import { normalizeOffer } from '../../src/core/normalizer.js';
 
 /** Valores de formulario vacíos (como tras form.reset()) */
 const EMPTY_VALUES = {
-  id: '', vehicle: '', dealer: '', notes: '', offerPrice: '', financeDiscount: '', downPayment: '',
-  financedAmount: '', tradeInValue: '', months: '', tin: '', manualMonthly: '', balloonPayment: '',
-  cancelEarly: false, earlyCancelMonth: '24', earlyCancelPenalty: '1,0'
+  id: '',
+  vehicle: '',
+  dealer: '',
+  notes: '',
+  offerPrice: '',
+  financeDiscount: '',
+  downPayment: '',
+  financedAmount: '',
+  tradeInValue: '',
+  months: '',
+  tin: '',
+  manualMonthly: '',
+  balloonPayment: '',
+  cancelEarly: false,
+  earlyCancelMonth: '24',
+  earlyCancelPenalty: '1,0'
 };
 
 const NO_LISTS = { linkedProducts: [], includedServices: [] };
@@ -29,20 +42,29 @@ describe('Serialización del formulario de oferta (formSerializer.js)', () => {
   });
 
   test('El capital financiado incluye los productos financiados (financed indefinido = financiado)', () => {
-    const linkedProducts = [
-      { cost: 350, financed: true },
-      { cost: 200 },
-      { cost: 500, financed: false }
-    ];
-    assert.equal(computeFinancedPrincipal({ offerPrice: '30000', downPayment: '5000', tradeInValue: '1000', linkedProducts }), 24550);
+    const linkedProducts = [{ cost: 350, financed: true }, { cost: 200 }, { cost: 500, financed: false }];
+    assert.equal(
+      computeFinancedPrincipal({ offerPrice: '30000', downPayment: '5000', tradeInValue: '1000', linkedProducts }),
+      24550
+    );
     assert.equal(computeNetBeforeDownPayment({ offerPrice: '30000', tradeInValue: '1000', linkedProducts }), 29550);
   });
 
   test('Financiación estándar con TIN: descarta la cuota derivada y calcula precios de referencia', () => {
-    const offer = formValuesToOffer({
-      ...EMPTY_VALUES, vehicle: ' Toyota RAV4 ', offerPrice: '30000', financeDiscount: '2000,00',
-      downPayment: '5000', financedAmount: '25.000,00', months: '48', tin: '6,5', manualMonthly: '592,87'
-    }, { modality: OFFER_MODALITIES.STANDARD_FINANCE, financingMode: 'tin', ...NO_LISTS });
+    const offer = formValuesToOffer(
+      {
+        ...EMPTY_VALUES,
+        vehicle: ' Toyota RAV4 ',
+        offerPrice: '30000',
+        financeDiscount: '2000,00',
+        downPayment: '5000',
+        financedAmount: '25.000,00',
+        months: '48',
+        tin: '6,5',
+        manualMonthly: '592,87'
+      },
+      { modality: OFFER_MODALITIES.STANDARD_FINANCE, financingMode: 'tin', ...NO_LISTS }
+    );
 
     assert.equal(offer.vehicle, 'Toyota RAV4');
     assert.equal(offer.offerPrice, 30000);
@@ -58,9 +80,16 @@ describe('Serialización del formulario de oferta (formSerializer.js)', () => {
   });
 
   test('Modo cuota: guarda la cuota manual y deduce el TIN', () => {
-    const offer = formValuesToOffer({
-      ...EMPTY_VALUES, offerPrice: '25000', downPayment: '5000', months: '60', manualMonthly: '400'
-    }, { modality: OFFER_MODALITIES.STANDARD_FINANCE, financingMode: 'monthly', ...NO_LISTS });
+    const offer = formValuesToOffer(
+      {
+        ...EMPTY_VALUES,
+        offerPrice: '25000',
+        downPayment: '5000',
+        months: '60',
+        manualMonthly: '400'
+      },
+      { modality: OFFER_MODALITIES.STANDARD_FINANCE, financingMode: 'monthly', ...NO_LISTS }
+    );
 
     assert.equal(offer.manualMonthlyPayment, 400);
     assert.ok(offer.tin > 7 && offer.tin < 8, `TIN deducido razonable: ${offer.tin}`);
@@ -68,9 +97,16 @@ describe('Serialización del formulario de oferta (formSerializer.js)', () => {
   });
 
   test('Contado: sin entrada, financiación ni descuento', () => {
-    const offer = formValuesToOffer({
-      ...EMPTY_VALUES, offerPrice: '26000', financeDiscount: '1500', downPayment: '0', financedAmount: '0'
-    }, { modality: OFFER_MODALITIES.CASH, financingMode: null, ...NO_LISTS });
+    const offer = formValuesToOffer(
+      {
+        ...EMPTY_VALUES,
+        offerPrice: '26000',
+        financeDiscount: '1500',
+        downPayment: '0',
+        financedAmount: '0'
+      },
+      { modality: OFFER_MODALITIES.CASH, financingMode: null, ...NO_LISTS }
+    );
 
     assert.equal(offer.financeDiscount, 0);
     assert.equal(offer.cashPriceReference, 26000);
@@ -80,10 +116,20 @@ describe('Serialización del formulario de oferta (formSerializer.js)', () => {
   });
 
   test('Flexible con cancelación anticipada: cuota final, mes y comisión', () => {
-    const offer = formValuesToOffer({
-      ...EMPTY_VALUES, offerPrice: '28000', downPayment: '4000', months: '48', tin: '7,9',
-      balloonPayment: '12.000,00', cancelEarly: true, earlyCancelMonth: '18', earlyCancelPenalty: '0,5'
-    }, { modality: OFFER_MODALITIES.FLEXIBLE_FINANCE, financingMode: 'tin', ...NO_LISTS });
+    const offer = formValuesToOffer(
+      {
+        ...EMPTY_VALUES,
+        offerPrice: '28000',
+        downPayment: '4000',
+        months: '48',
+        tin: '7,9',
+        balloonPayment: '12.000,00',
+        cancelEarly: true,
+        earlyCancelMonth: '18',
+        earlyCancelPenalty: '0,5'
+      },
+      { modality: OFFER_MODALITIES.FLEXIBLE_FINANCE, financingMode: 'tin', ...NO_LISTS }
+    );
 
     assert.equal(offer.balloonPayment, 12000);
     assert.equal(offer.cancelEarly, true);
@@ -92,9 +138,17 @@ describe('Serialización del formulario de oferta (formSerializer.js)', () => {
   });
 
   test('La cuota final y la cancelación se ignoran fuera de su modalidad', () => {
-    const offer = formValuesToOffer({
-      ...EMPTY_VALUES, offerPrice: '20000', downPayment: '0', tin: '5', balloonPayment: '9000', cancelEarly: true
-    }, { modality: OFFER_MODALITIES.STANDARD_FINANCE, financingMode: 'tin', ...NO_LISTS });
+    const offer = formValuesToOffer(
+      {
+        ...EMPTY_VALUES,
+        offerPrice: '20000',
+        downPayment: '0',
+        tin: '5',
+        balloonPayment: '9000',
+        cancelEarly: true
+      },
+      { modality: OFFER_MODALITIES.STANDARD_FINANCE, financingMode: 'tin', ...NO_LISTS }
+    );
 
     assert.equal(offer.balloonPayment, 0);
     assert.equal(offer.cancelEarly, false);
@@ -127,7 +181,18 @@ describe('Serialización del formulario de oferta (formSerializer.js)', () => {
       includedServices: form.includedServices
     });
 
-    for (const key of ['id', 'vehicle', 'modality', 'offerPrice', 'financeDiscount', 'cashPriceReference', 'downPayment', 'tradeInValue', 'months', 'tin']) {
+    for (const key of [
+      'id',
+      'vehicle',
+      'modality',
+      'offerPrice',
+      'financeDiscount',
+      'cashPriceReference',
+      'downPayment',
+      'tradeInValue',
+      'months',
+      'tin'
+    ]) {
       assert.deepEqual(rebuilt[key], original[key], `Campo ${key}`);
     }
     assert.deepEqual(rebuilt.linkedProducts, original.linkedProducts);
@@ -139,7 +204,11 @@ describe('Serialización del formulario de oferta (formSerializer.js)', () => {
   });
 
   test('offerToFormValues: cuota manual, solo capital financiado y contado', () => {
-    const monthly = offerToFormValues({ modality: OFFER_MODALITIES.STANDARD_FINANCE, manualMonthlyPayment: 345.5, tin: 7 });
+    const monthly = offerToFormValues({
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      manualMonthlyPayment: 345.5,
+      tin: 7
+    });
     assert.equal(monthly.financingMode, 'monthly');
     assert.equal(monthly.values.manualMonthly, '345,5');
     assert.equal(monthly.values.tin, '');

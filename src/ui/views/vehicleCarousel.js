@@ -46,7 +46,10 @@ function createVehicleCard(vehicle, isActive, onSelect) {
   const media = el('div', { className: 'vehicle-card-media' });
   const imgUrl = getVehicleImageUrl(vehicle.name);
   if (imgUrl) {
-    const img = el('img', { className: 'vehicle-card-img', attrs: { src: imgUrl, alt: vehicle.name, loading: 'lazy' } });
+    const img = el('img', {
+      className: 'vehicle-card-img',
+      attrs: { src: imgUrl, alt: vehicle.name, loading: 'lazy' }
+    });
     img.onerror = () => img.replaceWith(createVehicleCardFallback());
     media.appendChild(img);
   } else {
@@ -59,19 +62,21 @@ function createVehicleCard(vehicle, isActive, onSelect) {
 
   const info = el('div', { className: 'vehicle-card-info' }, [
     el('h4', { className: 'vehicle-card-name', text: vehicle.name }),
-    el('div', { className: 'vehicle-card-meta' }, [
-      el('span', { className: 'vehicle-card-count', text: offersLabel })
-    ])
+    el('div', { className: 'vehicle-card-meta' }, [el('span', { className: 'vehicle-card-count', text: offersLabel })])
   ]);
 
-  const card = el('button', {
-    className: `vehicle-carousel-card ${isActive ? 'active' : ''}`,
-    attrs: {
-      type: 'button',
-      'aria-pressed': isActive ? 'true' : 'false',
-      title: `Seleccionar ${vehicle.name} (${offersLabel})`
-    }
-  }, [media, info]);
+  const card = el(
+    'button',
+    {
+      className: `vehicle-carousel-card ${isActive ? 'active' : ''}`,
+      attrs: {
+        type: 'button',
+        'aria-pressed': isActive ? 'true' : 'false',
+        title: `Seleccionar ${vehicle.name} (${offersLabel})`
+      }
+    },
+    [media, info]
+  );
 
   card.addEventListener('click', () => onSelect(vehicle.name));
   return /** @type {HTMLButtonElement} */ (card);
@@ -89,10 +94,12 @@ export function renderVehicleCarousel(track, uniqueVehicles, currentVehicle, onS
   track.replaceChildren();
 
   if (uniqueVehicles.length === 0) {
-    track.appendChild(el('div', { className: 'vehicle-carousel-empty' }, [
-      el('span', { className: 'vehicle-carousel-empty-icon', text: '🚗' }),
-      el('span', { text: 'Sin vehículos registrados todavía' })
-    ]));
+    track.appendChild(
+      el('div', { className: 'vehicle-carousel-empty' }, [
+        el('span', { className: 'vehicle-carousel-empty-icon', text: '🚗' }),
+        el('span', { text: 'Sin vehículos registrados todavía' })
+      ])
+    );
     return;
   }
 

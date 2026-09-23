@@ -56,11 +56,14 @@ function addCopyButton(card, offer, exampleOffers) {
 const { store, renderApp } = createAppShell({
   createCallbacks: ({ store, inspectVehicle }) => ({
     getCardHandlers: () => ({
-      onEdit: (targetOffer) => {
+      onEdit: targetOffer => {
         const { offers, selectedVehicle } = store.getState();
-        offerModalCtrl.open(offers.find(o => o.id === targetOffer.id), selectedVehicle);
+        offerModalCtrl.open(
+          offers.find(o => o.id === targetOffer.id),
+          selectedVehicle
+        );
       },
-      onSchedule: (targetOffer) => amortizationModalCtrl.open(targetOffer),
+      onSchedule: targetOffer => amortizationModalCtrl.open(targetOffer),
       onDelete: null // Solo lectura para borrado en vista de ejemplos
     }),
     onCardCreated: (card, offer) => addCopyButton(card, offer, store.getState().offers),
@@ -70,7 +73,7 @@ const { store, renderApp } = createAppShell({
 
 offerModalCtrl = initOfferModal({
   getKnownVehicles: () => getUniqueVehicles(store.getState().offers).map(v => v.name),
-  onSave: async (offerData) => {
+  onSave: async offerData => {
     const fullOffer = createDefaultOffer(offerData);
     try {
       await copyExampleToUser(fullOffer);
@@ -83,6 +86,8 @@ offerModalCtrl = initOfferModal({
 });
 
 // Cargar ejemplos del volumen / API
-fetchExampleOffers().then(offers => {
-  store.setState({ offers });
-}).catch(() => renderApp());
+fetchExampleOffers()
+  .then(offers => {
+    store.setState({ offers });
+  })
+  .catch(() => renderApp());

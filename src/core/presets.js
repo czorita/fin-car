@@ -70,9 +70,7 @@ export const SAMPLE_OFFERS = [
     tin: 7.95,
     manualMonthlyPayment: null,
     balloonPayment: 13500,
-    linkedProducts: [
-      { id: 'p3', name: 'Seguro de vida vinculado', cost: 650, financed: true, required: true }
-    ],
+    linkedProducts: [{ id: 'p3', name: 'Seguro de vida vinculado', cost: 650, financed: true, required: true }],
     createdAt: '2026-09-03T16:00:00.000Z'
   },
   {
@@ -114,9 +112,7 @@ export const SAMPLE_OFFERS = [
     tin: 7.95,
     manualMonthlyPayment: null,
     balloonPayment: 0,
-    linkedProducts: [
-      { id: 'p_i30_1', name: 'Pack mantenimiento 5 años', cost: 600, financed: true, required: false }
-    ],
+    linkedProducts: [{ id: 'p_i30_1', name: 'Pack mantenimiento 5 años', cost: 600, financed: true, required: false }],
     includedServices: [],
     createdAt: '2026-09-05T12:00:00.000Z'
   },
@@ -148,7 +144,8 @@ export const SAMPLE_OFFERS = [
     imageUrl: getVehicleImageUrl('Toyota RAV4'),
     title: 'Toyota RAV4 2.5 HSD Advance - Financiación con Servicios incluidos',
     dealer: 'Toyota Madrid Norte',
-    notes: 'Descuento de 3.000 € por financiar. Incluye de serie 4 años de mantenimiento Toyota Care y 1er año de seguro a todo riesgo.',
+    notes:
+      'Descuento de 3.000 € por financiar. Incluye de serie 4 años de mantenimiento Toyota Care y 1er año de seguro a todo riesgo.',
     modality: OFFER_MODALITIES.STANDARD_FINANCE,
     vehiclePrice: 41500,
     financeDiscount: 3000,
@@ -162,7 +159,12 @@ export const SAMPLE_OFFERS = [
     balloonPayment: 0,
     linkedProducts: [],
     includedServices: [
-      { id: 'srv_rav4_maint', name: 'Mantenimiento oficial 4 años / 60.000 km', marketValue: 1200, category: 'maintenance' },
+      {
+        id: 'srv_rav4_maint',
+        name: 'Mantenimiento oficial 4 años / 60.000 km',
+        marketValue: 1200,
+        category: 'maintenance'
+      },
       { id: 'srv_rav4_ins', name: 'Seguro a todo riesgo (1er año)', marketValue: 750, category: 'insurance' }
     ],
     createdAt: '2026-09-06T11:00:00.000Z'
@@ -173,7 +175,8 @@ export const SAMPLE_OFFERS = [
     imageUrl: getVehicleImageUrl('Toyota Corolla 140H Style'),
     title: 'Toyota Corolla 140H Style - Cancelación anticipada (mes 24/84)',
     dealer: 'Toyota Financial Services',
-    notes: 'Aprovecha los 3.300 € de descuento contratando a 84 meses, pero liquida al mes 24 cumpliendo la permanencia mínima legal.',
+    notes:
+      'Aprovecha los 3.300 € de descuento contratando a 84 meses, pero liquida al mes 24 cumpliendo la permanencia mínima legal.',
     modality: OFFER_MODALITIES.EARLY_CANCELLATION,
     vehiclePrice: 27500,
     financeDiscount: 3300,

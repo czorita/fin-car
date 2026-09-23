@@ -13,7 +13,14 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
 /** Globales del navegador que usa el código de src/ */
 const BROWSER_GLOBALS = [
-  'document', 'DOMParser', 'HTMLElement', 'HTMLInputElement', 'Node', 'Event', 'localStorage', 'getComputedStyle'
+  'document',
+  'DOMParser',
+  'HTMLElement',
+  'HTMLInputElement',
+  'Node',
+  'Event',
+  'localStorage',
+  'getComputedStyle'
 ];
 
 /**

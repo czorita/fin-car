@@ -28,7 +28,9 @@
 
 .offer-card.is-winner {
   border-color: var(--badge-winner-border);
-  box-shadow: 0 0 25px rgba(16, 185, 129, 0.18), 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 0 25px rgba(16, 185, 129, 0.18),
+    0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .offer-header {

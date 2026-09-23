@@ -42,7 +42,10 @@ describe('Lista editable (offerModal/editableList.js) con la plantilla de produc
   });
 
   test('Renderiza una fila por elemento con valores formateados', () => {
-    list.setItems([{ id: 'p1', name: 'Seguro', cost: 1350.5 }, { id: 'p2', name: 'Pack', cost: 200, financed: false }]);
+    list.setItems([
+      { id: 'p1', name: 'Seguro', cost: 1350.5 },
+      { id: 'p2', name: 'Pack', cost: 200, financed: false }
+    ]);
     const rows = document.querySelectorAll('#list .linked-product-row');
     assert.equal(rows.length, 2);
     assert.equal(rows[0].querySelector('.prod-name').value, 'Seguro');
@@ -73,7 +76,10 @@ describe('Lista editable (offerModal/editableList.js) con la plantilla de produc
     list.add({ id: 'p2', name: 'B', cost: 2 });
     assert.equal(list.getItems().length, 2);
     document.querySelector('#list .btn-remove-prod').click();
-    assert.deepEqual(list.getItems().map(i => i.id), ['p2']);
+    assert.deepEqual(
+      list.getItems().map(i => i.id),
+      ['p2']
+    );
     assert.equal(document.querySelectorAll('#list .linked-product-row').length, 1);
     assert.equal(changes, 3);
   });

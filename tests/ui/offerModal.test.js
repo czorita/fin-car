@@ -22,7 +22,8 @@ describe('Modal de oferta (OfferModal.js) sobre el HTML real del formulario', ()
   });
 
   beforeEach(() => {
-    document.body.innerHTML = readPartial('modal-offer') + readPartial('tmpl-linked-product') + readPartial('tmpl-included-service');
+    document.body.innerHTML =
+      readPartial('modal-offer') + readPartial('tmpl-linked-product') + readPartial('tmpl-included-service');
     saved = [];
     modal = initOfferModal({ onSave: offer => saved.push(offer), getKnownVehicles: () => ['Toyota RAV4'] });
   });
@@ -31,7 +32,11 @@ describe('Modal de oferta (OfferModal.js) sobre el HTML real del formulario', ()
     modal.open(null, 'Toyota RAV4');
     assert.equal($('modal-offer-title').textContent, 'Nueva oferta de concesionario');
     assert.equal($('offer-vehicle').value, 'Toyota RAV4');
-    assert.ok(document.querySelector('#modality-selector .segmented-btn[data-val="standard_finance"]').classList.contains('active'));
+    assert.ok(
+      document
+        .querySelector('#modality-selector .segmented-btn[data-val="standard_finance"]')
+        .classList.contains('active')
+    );
     assert.equal($('down-payment').value, '4000', 'Entrada por defecto al financiar');
     assert.equal($('vehicles-datalist').children.length, 1);
     assert.equal($('modal-offer').open, true);
@@ -79,7 +84,11 @@ describe('Modal de oferta (OfferModal.js) sobre el HTML real del formulario', ()
 
     assert.equal($('finance-fields-container').style.display, 'none');
     assert.equal($('loan-months').required, false);
-    assert.equal($('form-offer').checkValidity(), true, 'Antes el campo #loan-months vacío y oculto bloqueaba el envío');
+    assert.equal(
+      $('form-offer').checkValidity(),
+      true,
+      'Antes el campo #loan-months vacío y oculto bloqueaba el envío'
+    );
 
     submit();
     assert.equal(saved[0].modality, 'cash');
@@ -109,8 +118,16 @@ describe('Modal de oferta (OfferModal.js) sobre el HTML real del formulario', ()
 
   test('Editar: rellena el formulario desde la oferta y conserva sus datos al guardar', () => {
     modal.open({
-      id: 'offer_1', vehicle: 'Hyundai i30', modality: 'flexible_finance', offerPrice: 28000, financeDiscount: 1000,
-      downPayment: 4000, months: 48, tin: 7.9, balloonPayment: 12000, dealer: 'Concesionario X',
+      id: 'offer_1',
+      vehicle: 'Hyundai i30',
+      modality: 'flexible_finance',
+      offerPrice: 28000,
+      financeDiscount: 1000,
+      downPayment: 4000,
+      months: 48,
+      tin: 7.9,
+      balloonPayment: 12000,
+      dealer: 'Concesionario X',
       linkedProducts: [{ id: 'p1', name: 'Seguro', cost: 300, financed: true }],
       includedServices: [{ id: 's1', name: 'Mantenimiento', marketValue: 900 }]
     });

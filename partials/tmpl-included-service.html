@@ -1,11 +1,23 @@
 <!-- Plantilla de Servicio Incluido / Ventaja en Formulario -->
 <template id="tmpl-included-service">
   <div class="included-service-row">
-    <input type="text" class="form-input btn-sm service-name list-row-input" placeholder="Servicio (ej. Mantenimiento 4 años)" />
+    <input
+      type="text"
+      class="form-input btn-sm service-name list-row-input"
+      placeholder="Servicio (ej. Mantenimiento 4 años)"
+    />
     <div class="input-wrapper">
-      <input type="text" inputmode="decimal" class="form-input btn-sm service-value has-addon list-row-input" placeholder="Valor si pagas a mano" title="Coste de contratarlo por tu cuenta para comparar a igualdad de condiciones" />
+      <input
+        type="text"
+        inputmode="decimal"
+        class="form-input btn-sm service-value has-addon list-row-input"
+        placeholder="Valor si pagas a mano"
+        title="Coste de contratarlo por tu cuenta para comparar a igualdad de condiciones"
+      />
       <span class="input-addon">€ valor</span>
     </div>
-    <button type="button" class="btn btn-ghost btn-sm btn-remove-service list-row-remove" title="Eliminar servicio">&times;</button>
+    <button type="button" class="btn btn-ghost btn-sm btn-remove-service list-row-remove" title="Eliminar servicio">
+      &times;
+    </button>
   </div>
 </template>

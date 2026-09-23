@@ -315,7 +315,11 @@ export async function fetchUserOffers() {
   // Pendientes en el momento de leer: aunque el reintento tenga éxito, la lista del
   // servidor ya leída no refleja esos guardados ni esos borrados.
   const deletedIds = new Set(getPendingDeletes());
-  const pendingIds = new Set(getStoredOffers().filter(o => o.pendingSync).map(o => o.id));
+  const pendingIds = new Set(
+    getStoredOffers()
+      .filter(o => o.pendingSync)
+      .map(o => o.id)
+  );
   await retryPendingOperations();
 
   const merged = mergeOffers(serverOffers, getStoredOffers(), deletedIds, pendingIds);

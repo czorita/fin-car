@@ -10,7 +10,7 @@
   --bg-surface-card: #151e30;
   --bg-surface-elevated: #1e293b;
   --bg-surface-glass: rgba(17, 24, 39, 0.75);
-  
+
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-medium: rgba(255, 255, 255, 0.14);
   --glass-border: rgba(255, 255, 255, 0.12);
@@ -53,7 +53,7 @@
   --transition-normal: 0.25s ease;
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   --bg-main: #f8fafc;
   --bg-surface: #ffffff;
   --bg-surface-card: #ffffff;
@@ -86,7 +86,9 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -103,7 +105,12 @@ body {
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   font-weight: 700;
   letter-spacing: -0.02em;

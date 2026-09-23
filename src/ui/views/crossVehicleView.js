@@ -78,11 +78,13 @@ export function renderCrossVehicleView({ dom, normalizedList, modality, view, ca
     const grid = el('div', { className: 'offers-grid' });
     rankedOffers.forEach((offer, idx) => {
       const isWinner = idx === 0 && rankedOffers.length > 1;
-      grid.appendChild(createCrossVehicleCardElement(offer, isWinner, {
-        allRankedOffers: rankedOffers,
-        onInspectVehicle: (vName) => callbacks.onInspectVehicle?.(vName),
-        onEditOffer: (target) => callbacks.getCardHandlers?.(target)?.onEdit?.(target)
-      }));
+      grid.appendChild(
+        createCrossVehicleCardElement(offer, isWinner, {
+          allRankedOffers: rankedOffers,
+          onInspectVehicle: vName => callbacks.onInspectVehicle?.(vName),
+          onEditOffer: target => callbacks.getCardHandlers?.(target)?.onEdit?.(target)
+        })
+      );
     });
     displaySlot.replaceChildren(grid);
   } else {

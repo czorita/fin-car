@@ -61,12 +61,16 @@ export function createAppRenderer({ store, dom, getTheme, getActiveTab, getView,
     const uniqueVehicles = getUniqueVehicles(offers);
     const activeVehicle = resolveActiveVehicle(uniqueVehicles);
 
-    renderVehicleCarousel(dom.vehicleChipsList, uniqueVehicles, activeVehicle, (name) => {
+    renderVehicleCarousel(dom.vehicleChipsList, uniqueVehicles, activeVehicle, name => {
       store.setState({ selectedVehicle: name });
     });
 
     const rankedVehicleOffers = renderSameVehicleView({
-      dom: { displaySlot: dom.offersDisplaySlot, countLabel: dom.offersCountLabel, btnAddForVehicle: dom.btnAddForVehicle },
+      dom: {
+        displaySlot: dom.offersDisplaySlot,
+        countLabel: dom.offersCountLabel,
+        btnAddForVehicle: dom.btnAddForVehicle
+      },
       normalizedList,
       activeVehicle,
       view: getView(),
@@ -76,7 +80,11 @@ export function createAppRenderer({ store, dom, getTheme, getActiveTab, getView,
 
     const modality = selectedCrossModality || 'cash';
     const rankedCrossOffers = renderCrossVehicleView({
-      dom: { modalitySelector: dom.crossModalitySelector, displaySlot: dom.crossDisplaySlot, countLabel: dom.crossCountLabel },
+      dom: {
+        modalitySelector: dom.crossModalitySelector,
+        displaySlot: dom.crossDisplaySlot,
+        countLabel: dom.crossCountLabel
+      },
       normalizedList,
       modality,
       view: getCrossView(),
@@ -85,7 +93,12 @@ export function createAppRenderer({ store, dom, getTheme, getActiveTab, getView,
 
     const activeTab = getActiveTab() || MAIN_TABS.SAME_VEHICLE;
     renderAnalyticsView({
-      dom: { section: dom.analyticsSection, heading: dom.analyticsHeading, subtext: dom.analyticsSubtext, canvas: dom.costBreakdownCanvas },
+      dom: {
+        section: dom.analyticsSection,
+        heading: dom.analyticsHeading,
+        subtext: dom.analyticsSubtext,
+        canvas: dom.costBreakdownCanvas
+      },
       activeTab,
       offers: activeTab === MAIN_TABS.SAME_VEHICLE ? rankedVehicleOffers : rankedCrossOffers,
       activeVehicle,
@@ -97,7 +110,7 @@ export function createAppRenderer({ store, dom, getTheme, getActiveTab, getView,
   }
 
   // Botonera de modalidad cruzada
-  dom.crossModalitySelector?.addEventListener('click', (e) => {
+  dom.crossModalitySelector?.addEventListener('click', e => {
     const btn = e.target.closest('.segmented-btn');
     if (btn?.dataset.modality) {
       store.setState({ selectedCrossModality: btn.dataset.modality });

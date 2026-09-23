@@ -35,7 +35,12 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
   test('Pestaña 1: una tarjeta por oferta del vehículo y la de menor coste marcada como ganadora', () => {
     const normalized = SAMPLE_OFFERS.map(normalizeOffer);
     const vehicle = normalized[0].vehicle;
-    const ranked = renderSameVehicleView({ dom: sameDom(), normalizedList: normalized, activeVehicle: vehicle, view: 'cards' });
+    const ranked = renderSameVehicleView({
+      dom: sameDom(),
+      normalizedList: normalized,
+      activeVehicle: vehicle,
+      view: 'cards'
+    });
 
     const cards = document.querySelectorAll('#slot .offer-card');
     assert.equal(cards.length, ranked.length);
@@ -52,7 +57,10 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
     const emptyState = document.createElement('div');
     emptyState.className = 'empty';
     renderSameVehicleView({
-      dom: sameDom(), normalizedList: [], activeVehicle: null, view: 'cards',
+      dom: sameDom(),
+      normalizedList: [],
+      activeVehicle: null,
+      view: 'cards',
       callbacks: { renderEmptyState: () => emptyState }
     });
     assert.ok($('slot').querySelector('.empty'));
@@ -74,7 +82,13 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
   test('Guía de trampas: lista las ofertas con trampa como texto (sin interpretar HTML)', () => {
     const trap = initTrapGuideModal();
     trap.update([
-      { title: '<img src=x onerror=alert(1)>', isCash: false, verdict: { status: 'danger' }, advertisedDiscount: 2600, netDifferenceVsCashRef: 2195.39 },
+      {
+        title: '<img src=x onerror=alert(1)>',
+        isCash: false,
+        verdict: { status: 'danger' },
+        advertisedDiscount: 2600,
+        netDifferenceVsCashRef: 2195.39
+      },
       { title: 'Sin trampa', isCash: false, verdict: { status: 'success' } }
     ]);
 

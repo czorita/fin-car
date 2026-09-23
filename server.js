@@ -173,7 +173,7 @@ async function handleRequest(req, res) {
       // Validación condicional ETag (304 Not Modified)
       if (req.headers['if-none-match'] === etag) {
         res.writeHead(304, {
-          'ETag': etag,
+          ETag: etag,
           'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable'
         });
         res.end();
@@ -183,7 +183,7 @@ async function handleRequest(req, res) {
       const headers = {
         'Content-Type': contentType,
         'Content-Length': stat.size,
-        'ETag': etag,
+        ETag: etag,
         'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable'
       };
 
@@ -211,7 +211,7 @@ async function handleRequest(req, res) {
         const etag = `W/"${stat.size.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
 
         if (req.headers['if-none-match'] === etag) {
-          res.writeHead(304, { 'ETag': etag, 'Cache-Control': 'no-cache' });
+          res.writeHead(304, { ETag: etag, 'Cache-Control': 'no-cache' });
           res.end();
           return;
         }
@@ -219,7 +219,7 @@ async function handleRequest(req, res) {
         const headers = {
           'Content-Type': 'text/html; charset=utf-8',
           'Content-Length': stat.size,
-          'ETag': etag,
+          ETag: etag,
           'Cache-Control': 'no-cache'
         };
 
@@ -266,4 +266,3 @@ server.listen(PORT, '0.0.0.0', () => {
 });
 
 export { server };
-

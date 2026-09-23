@@ -2,7 +2,18 @@
 <dialog id="modal-offer" class="app-modal">
   <div class="modal-header">
     <h2 id="modal-offer-title">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>
       Configurar oferta
     </h2>
     <button id="btn-close-offer-modal" class="btn btn-ghost btn-icon" type="button">&times;</button>
@@ -16,7 +27,15 @@
         Vehículo / modelo *
         <span class="helper-icon" title="Modelo de coche sobre el que se aplica la oferta">ⓘ</span>
       </label>
-      <input type="text" id="offer-vehicle" list="vehicles-datalist" class="form-input" placeholder="Ej: Hyundai Tucson, Toyota RAV4" required autocomplete="off" />
+      <input
+        type="text"
+        id="offer-vehicle"
+        list="vehicles-datalist"
+        class="form-input"
+        placeholder="Ej: Hyundai Tucson, Toyota RAV4"
+        required
+        autocomplete="off"
+      />
       <datalist id="vehicles-datalist"></datalist>
     </div>
 
@@ -28,7 +47,9 @@
       </div>
       <div class="vehicle-auto-preview-info">
         <span class="vehicle-auto-preview-badge">✓ Foto oficial vinculada automáticamente</span>
-        <span class="form-helper" id="vehicle-image-status">Fotografía asignada desde el catálogo para las comparativas.</span>
+        <span class="form-helper" id="vehicle-image-status"
+          >Fotografía asignada desde el catálogo para las comparativas.</span
+        >
       </div>
     </div>
 
@@ -57,10 +78,21 @@
       <div class="form-group" id="group-vehicle-price">
         <label class="form-label" for="offer-price">
           Precio del vehículo *
-          <span class="helper-icon" title="Precio ofertado del vehículo con el descuento por financiar ya incluido (si aplica)">ⓘ</span>
+          <span
+            class="helper-icon"
+            title="Precio ofertado del vehículo con el descuento por financiar ya incluido (si aplica)"
+            >ⓘ</span
+          >
         </label>
         <div class="input-wrapper">
-          <input type="text" inputmode="decimal" id="offer-price" class="form-input has-addon" placeholder="Ej: 24200 o 24.200,00" required />
+          <input
+            type="text"
+            inputmode="decimal"
+            id="offer-price"
+            class="form-input has-addon"
+            placeholder="Ej: 24200 o 24.200,00"
+            required
+          />
           <span class="input-addon">€</span>
         </div>
       </div>
@@ -68,10 +100,20 @@
       <div class="form-group" id="group-finance-discount">
         <label class="form-label" for="finance-discount">
           Descuento por financiar aplicado
-          <span class="helper-icon" title="Descuento que promete el concesionario respecto al precio al contado (se suma al precio financiado para obtener el equivalente al contado)">ⓘ</span>
+          <span
+            class="helper-icon"
+            title="Descuento que promete el concesionario respecto al precio al contado (se suma al precio financiado para obtener el equivalente al contado)"
+            >ⓘ</span
+          >
         </label>
         <div class="input-wrapper">
-          <input type="text" inputmode="decimal" id="finance-discount" class="form-input has-addon" placeholder="Ej: 3300 o 3.300,00" />
+          <input
+            type="text"
+            inputmode="decimal"
+            id="finance-discount"
+            class="form-input has-addon"
+            placeholder="Ej: 3300 o 3.300,00"
+          />
           <span class="input-addon">€</span>
         </div>
       </div>
@@ -95,10 +137,23 @@
             Entrada (€)
             <span class="helper-icon" title="Dinero aportado de tu bolsillo al inicio">ⓘ</span>
           </label>
-          <button type="button" id="btn-unlock-down" class="btn-link-action" title="Permite introducir la entrada en lugar de la cantidad a financiar">Editar entrada</button>
+          <button
+            type="button"
+            id="btn-unlock-down"
+            class="btn-link-action"
+            title="Permite introducir la entrada en lugar de la cantidad a financiar"
+          >
+            Editar entrada
+          </button>
         </div>
         <div class="input-wrapper">
-          <input type="text" inputmode="decimal" id="down-payment" class="form-input has-addon" placeholder="4000 o 4.000,00" />
+          <input
+            type="text"
+            inputmode="decimal"
+            id="down-payment"
+            class="form-input has-addon"
+            placeholder="4000 o 4.000,00"
+          />
           <span class="input-addon">€</span>
         </div>
         <span class="form-helper" id="down-payment-helper"></span>
@@ -110,10 +165,23 @@
             O cantidad a financiar (€)
             <span class="helper-icon" title="Importe neto del préstamo solicitado a la entidad">ⓘ</span>
           </label>
-          <button type="button" id="btn-unlock-financed" class="btn-link-action" title="Permite fijar la cantidad total a financiar">Editar financiado</button>
+          <button
+            type="button"
+            id="btn-unlock-financed"
+            class="btn-link-action"
+            title="Permite fijar la cantidad total a financiar"
+          >
+            Editar financiado
+          </button>
         </div>
         <div class="input-wrapper">
-          <input type="text" inputmode="decimal" id="financed-amount" class="form-input has-addon" placeholder="Autocalcular (ej: 20.200)" />
+          <input
+            type="text"
+            inputmode="decimal"
+            id="financed-amount"
+            class="form-input has-addon"
+            placeholder="Autocalcular (ej: 20.200)"
+          />
           <span class="input-addon">€</span>
         </div>
         <span class="form-helper" id="financed-amount-helper"></span>
@@ -144,7 +212,17 @@
             <span id="loan-months-badge" class="months-duration-badge">5 años</span>
           </label>
           <div class="input-wrapper">
-            <input type="number" id="loan-months" class="form-input has-addon" min="1" max="240" step="1" placeholder="60" value="60" required />
+            <input
+              type="number"
+              id="loan-months"
+              class="form-input has-addon"
+              min="1"
+              max="240"
+              step="1"
+              placeholder="60"
+              value="60"
+              required
+            />
             <span class="input-addon">meses</span>
           </div>
           <div class="months-quick-pills" id="loan-months-pills">
@@ -165,7 +243,14 @@
               TIN anual (%)
               <span class="helper-icon" title="Tipo de Interés Nominal fijado en el contrato">ⓘ</span>
             </label>
-            <button type="button" id="btn-unlock-tin" class="btn-link-action" title="Permite introducir el TIN en lugar de la cuota">Editar TIN</button>
+            <button
+              type="button"
+              id="btn-unlock-tin"
+              class="btn-link-action"
+              title="Permite introducir el TIN en lugar de la cuota"
+            >
+              Editar TIN
+            </button>
           </div>
           <div class="input-wrapper">
             <input type="text" inputmode="decimal" id="loan-tin" class="form-input has-addon" placeholder="8,5" />
@@ -180,10 +265,23 @@
               O cuota ofertada (€)
               <span class="helper-icon" title="Opcional: Si el comercial te fijó la cuota mensual exacta">ⓘ</span>
             </label>
-            <button type="button" id="btn-unlock-monthly" class="btn-link-action" title="Permite fijar la cuota mensual exacta">Editar cuota</button>
+            <button
+              type="button"
+              id="btn-unlock-monthly"
+              class="btn-link-action"
+              title="Permite fijar la cuota mensual exacta"
+            >
+              Editar cuota
+            </button>
           </div>
           <div class="input-wrapper">
-            <input type="text" inputmode="decimal" id="manual-monthly" class="form-input has-addon" placeholder="Autocalcular (ej: 345,50)" />
+            <input
+              type="text"
+              inputmode="decimal"
+              id="manual-monthly"
+              class="form-input has-addon"
+              placeholder="Autocalcular (ej: 345,50)"
+            />
             <span class="input-addon">€/mes</span>
           </div>
           <span class="form-helper" id="manual-monthly-helper"></span>
@@ -203,7 +301,13 @@
             <span class="helper-icon" title="Último pago balloon de la financiación flexible">ⓘ</span>
           </label>
           <div class="input-wrapper">
-            <input type="text" inputmode="decimal" id="balloon-payment" class="form-input has-addon" placeholder="13000 o 13.000,00" />
+            <input
+              type="text"
+              inputmode="decimal"
+              id="balloon-payment"
+              class="form-input has-addon"
+              placeholder="13000 o 13.000,00"
+            />
             <span class="input-addon">€</span>
           </div>
         </div>
@@ -214,7 +318,8 @@
             <span>⚡ Planear cancelación anticipada en permanencia (ahorrarte los intereses del balloon)</span>
           </label>
           <span class="checkbox-inline-help">
-            Cancela el préstamo al cumplir la permanencia obligatoria (ej. mes 24) para quedarte el coche con el descuento y evitar devengar intereses sobre la cuota final.
+            Cancela el préstamo al cumplir la permanencia obligatoria (ej. mes 24) para quedarte el coche con el
+            descuento y evitar devengar intereses sobre la cuota final.
           </span>
         </div>
       </div>
@@ -222,19 +327,30 @@
       <!-- Cancelación Anticipada (Permanencia con Penalización) -->
       <div id="early-cancellation-container">
         <div class="early-cancel-header">
-          <h5 class="early-cancel-title">
-            ⚡ Parámetros de Permanencia y Cancelación
-          </h5>
+          <h5 class="early-cancel-title">⚡ Parámetros de Permanencia y Cancelación</h5>
           <span class="badge badge-success badge--xs">Permanencia y Finiquito</span>
         </div>
         <div class="form-grid-2--spaced">
           <div class="form-group form-group--flush">
             <label class="form-label" for="early-cancel-month">
               Mes de cancelación (permanencia) *
-              <span class="helper-icon" title="Mes en el que la financiera permite cancelar sin penalizaciones comerciales de devolución del descuento (típicamente 18, 24 o 36 meses).">ⓘ</span>
+              <span
+                class="helper-icon"
+                title="Mes en el que la financiera permite cancelar sin penalizaciones comerciales de devolución del descuento (típicamente 18, 24 o 36 meses)."
+                >ⓘ</span
+              >
             </label>
             <div class="input-wrapper">
-              <input type="number" id="early-cancel-month" class="form-input has-addon" min="1" max="120" step="1" placeholder="24" value="24" />
+              <input
+                type="number"
+                id="early-cancel-month"
+                class="form-input has-addon"
+                min="1"
+                max="120"
+                step="1"
+                placeholder="24"
+                value="24"
+              />
               <span class="input-addon">mes</span>
             </div>
             <div class="months-quick-pills" id="cancel-months-pills">
@@ -248,10 +364,21 @@
           <div class="form-group form-group--flush">
             <label class="form-label" for="early-cancel-penalty">
               Comisión de cancelación anticipada (%)
-              <span class="helper-icon" title="Comisión de amortización bancaria fijada en el contrato. Máximo legal en España (Ley 16/2011): 1.0% si queda > 1 año; 0.5% si queda ≤ 1 año.">ⓘ</span>
+              <span
+                class="helper-icon"
+                title="Comisión de amortización bancaria fijada en el contrato. Máximo legal en España (Ley 16/2011): 1.0% si queda > 1 año; 0.5% si queda ≤ 1 año."
+                >ⓘ</span
+              >
             </label>
             <div class="input-wrapper">
-              <input type="text" inputmode="decimal" id="early-cancel-penalty" class="form-input has-addon" placeholder="1,0" value="1,0" />
+              <input
+                type="text"
+                inputmode="decimal"
+                id="early-cancel-penalty"
+                class="form-input has-addon"
+                placeholder="1,0"
+                value="1,0"
+              />
               <span class="input-addon">%</span>
             </div>
             <div class="months-quick-pills" id="penalty-quick-pills">
@@ -288,7 +415,11 @@
         <div class="section-header-row">
           <label class="form-label form-label--no-margin">
             Productos obligatorios vinculados
-            <span class="helper-icon" title="Seguros de vida, packs de mantenimiento, etc. exigidos para obtener el descuento">ⓘ</span>
+            <span
+              class="helper-icon"
+              title="Seguros de vida, packs de mantenimiento, etc. exigidos para obtener el descuento"
+              >ⓘ</span
+            >
           </label>
           <button type="button" id="btn-add-product" class="btn btn-secondary btn-sm">+ Añadir seguro/pack</button>
         </div>
@@ -304,10 +435,15 @@
         <div>
           <label class="form-label services-label">
             <span>🎁 Servicios y ventajas incluidas (bonificados / de serie)</span>
-            <span class="helper-icon" title="Mantenimiento, seguro, extensión de garantía, etc. incluidos en la oferta a coste 0 € en factura. Permite comparar a igualdad de condiciones frente al contado u otros coches.">ⓘ</span>
+            <span
+              class="helper-icon"
+              title="Mantenimiento, seguro, extensión de garantía, etc. incluidos en la oferta a coste 0 € en factura. Permite comparar a igualdad de condiciones frente al contado u otros coches."
+              >ⓘ</span
+            >
           </label>
           <p class="services-help">
-            Coste estimado si tuvieras que pagarlo por tu cuenta (a mano). Se deduce del coste total para comparar en igualdad de condiciones (TCO).
+            Coste estimado si tuvieras que pagarlo por tu cuenta (a mano). Se deduce del coste total para comparar en
+            igualdad de condiciones (TCO).
           </p>
         </div>
         <span id="included-services-total-badge" class="badge badge-info">0 € en servicios</span>
@@ -315,18 +451,34 @@
 
       <!-- Presets rápidos calibrados con RAV4 / Tucson -->
       <div class="service-quick-presets">
-        <button type="button" class="btn btn-secondary btn-sm btn-add-preset-service" data-name="Mantenimiento oficial (4-5 años)" data-value="1200" title="Coste conservador de 4-5 revisiones oficiales para SUV (RAV4/Tucson)">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm btn-add-preset-service"
+          data-name="Mantenimiento oficial (4-5 años)"
+          data-value="1200"
+          title="Coste conservador de 4-5 revisiones oficiales para SUV (RAV4/Tucson)"
+        >
           + Mantenimiento (1.200 €)
         </button>
-        <button type="button" class="btn btn-secondary btn-sm btn-add-preset-service" data-name="Seguro a todo riesgo (1er año)" data-value="750" title="Póliza todo riesgo estimada para SUV de 35k-45k€">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm btn-add-preset-service"
+          data-name="Seguro a todo riesgo (1er año)"
+          data-value="750"
+          title="Póliza todo riesgo estimada para SUV de 35k-45k€"
+        >
           + Seguro 1 año (750 €)
         </button>
-        <button type="button" class="btn btn-secondary btn-sm btn-add-preset-service" data-name="Extensión de garantía oficial (+2-3 años)" data-value="600" title="Extensión de garantía oficial">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm btn-add-preset-service"
+          data-name="Extensión de garantía oficial (+2-3 años)"
+          data-value="600"
+          title="Extensión de garantía oficial"
+        >
           + Garantía (+600 €)
         </button>
-        <button type="button" id="btn-add-custom-service" class="btn btn-ghost btn-sm">
-          + Personalizado
-        </button>
+        <button type="button" id="btn-add-custom-service" class="btn btn-ghost btn-sm">+ Personalizado</button>
       </div>
 
       <div id="included-services-list">

@@ -118,12 +118,15 @@ export function rankCrossVehicleOffers(crossOffers) {
 
   const sorted = [...crossOffers].sort((a, b) => a.totalOutOfPocketCost - b.totalOutOfPocketCost);
   const winner = sorted[0];
-  const maxDiff = sorted.length > 1
-    ? Number((sorted[sorted.length - 1].totalOutOfPocketCost - winner.totalOutOfPocketCost).toFixed(2))
-    : 0;
+  const maxDiff =
+    sorted.length > 1
+      ? Number((sorted[sorted.length - 1].totalOutOfPocketCost - winner.totalOutOfPocketCost).toFixed(2))
+      : 0;
 
   // Análisis por coste equiparado (TCO) considerando servicios incluidos
-  const sortedByTco = [...crossOffers].sort((a, b) => (a.adjustedTcoCost ?? a.totalOutOfPocketCost) - (b.adjustedTcoCost ?? b.totalOutOfPocketCost));
+  const sortedByTco = [...crossOffers].sort(
+    (a, b) => (a.adjustedTcoCost ?? a.totalOutOfPocketCost) - (b.adjustedTcoCost ?? b.totalOutOfPocketCost)
+  );
   const winnerTco = sortedByTco[0];
   const hasIncludedServices = crossOffers.some(o => (o.includedServicesValue || 0) > 0);
 
@@ -131,7 +134,8 @@ export function rankCrossVehicleOffers(crossOffers) {
     const diffVsWinner = Number((offer.totalOutOfPocketCost - winner.totalOutOfPocketCost).toFixed(2));
     const vehicleName = getOfferVehicle(offer);
     const offerTco = offer.adjustedTcoCost !== undefined ? offer.adjustedTcoCost : offer.totalOutOfPocketCost;
-    const winnerTcoVal = winnerTco.adjustedTcoCost !== undefined ? winnerTco.adjustedTcoCost : winnerTco.totalOutOfPocketCost;
+    const winnerTcoVal =
+      winnerTco.adjustedTcoCost !== undefined ? winnerTco.adjustedTcoCost : winnerTco.totalOutOfPocketCost;
     const crossTcoDiffVsWinner = Number((offerTco - winnerTcoVal).toFixed(2));
 
     let crossHighlight;

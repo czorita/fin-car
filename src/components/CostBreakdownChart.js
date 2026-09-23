@@ -13,8 +13,8 @@ let chartInstance = null;
 
 /**
  * Renderiza o actualiza el gráfico de barras apiladas.
- * @param {HTMLCanvasElement} canvas 
- * @param {Array<import('../core/normalizer.js').NormalizedOffer>} offers 
+ * @param {HTMLCanvasElement} canvas
+ * @param {Array<import('../core/normalizer.js').NormalizedOffer>} offers
  * @param {string} theme - 'dark' | 'light'
  * @param {string} [activeTab='same_vehicle'] - 'same_vehicle' | 'cross_vehicle'
  */
@@ -112,7 +112,7 @@ export function renderCostBreakdownChart(canvas, offers, theme = 'dark', activeT
           },
           ticks: {
             color: textColor,
-            callback: (val) => `${Number(val).toLocaleString('es-ES')} €`
+            callback: val => `${Number(val).toLocaleString('es-ES')} €`
           }
         },
         y: {
@@ -143,11 +143,11 @@ export function renderCostBreakdownChart(canvas, offers, theme = 'dark', activeT
         },
         tooltip: {
           callbacks: {
-            label: (context) => {
+            label: context => {
               const val = Number(context.raw) || 0;
               return ` ${context.dataset.label}: ${val.toLocaleString('es-ES')} €`;
             },
-            footer: (tooltipItems) => {
+            footer: tooltipItems => {
               let sum = 0;
               tooltipItems.forEach(item => {
                 sum += Number(item.raw) || 0;

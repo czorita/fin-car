@@ -8,9 +8,9 @@ import { formatMonthsDuration, formatAprPercent } from '../core/formatters.js';
 
 /**
  * Añade una fila a la tabla comparativa.
- * @param {HTMLTableSectionElement} tbody 
- * @param {string} labelText 
- * @param {Array<string|number>} values 
+ * @param {HTMLTableSectionElement} tbody
+ * @param {string} labelText
+ * @param {Array<string|number>} values
  * @param {object} [options]
  * @param {boolean} [options.isBold]
  * @param {string} [options.highlightClass]
@@ -42,7 +42,7 @@ function appendTableRow(tbody, labelText, values, options = {}) {
 
 /**
  * Renderiza la matriz comparativa en formato tabla lado a lado.
- * @param {Array<import('../core/normalizer.js').NormalizedOffer>} offers 
+ * @param {Array<import('../core/normalizer.js').NormalizedOffer>} offers
  * @returns {HTMLDivElement} Contenedor con la tabla comparativa
  */
 export function createComparisonTableElement(offers) {
@@ -91,54 +91,140 @@ export function createComparisonTableElement(offers) {
   // Tbody
   const tbody = document.createElement('tbody');
 
-  appendTableRow(tbody, 'Modalidad', offers.map(o => MODALITY_LABELS[o.modality] || o.modality));
-  appendTableRow(tbody, 'Concesionario', offers.map(o => o.dealer || '—'));
-  appendTableRow(tbody, 'Precio del vehículo', offers.map(o => `${(o.vehiclePrice || o.cashPriceReference || o.offerPrice).toLocaleString('es-ES')} €`), { isBold: true });
+  appendTableRow(
+    tbody,
+    'Modalidad',
+    offers.map(o => MODALITY_LABELS[o.modality] || o.modality)
+  );
+  appendTableRow(
+    tbody,
+    'Concesionario',
+    offers.map(o => o.dealer || '—')
+  );
+  appendTableRow(
+    tbody,
+    'Precio del vehículo',
+    offers.map(o => `${(o.vehiclePrice || o.cashPriceReference || o.offerPrice).toLocaleString('es-ES')} €`),
+    { isBold: true }
+  );
 
-  const hasAnyDiscount = offers.some(o => !o.isCash && ((o.financeDiscount && o.financeDiscount > 0) || (o.advertisedDiscount && o.advertisedDiscount > 0)));
+  const hasAnyDiscount = offers.some(
+    o =>
+      !o.isCash && ((o.financeDiscount && o.financeDiscount > 0) || (o.advertisedDiscount && o.advertisedDiscount > 0))
+  );
   if (hasAnyDiscount) {
-    appendTableRow(tbody, 'Descuento por financiar', offers.map(o => {
-      const disc = o.financeDiscount !== undefined ? o.financeDiscount : (o.advertisedDiscount || 0);
-      return (!o.isCash && disc > 0) ? `-${disc.toLocaleString('es-ES')} €` : '—';
-    }), { highlightClass: 'highlight-save' });
-    appendTableRow(tbody, 'Precio base de cálculo', offers.map(o => `${o.offerPrice.toLocaleString('es-ES')} €`), { isBold: true });
+    appendTableRow(
+      tbody,
+      'Descuento por financiar',
+      offers.map(o => {
+        const disc = o.financeDiscount !== undefined ? o.financeDiscount : o.advertisedDiscount || 0;
+        return !o.isCash && disc > 0 ? `-${disc.toLocaleString('es-ES')} €` : '—';
+      }),
+      { highlightClass: 'highlight-save' }
+    );
+    appendTableRow(
+      tbody,
+      'Precio base de cálculo',
+      offers.map(o => `${o.offerPrice.toLocaleString('es-ES')} €`),
+      { isBold: true }
+    );
   }
-  appendTableRow(tbody, 'Entrada inicial', offers.map(o => o.isCash ? '—' : (o.downPayment > 0 ? `${o.downPayment.toLocaleString('es-ES')} €` : '0 €')));
-  appendTableRow(tbody, 'Plazo', offers.map(o => {
-    if (o.isCash) return 'Contado';
-    if (o.isEarlyCancellation) return `Mes ${o.earlyCancellationMonth} (de ${o.contractMonths}m)`;
-    return `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`;
-  }));
-  appendTableRow(tbody, 'Cuota mensual', offers.map(o => o.isCash ? '—' : `${o.monthlyPayment.toLocaleString('es-ES')} €/mes`), { isBold: true });
-  appendTableRow(tbody, 'Cuota final / Finiquito', offers.map(o => {
-    if (o.isEarlyCancellation) return `${o.finalSettlementPayment.toLocaleString('es-ES')} € (finiquito)`;
-    return o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—';
-  }));
+  appendTableRow(
+    tbody,
+    'Entrada inicial',
+    offers.map(o => (o.isCash ? '—' : o.downPayment > 0 ? `${o.downPayment.toLocaleString('es-ES')} €` : '0 €'))
+  );
+  appendTableRow(
+    tbody,
+    'Plazo',
+    offers.map(o => {
+      if (o.isCash) return 'Contado';
+      if (o.isEarlyCancellation) return `Mes ${o.earlyCancellationMonth} (de ${o.contractMonths}m)`;
+      return `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`;
+    })
+  );
+  appendTableRow(
+    tbody,
+    'Cuota mensual',
+    offers.map(o => (o.isCash ? '—' : `${o.monthlyPayment.toLocaleString('es-ES')} €/mes`)),
+    { isBold: true }
+  );
+  appendTableRow(
+    tbody,
+    'Cuota final / Finiquito',
+    offers.map(o => {
+      if (o.isEarlyCancellation) return `${o.finalSettlementPayment.toLocaleString('es-ES')} € (finiquito)`;
+      return o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—';
+    })
+  );
 
   const hasAnyEarlyCancellation = offers.some(o => o.isEarlyCancellation);
   if (hasAnyEarlyCancellation) {
-    appendTableRow(tbody, 'Comisión de cancelación', offers.map(o => {
-      return o.isEarlyCancellation ? `+${o.cancellationPenalty.toLocaleString('es-ES')} € (${o.earlyCancellationPenaltyRate}%)` : '—';
-    }));
-    appendTableRow(tbody, 'Intereses futuros ahorrados', offers.map(o => {
-      return (o.isEarlyCancellation && o.futureInterestSaved > 0) ? `-${o.futureInterestSaved.toLocaleString('es-ES')} €` : '—';
-    }), { highlightClass: 'highlight-save' });
+    appendTableRow(
+      tbody,
+      'Comisión de cancelación',
+      offers.map(o => {
+        return o.isEarlyCancellation
+          ? `+${o.cancellationPenalty.toLocaleString('es-ES')} € (${o.earlyCancellationPenaltyRate}%)`
+          : '—';
+      })
+    );
+    appendTableRow(
+      tbody,
+      'Intereses futuros ahorrados',
+      offers.map(o => {
+        return o.isEarlyCancellation && o.futureInterestSaved > 0
+          ? `-${o.futureInterestSaved.toLocaleString('es-ES')} €`
+          : '—';
+      }),
+      { highlightClass: 'highlight-save' }
+    );
   }
 
-  appendTableRow(tbody, 'TIN / TAE', offers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${formatAprPercent(o.effectiveApr)} TAE`));
-  appendTableRow(tbody, 'Intereses bancarios', offers.map(o => o.totalInterest > 0 ? `+${o.totalInterest.toLocaleString('es-ES')} €` : '0 €'), { isBold: true, highlightClass: 'highlight-trap' });
-  appendTableRow(tbody, 'Seguros / extras cobrados', offers.map(o => o.costBreakdown.linkedProducts > 0 ? `+${o.costBreakdown.linkedProducts.toLocaleString('es-ES')} €` : '0 €'));
-  appendTableRow(tbody, 'Coste financiero compra', offers.map(o => `${o.totalOutOfPocketCost.toLocaleString('es-ES')} €`), { isBold: true, isLargeText: true });
-  
+  appendTableRow(
+    tbody,
+    'TIN / TAE',
+    offers.map(o => (o.isCash ? '0%' : `${o.nominalTin}% / ${formatAprPercent(o.effectiveApr)} TAE`))
+  );
+  appendTableRow(
+    tbody,
+    'Intereses bancarios',
+    offers.map(o => (o.totalInterest > 0 ? `+${o.totalInterest.toLocaleString('es-ES')} €` : '0 €')),
+    { isBold: true, highlightClass: 'highlight-trap' }
+  );
+  appendTableRow(
+    tbody,
+    'Seguros / extras cobrados',
+    offers.map(o =>
+      o.costBreakdown.linkedProducts > 0 ? `+${o.costBreakdown.linkedProducts.toLocaleString('es-ES')} €` : '0 €'
+    )
+  );
+  appendTableRow(
+    tbody,
+    'Coste financiero compra',
+    offers.map(o => `${o.totalOutOfPocketCost.toLocaleString('es-ES')} €`),
+    { isBold: true, isLargeText: true }
+  );
+
   const hasIncludedServices = offers.some(o => (o.includedServicesValue || 0) > 0);
   if (hasIncludedServices) {
-    appendTableRow(tbody, 'Servicios bonificados (valor)', offers.map(o => {
-      if (!o.includedServicesValue) return '—';
-      const srvNames = (o.includedServices || []).map(s => s.name).join(', ');
-      return `🎁 +${o.includedServicesValue.toLocaleString('es-ES')} €${srvNames ? ` (${srvNames})` : ''}`;
-    }), { highlightClass: 'highlight-save' });
+    appendTableRow(
+      tbody,
+      'Servicios bonificados (valor)',
+      offers.map(o => {
+        if (!o.includedServicesValue) return '—';
+        const srvNames = (o.includedServices || []).map(s => s.name).join(', ');
+        return `🎁 +${o.includedServicesValue.toLocaleString('es-ES')} €${srvNames ? ` (${srvNames})` : ''}`;
+      }),
+      { highlightClass: 'highlight-save' }
+    );
 
-    appendTableRow(tbody, 'Coste equiparado (TCO)', offers.map(o => `${(o.adjustedTcoCost ?? o.totalOutOfPocketCost).toLocaleString('es-ES')} €`), { isBold: true, highlightClass: 'highlight-save' });
+    appendTableRow(
+      tbody,
+      'Coste equiparado (TCO)',
+      offers.map(o => `${(o.adjustedTcoCost ?? o.totalOutOfPocketCost).toLocaleString('es-ES')} €`),
+      { isBold: true, highlightClass: 'highlight-save' }
+    );
   }
 
   // Fila de diferencia financiera
@@ -176,7 +262,8 @@ export function createComparisonTableElement(offers) {
         td.textContent = 'Referencia';
         td.className = 'table-cell--data table-cell--bold table-cell--muted';
       } else {
-        const eqDiff = o.netEquatedDifferenceVsCashRef !== undefined ? o.netEquatedDifferenceVsCashRef : o.netDifferenceVsCashRef;
+        const eqDiff =
+          o.netEquatedDifferenceVsCashRef !== undefined ? o.netEquatedDifferenceVsCashRef : o.netDifferenceVsCashRef;
         const sign = eqDiff > 0 ? '+' : '';
         td.textContent = `${sign}${eqDiff.toLocaleString('es-ES')} €`;
         td.className = `table-cell--data table-cell--bold ${eqDiff > 0 ? 'highlight-trap' : 'highlight-save'}`;
@@ -196,12 +283,17 @@ export function createComparisonTableElement(offers) {
   offers.forEach(o => {
     const td = document.createElement('td');
     td.className = 'table-cell--data';
-    if (o.isCash || o.verdict.status === 'warning' || o.verdict.status === 'neutral' || o.verdict.badge === 'Sin ventajas') {
+    if (
+      o.isCash ||
+      o.verdict.status === 'warning' ||
+      o.verdict.status === 'neutral' ||
+      o.verdict.badge === 'Sin ventajas'
+    ) {
       td.textContent = '—';
       td.className = 'table-cell--data table-cell--muted';
     } else {
       const badge = document.createElement('span');
-      badge.className = `badge ${o.verdict.status === 'danger' ? 'badge-trap' : (o.verdict.status === 'success' ? 'badge-winner' : 'badge-neutral')}`;
+      badge.className = `badge ${o.verdict.status === 'danger' ? 'badge-trap' : o.verdict.status === 'success' ? 'badge-winner' : 'badge-neutral'}`;
       badge.textContent = o.verdict.badge;
       td.appendChild(badge);
     }

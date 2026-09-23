@@ -184,25 +184,29 @@ export function getOfferVehicle(offer) {
 
 /**
  * Crea una oferta con valores por defecto y validación robusta (evitando falsos negativos con valor 0).
- * @param {Partial<Offer>} overrides 
+ * @param {Partial<Offer>} overrides
  * @returns {Offer}
  */
 export function createDefaultOffer(overrides = {}) {
   const id = overrides.id || generateId(ID_PREFIX_OFFER);
-  const vehicle = overrides.vehicle !== undefined && overrides.vehicle !== null && String(overrides.vehicle).trim() !== ''
-    ? String(overrides.vehicle).trim()
-    : getOfferVehicle(overrides);
+  const vehicle =
+    overrides.vehicle !== undefined && overrides.vehicle !== null && String(overrides.vehicle).trim() !== ''
+      ? String(overrides.vehicle).trim()
+      : getOfferVehicle(overrides);
   const imageUrl = getVehicleImageUrl(vehicle, overrides.imageUrl);
 
   const isCash = overrides.modality === OFFER_MODALITIES.CASH;
 
   // Precios y descuentos (lógica compartida con normalizeOffer)
-  const { offerPrice, vehiclePrice, cashPriceReference, financeDiscount } = resolvePrices(overrides, { defaults: DEFAULTS });
+  const { offerPrice, vehiclePrice, cashPriceReference, financeDiscount } = resolvePrices(overrides, {
+    defaults: DEFAULTS
+  });
 
   let downPayment = 0;
-  let financedAmount = overrides.financedAmount !== undefined && overrides.financedAmount !== null
-    ? Number(overrides.financedAmount)
-    : null;
+  let financedAmount =
+    overrides.financedAmount !== undefined && overrides.financedAmount !== null
+      ? Number(overrides.financedAmount)
+      : null;
 
   if (!isCash) {
     const resolved = resolveDownPayment({
@@ -225,7 +229,7 @@ export function createDefaultOffer(overrides = {}) {
     dealer: overrides.dealer || '',
     notes: overrides.notes || '',
     modality: overrides.modality || OFFER_MODALITIES.STANDARD_FINANCE,
-    
+
     // Precios: vehiclePrice (catálogo/referencia) y offerPrice (precio base tras descuento)
     vehiclePrice,
     financeDiscount,
@@ -233,37 +237,51 @@ export function createDefaultOffer(overrides = {}) {
     offerPrice,
     downPayment,
     financedAmount,
-    tradeInValue: overrides.tradeInValue !== undefined 
-      ? Number(overrides.tradeInValue) 
-      : 0,
+    tradeInValue: overrides.tradeInValue !== undefined ? Number(overrides.tradeInValue) : 0,
 
     // Parámetros de préstamo
-    months: overrides.months !== undefined 
-      ? Number(overrides.months) 
-      : (overrides.modality === OFFER_MODALITIES.EARLY_CANCELLATION ? DEFAULTS.contractMonths : DEFAULTS.months),
-    contractMonths: overrides.contractMonths !== undefined
-      ? Number(overrides.contractMonths)
-      : (overrides.months !== undefined ? Number(overrides.months) : (overrides.modality === OFFER_MODALITIES.EARLY_CANCELLATION ? DEFAULTS.contractMonths : DEFAULTS.months)),
-    tin: overrides.tin !== undefined 
-      ? (overrides.tin === null ? null : Number(overrides.tin)) 
-      : (overrides.manualMonthlyPayment ? null : DEFAULTS.tin),
-    manualMonthlyPayment: overrides.manualMonthlyPayment !== undefined 
-      ? (overrides.manualMonthlyPayment === null ? null : Number(overrides.manualMonthlyPayment)) 
-      : null,
-    
+    months:
+      overrides.months !== undefined
+        ? Number(overrides.months)
+        : overrides.modality === OFFER_MODALITIES.EARLY_CANCELLATION
+          ? DEFAULTS.contractMonths
+          : DEFAULTS.months,
+    contractMonths:
+      overrides.contractMonths !== undefined
+        ? Number(overrides.contractMonths)
+        : overrides.months !== undefined
+          ? Number(overrides.months)
+          : overrides.modality === OFFER_MODALITIES.EARLY_CANCELLATION
+            ? DEFAULTS.contractMonths
+            : DEFAULTS.months,
+    tin:
+      overrides.tin !== undefined
+        ? overrides.tin === null
+          ? null
+          : Number(overrides.tin)
+        : overrides.manualMonthlyPayment
+          ? null
+          : DEFAULTS.tin,
+    manualMonthlyPayment:
+      overrides.manualMonthlyPayment !== undefined
+        ? overrides.manualMonthlyPayment === null
+          ? null
+          : Number(overrides.manualMonthlyPayment)
+        : null,
+
     // Financiación flexible / multiopción
-    balloonPayment: overrides.balloonPayment !== undefined 
-      ? Number(overrides.balloonPayment) 
-      : 0,
+    balloonPayment: overrides.balloonPayment !== undefined ? Number(overrides.balloonPayment) : 0,
 
     // Financiación con cancelación anticipada (permanencia)
     cancelEarly: Boolean(overrides.cancelEarly),
-    earlyCancellationMonth: overrides.earlyCancellationMonth !== undefined
-      ? Number(overrides.earlyCancellationMonth)
-      : DEFAULTS.earlyCancellationMonth,
-    earlyCancellationPenaltyRate: overrides.earlyCancellationPenaltyRate !== undefined
-      ? Number(overrides.earlyCancellationPenaltyRate)
-      : DEFAULTS.earlyCancellationPenaltyRate,
+    earlyCancellationMonth:
+      overrides.earlyCancellationMonth !== undefined
+        ? Number(overrides.earlyCancellationMonth)
+        : DEFAULTS.earlyCancellationMonth,
+    earlyCancellationPenaltyRate:
+      overrides.earlyCancellationPenaltyRate !== undefined
+        ? Number(overrides.earlyCancellationPenaltyRate)
+        : DEFAULTS.earlyCancellationPenaltyRate,
 
     // Productos obligatorios vinculados a la financiación
     linkedProducts: Array.isArray(overrides.linkedProducts) ? overrides.linkedProducts : [],

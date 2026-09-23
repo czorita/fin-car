@@ -39,14 +39,16 @@ export function generateVerdict({
   includedServicesValue = 0,
   netEquatedDifferenceVsCashRef = undefined
 }) {
-  const equatedDiff = netEquatedDifferenceVsCashRef !== undefined
-    ? netEquatedDifferenceVsCashRef
-    : (netDifferenceVsCashRef - includedServicesValue);
+  const equatedDiff =
+    netEquatedDifferenceVsCashRef !== undefined
+      ? netEquatedDifferenceVsCashRef
+      : netDifferenceVsCashRef - includedServicesValue;
 
   if (isCash) {
-    const srvText = includedServicesValue > 0
-      ? ` Incluye ${includedServicesValue.toLocaleString('es-ES')} € en servicios bonificados.`
-      : '';
+    const srvText =
+      includedServicesValue > 0
+        ? ` Incluye ${includedServicesValue.toLocaleString('es-ES')} € en servicios bonificados.`
+        : '';
     return {
       status: 'neutral',
       badge: 'Pago al contado',
@@ -58,7 +60,10 @@ export function generateVerdict({
   // Veredicto específico para Financiación con Cancelación Anticipada
   if (isEarlyCancellation) {
     if (netDifferenceVsCashRef < 0) {
-      const srvText = includedServicesValue > 0 ? ` y sumas ${includedServicesValue.toLocaleString('es-ES')} € en servicios de serie.` : '.';
+      const srvText =
+        includedServicesValue > 0
+          ? ` y sumas ${includedServicesValue.toLocaleString('es-ES')} € en servicios de serie.`
+          : '.';
       return {
         status: 'success',
         badge: '⚡ Ahorro neto cancelando',
@@ -99,9 +104,10 @@ export function generateVerdict({
 
   // 1. Ahorro neto directo en el precio financiado (sin necesitar servicios)
   if (netDifferenceVsCashRef < 0) {
-    const srvText = includedServicesValue > 0
-      ? ` y además incluye ${includedServicesValue.toLocaleString('es-ES')} € en servicios de serie.`
-      : ' gracias a las promociones.';
+    const srvText =
+      includedServicesValue > 0
+        ? ` y además incluye ${includedServicesValue.toLocaleString('es-ES')} € en servicios de serie.`
+        : ' gracias a las promociones.';
     return {
       status: 'success',
       badge: 'Ahorro neto',

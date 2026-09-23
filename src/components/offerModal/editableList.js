@@ -38,19 +38,19 @@ export function createEditableList({ container, template, rowSelector, removeSel
     if (field.kind === 'checkbox') {
       // Semántica de productos: sin valor explícito se considera marcado
       input.checked = item[field.prop] !== false;
-      input.addEventListener('change', (e) => {
+      input.addEventListener('change', e => {
         item[field.prop] = e.target.checked;
         onChange();
       });
     } else if (field.kind === 'number') {
       input.value = formatLocaleNumber(item[field.prop] || 0);
-      input.addEventListener('change', (e) => {
+      input.addEventListener('change', e => {
         item[field.prop] = parseLocaleNumber(e.target.value);
         onChange();
       });
     } else {
       input.value = item[field.prop] || '';
-      input.addEventListener('change', (e) => {
+      input.addEventListener('change', e => {
         item[field.prop] = e.target.value;
       });
     }

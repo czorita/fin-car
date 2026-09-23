@@ -41,7 +41,10 @@ export function createEarlyCancellationPanel(els, { getMode, getPrincipal, getFi
     if (!isEarlyCancel && !isFlexibleEarly) return;
 
     const principal = getPrincipal();
-    const contractMonths = parseMonths(els.loanMonthsInput?.value, isEarlyCancel ? DEFAULTS.contractMonths : FLEXIBLE_DEFAULT_MONTHS);
+    const contractMonths = parseMonths(
+      els.loanMonthsInput?.value,
+      isEarlyCancel ? DEFAULTS.contractMonths : FLEXIBLE_DEFAULT_MONTHS
+    );
     const cancelMonth = parseMonths(earlyCancelMonthInput?.value, DEFAULTS.earlyCancellationMonth);
     const penaltyRate = parseLocaleRate(earlyCancelPenaltyInput?.value || '1,0');
     const balloon = isFlexibleEarly ? parseLocaleNumber(els.balloonPaymentInput?.value || 0) : 0;
@@ -58,10 +61,18 @@ export function createEarlyCancellationPanel(els, { getMode, getPrincipal, getFi
     }
 
     const res = calculateEarlyCancellationSettlement(
-      principal, tin, contractMonths, cancelMonth, penaltyRate, balloon, manualCuota > 0 ? manualCuota : null
+      principal,
+      tin,
+      contractMonths,
+      cancelMonth,
+      penaltyRate,
+      balloon,
+      manualCuota > 0 ? manualCuota : null
     );
 
-    const setText = (node, text) => { if (node) node.textContent = text; };
+    const setText = (node, text) => {
+      if (node) node.textContent = text;
+    };
     setText(els.cancelSummaryMonth, String(res.cancelMonth));
     setText(els.cancelSummaryCapital, `${res.settlementCapital.toLocaleString('es-ES')} €`);
     setText(els.cancelSummaryRate, formatLocaleNumber(res.penaltyRate));
@@ -73,7 +84,7 @@ export function createEarlyCancellationPanel(els, { getMode, getPrincipal, getFi
   earlyCancelMonthInput?.addEventListener('input', onChange);
   earlyCancelPenaltyInput?.addEventListener('input', onChange);
 
-  cancelMonthsPills?.addEventListener('click', (e) => {
+  cancelMonthsPills?.addEventListener('click', e => {
     const btn = e.target.closest('.months-pill-btn');
     if (btn?.dataset.cancel) {
       if (earlyCancelMonthInput) earlyCancelMonthInput.value = btn.dataset.cancel;
@@ -82,7 +93,7 @@ export function createEarlyCancellationPanel(els, { getMode, getPrincipal, getFi
     }
   });
 
-  penaltyQuickPills?.addEventListener('click', (e) => {
+  penaltyQuickPills?.addEventListener('click', e => {
     const btn = e.target.closest('.months-pill-btn');
     if (btn?.dataset.penalty) {
       if (earlyCancelPenaltyInput) earlyCancelPenaltyInput.value = formatLocaleNumber(btn.dataset.penalty);

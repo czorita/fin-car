@@ -15,17 +15,19 @@ describe('Servidor HTTP y Entrega de Archivos Estáticos', () => {
 
   function request(urlPath) {
     return new Promise((resolve, reject) => {
-      http.get(`${BASE_URL}${urlPath}`, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          resolve({
-            statusCode: res.statusCode,
-            headers: res.headers,
-            body: data
+      http
+        .get(`${BASE_URL}${urlPath}`, res => {
+          let data = '';
+          res.on('data', chunk => (data += chunk));
+          res.on('end', () => {
+            resolve({
+              statusCode: res.statusCode,
+              headers: res.headers,
+              body: data
+            });
           });
-        });
-      }).on('error', reject);
+        })
+        .on('error', reject);
     });
   }
 
@@ -41,11 +43,17 @@ describe('Servidor HTTP y Entrega de Archivos Estáticos', () => {
     }
     const indexPath = path.resolve(distDir, 'index.html');
     if (!fs.existsSync(indexPath)) {
-      fs.writeFileSync(indexPath, '<!doctype html><html><head><title>Fin-Car</title></head><body><h1>Fin-Car</h1></body></html>');
+      fs.writeFileSync(
+        indexPath,
+        '<!doctype html><html><head><title>Fin-Car</title></head><body><h1>Fin-Car</h1></body></html>'
+      );
     }
     const ejemplosPath = path.resolve(distDir, 'ejemplos.html');
     if (!fs.existsSync(ejemplosPath)) {
-      fs.writeFileSync(ejemplosPath, '<!doctype html><html><head><title>Ejemplos</title></head><body><h1>Ejemplos</h1></body></html>');
+      fs.writeFileSync(
+        ejemplosPath,
+        '<!doctype html><html><head><title>Ejemplos</title></head><body><h1>Ejemplos</h1></body></html>'
+      );
     }
     const existingFiles = fs.readdirSync(distAssetsDir);
     if (!existingFiles.some(f => f.endsWith('.js'))) {
