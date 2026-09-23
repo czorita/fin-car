@@ -11,6 +11,7 @@ describe('Servidor HTTP y Entrega de Archivos Estáticos', () => {
   let serverInstance;
   const TEST_PORT = 8999;
   const BASE_URL = `http://localhost:${TEST_PORT}`;
+  const TEST_SUBDIR = '__test-subdir__';
 
   function request(urlPath) {
     return new Promise((resolve, reject) => {
@@ -53,6 +54,8 @@ describe('Servidor HTTP y Entrega de Archivos Estáticos', () => {
     if (!existingFiles.some(f => f.endsWith('.css'))) {
       fs.writeFileSync(path.resolve(distAssetsDir, 'style-bundle.css'), 'body { margin: 0; }');
     }
+    fs.mkdirSync(path.resolve(distDir, TEST_SUBDIR), { recursive: true });
+    fs.writeFileSync(path.resolve(distDir, TEST_SUBDIR, 'index.html'), '<!doctype html><p>subdir-index</p>');
 
     // Importación dinámica para inicializar el servidor en el puerto de prueba
     const mod = await import('../server.js');
@@ -65,6 +68,8 @@ describe('Servidor HTTP y Entrega de Archivos Estáticos', () => {
     if (serverInstance) {
       await new Promise(resolve => serverInstance.close(resolve));
     }
+    const fs = await import('node:fs');
+    fs.rmSync(path.resolve(__dirname, '../dist', TEST_SUBDIR), { recursive: true, force: true });
   });
 
   test('GET / debe responder 200 con Content-Type text/html', async () => {
@@ -119,5 +124,25 @@ describe('Servidor HTTP y Entrega de Archivos Estáticos', () => {
   test('Intento de Path Traversal debe ser bloqueado', async () => {
     const res = await request('/../package.json');
     assert.ok(res.statusCode === 403 || res.statusCode === 404);
+  });
+
+  test('URL mal codificada responde 400 sin tumbar el servidor', async () => {
+    const res = await request('/%E0%A4%A');
+    assert.equal(res.statusCode, 400);
+
+    const alive = await request('/');
+    assert.equal(alive.statusCode, 200);
+  });
+
+  test('URL mal codificada en la API responde 400 con JSON', async () => {
+    const res = await request('/api/offers/%E0%A4%A');
+    assert.equal(res.statusCode, 400);
+    assert.match(res.headers['content-type'], /application\/json/);
+  });
+
+  test('GET a un directorio de dist sirve su index.html', async () => {
+    const res = await request(`/${TEST_SUBDIR}`);
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /subdir-index/);
   });
 });
