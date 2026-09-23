@@ -2,6 +2,8 @@
  * Utilidades de formateo y parseo numérico con soporte para comas decimales.
  */
 
+import { NOT_AVAILABLE_LABEL } from './constants.js';
+
 /**
  * Parsea un número admitiendo comas o puntos decimales y separadores de miles.
  * Soporta formatos:
@@ -91,3 +93,14 @@ export function formatMonthsDuration(months) {
   return `${yearStr} y ${monthStr}`;
 }
 
+
+/**
+ * Formatea una TAE en porcentaje. Si no es calculable (`null`), devuelve "N/D".
+ * Ej: 9.85 -> "9.85%"; 0 -> "0%"; null -> "N/D"
+ * @param {number|null|undefined} apr
+ * @returns {string}
+ */
+export function formatAprPercent(apr) {
+  if (apr === null || apr === undefined || !Number.isFinite(Number(apr))) return NOT_AVAILABLE_LABEL;
+  return `${apr}%`;
+}

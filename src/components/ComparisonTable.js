@@ -4,7 +4,7 @@
  */
 
 import { MODALITY_LABELS, getOfferFinanceSubtitle } from '../core/types.js';
-import { formatMonthsDuration } from '../core/formatters.js';
+import { formatMonthsDuration, formatAprPercent } from '../core/formatters.js';
 
 /**
  * Añade una fila a la tabla comparativa.
@@ -125,7 +125,7 @@ export function createComparisonTableElement(offers) {
     }), { highlightClass: 'highlight-save' });
   }
 
-  appendTableRow(tbody, 'TIN / TAE', offers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${o.effectiveApr}% TAE`));
+  appendTableRow(tbody, 'TIN / TAE', offers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${formatAprPercent(o.effectiveApr)} TAE`));
   appendTableRow(tbody, 'Intereses bancarios', offers.map(o => o.totalInterest > 0 ? `+${o.totalInterest.toLocaleString('es-ES')} €` : '0 €'), { isBold: true, highlightClass: 'highlight-trap' });
   appendTableRow(tbody, 'Seguros / extras cobrados', offers.map(o => o.costBreakdown.linkedProducts > 0 ? `+${o.costBreakdown.linkedProducts.toLocaleString('es-ES')} €` : '0 €'));
   appendTableRow(tbody, 'Coste financiero compra', offers.map(o => `${o.totalOutOfPocketCost.toLocaleString('es-ES')} €`), { isBold: true, isLargeText: true });

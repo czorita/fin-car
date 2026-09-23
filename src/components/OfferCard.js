@@ -4,6 +4,7 @@
  */
 
 import { MODALITY_LABELS, OFFER_MODALITIES, getOfferFinanceSubtitle } from '../core/types.js';
+import { formatAprPercent } from '../core/formatters.js';
 
 /**
  * Crea una fila de especificación en el desglose de la tarjeta.
@@ -179,7 +180,7 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
   if (!isCash) {
     specsList.appendChild(createSpecRow('Capital financiado:', `${offer.principalFinanced.toLocaleString('es-ES')} €`));
-    specsList.appendChild(createSpecRow('TIN nominal / TAE real:', `${offer.nominalTin}% TIN / ${offer.effectiveApr}% TAE`));
+    specsList.appendChild(createSpecRow('TIN nominal / TAE real:', `${offer.nominalTin}% TIN / ${formatAprPercent(offer.effectiveApr)} TAE`));
     specsList.appendChild(createSpecRow('Total intereses banco:', `+${offer.totalInterest.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
 
     if (offer.costBreakdown.linkedProducts > 0) {

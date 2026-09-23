@@ -363,8 +363,10 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     const balloon = isFlexibleEarly ? parseLocaleNumber(balloonPaymentInput?.value || 0) : 0;
 
     let tin = parseLocaleNumber(loanTinInput?.value || 0);
+    // Cuota manual: la liquidación se calcula con ella (igual que en normalizeOffer)
+    const manualCuota = activeFinancingMode === 'monthly' ? parseLocaleNumber(manualMonthlyInput?.value || 0) : 0;
     if (activeFinancingMode === 'monthly' && (!tin || tin <= 0)) {
-      const cuota = parseLocaleNumber(manualMonthlyInput?.value || 0);
+      const cuota = manualCuota;
       if (principal > 0 && contractMonths > 0 && cuota > 0) {
         const deduced = reverseEngineerInterestRate(principal, cuota, contractMonths, balloon);
         tin = deduced.tin;
@@ -374,7 +376,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       tin = 8.5;
     }
 
-    const res = calculateEarlyCancellationSettlement(principal, tin, contractMonths, cancelMonth, penaltyRate, balloon);
+    const res = calculateEarlyCancellationSettlement(principal, tin, contractMonths, cancelMonth, penaltyRate, balloon, manualCuota > 0 ? manualCuota : null);
 
     if (cancelSummaryMonth) cancelSummaryMonth.textContent = String(res.cancelMonth);
     if (cancelSummaryCapital) cancelSummaryCapital.textContent = `${res.settlementCapital.toLocaleString('es-ES')} €`;

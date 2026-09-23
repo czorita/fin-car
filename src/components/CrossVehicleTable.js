@@ -4,7 +4,7 @@
  */
 
 import { MODALITY_LABELS, getOfferVehicle } from '../core/types.js';
-import { formatMonthsDuration } from '../core/formatters.js';
+import { formatMonthsDuration, formatAprPercent } from '../core/formatters.js';
 import { getVehicleImageUrl } from '../core/vehicleCatalog.js';
 
 /**
@@ -141,7 +141,7 @@ export function createCrossVehicleTableElement(rankedCrossOffers) {
     appendRow(tbody, 'Intereses futuros ahorrados', rankedCrossOffers.map(o => (o.isEarlyCancellation && o.futureInterestSaved > 0) ? `-${o.futureInterestSaved.toLocaleString('es-ES')} €` : '—'), { highlightClass: 'highlight-save' });
   }
 
-  appendRow(tbody, 'TIN / TAE real', rankedCrossOffers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${o.effectiveApr}% TAE`));
+  appendRow(tbody, 'TIN / TAE real', rankedCrossOffers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${formatAprPercent(o.effectiveApr)} TAE`));
   appendRow(tbody, 'Total intereses pagados', rankedCrossOffers.map(o => o.totalInterest > 0 ? `+${o.totalInterest.toLocaleString('es-ES')} €` : '0 €'), { isBold: true, highlightClass: 'highlight-trap' });
   appendRow(tbody, 'Coste financiero compra', rankedCrossOffers.map(o => `${o.totalOutOfPocketCost.toLocaleString('es-ES')} €`), { isBold: true, isLargeText: true });
 

@@ -67,8 +67,38 @@ export const DEFAULTS = {
   contractMonths: 84,
   earlyCancellationMonth: 24,
   earlyCancellationPenaltyRate: 1.0,
+  /** Plazo de contrato por defecto de la compra flexible con cancelación (meses) */
+  flexibleContractMonths: 48,
   tin: 8.5
 };
+
+// --- Motor financiero (parámetros numéricos) ---
+/** Iteraciones máximas de Newton-Raphson en el cálculo de la TIR */
+export const IRR_MAX_ITERATIONS = 100;
+/** Tolerancia sobre el VAN para dar por convergida la TIR */
+export const IRR_PRECISION = 1e-7;
+/** Derivada mínima (en valor absoluto) para continuar iterando Newton-Raphson */
+export const IRR_MIN_DERIVATIVE = 1e-12;
+/** Estimación inicial por defecto de la TIR mensual */
+export const IRR_DEFAULT_GUESS = 0.01;
+/** Estimación inicial de la TIR mensual al calcular la TAE (~10% anual) */
+export const APR_IRR_GUESS = 0.008;
+/** Tasa mensual mínima admisible (-99%): por debajo, la TIR se considera no válida */
+export const IRR_MIN_RATE = -0.99;
+/** Cota superior de tasa mensual para la bisección de respaldo (1000% mensual) */
+export const IRR_BISECTION_MAX_RATE = 10;
+/** Iteraciones máximas de la bisección de respaldo de la TIR */
+export const IRR_BISECTION_MAX_ITERATIONS = 200;
+
+/** Iteraciones máximas de la bisección al deducir el TIN a partir de la cuota */
+export const REVERSE_TIN_MAX_ITERATIONS = 80;
+/** Cota superior de tasa mensual al deducir el TIN (50% mensual) */
+export const REVERSE_TIN_MAX_MONTHLY_RATE = 0.5;
+/** Tolerancia (€) entre la cuota calculada y la objetivo al deducir el TIN */
+export const REVERSE_TIN_PAYMENT_TOLERANCE = 0.001;
+
+/** Texto mostrado cuando la TAE no puede calcularse */
+export const NOT_AVAILABLE_LABEL = 'N/D';
 
 // --- LocalStorage Keys ---
 export const STORAGE_KEY_OFFERS = 'fin_car_user_offers_v2';

@@ -1,8 +1,34 @@
 /**
  * Motor de cálculos financieros para préstamos y ofertas de automóviles.
  * Incluye sistema francés, préstamos con cuota final (balloon / multiopción),
- * cálculo de TAE real mediante TIR (Newton-Raphson) y cuadro de amortización.
+ * cálculo de TAE real mediante TIR (Newton-Raphson con bisección de respaldo) y cuadro de amortización.
  */
+
+import {
+  DEFAULTS,
+  IRR_MAX_ITERATIONS,
+  IRR_PRECISION,
+  IRR_MIN_DERIVATIVE,
+  IRR_DEFAULT_GUESS,
+  APR_IRR_GUESS,
+  IRR_MIN_RATE,
+  IRR_BISECTION_MAX_RATE,
+  IRR_BISECTION_MAX_ITERATIONS,
+  REVERSE_TIN_MAX_ITERATIONS,
+  REVERSE_TIN_MAX_MONTHLY_RATE,
+  REVERSE_TIN_PAYMENT_TOLERANCE
+} from './constants.js';
+
+/**
+ * Devuelve la cuota a aplicar: la cuota forzada si es un número positivo o, en su defecto, la teórica.
+ * @param {number|null|undefined} override
+ * @param {number} theoretical
+ * @returns {number}
+ */
+function pickMonthlyPayment(override, theoretical) {
+  const value = Number(override);
+  return override !== null && override !== undefined && Number.isFinite(value) && value > 0 ? value : theoretical;
+}
 
 /**
  * Calcula la cuota mensual para un préstamo estándar o con valor residual (cuota final).
@@ -43,8 +69,10 @@ export function calculateMonthlyPayment(principal, annualTin, months, balloonPay
  * @param {number} annualTin - TIN anual (%)
  * @param {number} contractMonths - Plazo original del contrato (ej: 84)
  * @param {number} cancelMonth - Mes en el que se liquida totalmente (ej: 24)
- * @param {number} [penaltyRate=1.0] - Comisión de cancelación anticipada en % (ej: 1.0)
+ * @param {number} [penaltyRate=DEFAULTS.earlyCancellationPenaltyRate] - Comisión de cancelación anticipada en % (ej: 1.0)
  * @param {number} [balloonPayment=0] - Cuota final / balloon residual al término del contrato original
+ * @param {number|null} [monthlyPaymentOverride=null] - Cuota real a aplicar (ej. la indicada por el concesionario)
+ *   en lugar de la teórica del TIN. Se usa en el bucle de amortización y en todos los totales.
  * @returns {{
  *   monthlyPayment: number,
  *   contractMonths: number,
@@ -60,7 +88,15 @@ export function calculateMonthlyPayment(principal, annualTin, months, balloonPay
  *   futureInterestSaved: number
  * }}
  */
-export function calculateEarlyCancellationSettlement(principal, annualTin, contractMonths, cancelMonth, penaltyRate = 1.0, balloonPayment = 0) {
+export function calculateEarlyCancellationSettlement(
+  principal,
+  annualTin,
+  contractMonths,
+  cancelMonth,
+  penaltyRate = DEFAULTS.earlyCancellationPenaltyRate,
+  balloonPayment = 0,
+  monthlyPaymentOverride = null
+) {
   if (principal <= 0 || contractMonths <= 0 || cancelMonth <= 0) {
     return {
       monthlyPayment: 0,
@@ -81,7 +117,10 @@ export function calculateEarlyCancellationSettlement(principal, annualTin, contr
   const effectiveCancelMonth = Math.min(contractMonths, Math.max(1, cancelMonth));
   const r = (annualTin / 100) / 12;
   const vf = Number(balloonPayment) || 0;
-  const monthlyPayment = calculateMonthlyPayment(principal, annualTin, contractMonths, vf);
+  const monthlyPayment = pickMonthlyPayment(
+    monthlyPaymentOverride,
+    calculateMonthlyPayment(principal, annualTin, contractMonths, vf)
+  );
 
   let balance = principal;
   let totalInterestPaid = 0;
@@ -131,13 +170,17 @@ export function calculateEarlyCancellationSettlement(principal, annualTin, contr
  * @param {number} months - Plazo en meses
  * @param {number} [balloonPayment=0] - Cuota final (VFG)
  * @param {object|null} [earlyCancellation=null] - Configuración de cancelación anticipada { cancelMonth, penaltyRate }
+ * @param {number|null} [monthlyPaymentOverride=null] - Cuota real a aplicar en lugar de la teórica del TIN
  * @returns {Array<{month: number, payment: number, principalPayment: number, interestPayment: number, remainingBalance: number, isCancellation?: boolean, cancellationDetails?: object}>}
  */
-export function generateAmortizationSchedule(principal, annualTin, months, balloonPayment = 0, earlyCancellation = null) {
+export function generateAmortizationSchedule(principal, annualTin, months, balloonPayment = 0, earlyCancellation = null, monthlyPaymentOverride = null) {
   if (principal <= 0 || months <= 0) return [];
   
   const r = (annualTin / 100) / 12;
-  const monthlyPayment = calculateMonthlyPayment(principal, annualTin, months, balloonPayment);
+  const monthlyPayment = pickMonthlyPayment(
+    monthlyPaymentOverride,
+    calculateMonthlyPayment(principal, annualTin, months, balloonPayment)
+  );
   const vf = balloonPayment || 0;
   
   const schedule = [];
@@ -145,7 +188,7 @@ export function generateAmortizationSchedule(principal, annualTin, months, ballo
 
   const isEarlyCancel = Boolean(earlyCancellation && earlyCancellation.cancelMonth && earlyCancellation.cancelMonth < months);
   const limitMonths = isEarlyCancel ? Math.min(months, earlyCancellation.cancelMonth) : months;
-  const penaltyRate = (earlyCancellation && earlyCancellation.penaltyRate !== undefined) ? Number(earlyCancellation.penaltyRate) : 1.0;
+  const penaltyRate = (earlyCancellation && earlyCancellation.penaltyRate !== undefined) ? Number(earlyCancellation.penaltyRate) : DEFAULTS.earlyCancellationPenaltyRate;
 
   for (let m = 1; m <= limitMonths; m++) {
     const interest = balance * r;
@@ -209,20 +252,29 @@ export function generateAmortizationSchedule(principal, annualTin, months, ballo
 }
 
 /**
- * Calcula la TIR (Tasa Interna de Retorno) periódica mensual usando Newton-Raphson.
- * cashflows[0] = flujo inicial (negativo: dinero recibido por el comprador o coste del coche)
- * cashflows[1..n] = pagos mensuales (positivos)
- * 
- * @param {number[]} cashflows 
- * @param {number} guess - Estimación inicial (ej: 0.01)
- * @returns {number|null} Tasa periódica mensual o null si no converge
+ * Valor actual neto de una serie de flujos mensuales a una tasa periódica dada.
+ * @param {number[]} cashflows
+ * @param {number} rate
+ * @returns {number}
  */
-export function calculateIRR(cashflows, guess = 0.01) {
-  const maxIter = 100;
-  const precision = 1e-7;
+function netPresentValue(cashflows, rate) {
+  let npv = 0;
+  for (let t = 0; t < cashflows.length; t++) {
+    npv += cashflows[t] / Math.pow(1 + rate, t);
+  }
+  return npv;
+}
+
+/**
+ * Busca la TIR por Newton-Raphson a partir de una estimación inicial.
+ * @param {number[]} cashflows
+ * @param {number} guess
+ * @returns {number|null} Tasa encontrada o null si no converge
+ */
+function irrByNewton(cashflows, guess) {
   let rate = guess;
 
-  for (let i = 0; i < maxIter; i++) {
+  for (let i = 0; i < IRR_MAX_ITERATIONS; i++) {
     let npv = 0;
     let dNpv = 0;
 
@@ -234,20 +286,80 @@ export function calculateIRR(cashflows, guess = 0.01) {
       }
     }
 
-    if (Math.abs(npv) < precision) {
+    if (Math.abs(npv) < IRR_PRECISION) {
       return rate;
     }
 
-    if (Math.abs(dNpv) < 1e-12) {
-      break;
+    if (!Number.isFinite(npv) || !Number.isFinite(dNpv) || Math.abs(dNpv) < IRR_MIN_DERIVATIVE) {
+      return null;
     }
 
     const newRate = rate - npv / dNpv;
-    if (isNaN(newRate) || !isFinite(newRate)) break;
+    // Una tasa <= -100% no tiene sentido financiero (y hace explotar el descuento)
+    if (!Number.isFinite(newRate) || newRate <= -1) return null;
     rate = newRate;
   }
 
   return null;
+}
+
+/**
+ * Busca la TIR por bisección en el intervalo [IRR_MIN_RATE, IRR_BISECTION_MAX_RATE].
+ * Más lenta que Newton-Raphson pero robusta: converge siempre que el VAN cambie de signo en el intervalo.
+ * @param {number[]} cashflows
+ * @returns {number|null} Tasa encontrada o null si no hay cambio de signo
+ */
+function irrByBisection(cashflows) {
+  let low = IRR_MIN_RATE;
+  let high = IRR_BISECTION_MAX_RATE;
+  let npvLow = netPresentValue(cashflows, low);
+  const npvHigh = netPresentValue(cashflows, high);
+
+  if (Number.isNaN(npvLow) || Number.isNaN(npvHigh)) return null;
+  if (npvLow === 0) return low;
+  if (npvHigh === 0) return high;
+  if (Math.sign(npvLow) === Math.sign(npvHigh)) return null;
+
+  for (let i = 0; i < IRR_BISECTION_MAX_ITERATIONS; i++) {
+    const mid = (low + high) / 2;
+    const npvMid = netPresentValue(cashflows, mid);
+    if (Number.isNaN(npvMid)) return null;
+
+    if (Math.abs(npvMid) < IRR_PRECISION || (high - low) / 2 < Number.EPSILON) {
+      return mid;
+    }
+
+    if (Math.sign(npvMid) === Math.sign(npvLow)) {
+      low = mid;
+      npvLow = npvMid;
+    } else {
+      high = mid;
+    }
+  }
+
+  return (low + high) / 2;
+}
+
+/**
+ * Calcula la TIR (Tasa Interna de Retorno) periódica mensual.
+ * Usa Newton-Raphson y, si no converge (mal punto de partida, derivada nula, divergencia),
+ * recurre a bisección como respaldo.
+ * cashflows[0] = flujo inicial (negativo: dinero recibido por el comprador o coste del coche)
+ * cashflows[1..n] = pagos mensuales (positivos)
+ * 
+ * @param {number[]} cashflows 
+ * @param {number} [guess=IRR_DEFAULT_GUESS] - Estimación inicial (ej: 0.01)
+ * @returns {number|null} Tasa periódica mensual o null si no hay solución
+ */
+export function calculateIRR(cashflows, guess = IRR_DEFAULT_GUESS) {
+  if (!Array.isArray(cashflows) || cashflows.length < 2) return null;
+
+  const newtonRate = irrByNewton(cashflows, guess);
+  if (newtonRate !== null && newtonRate >= IRR_MIN_RATE) {
+    return newtonRate;
+  }
+
+  return irrByBisection(cashflows);
 }
 
 /**
@@ -259,7 +371,8 @@ export function calculateIRR(cashflows, guess = 0.01) {
  * @param {number} months - Plazo en meses
  * @param {number} balloonPayment - Cuota final (si existe)
  * @param {number} upfrontFees - Gastos iniciales adicionales (seguros obligatorios al contado, etc.)
- * @returns {number} TAE en porcentaje (ej: 9.85)
+ * @returns {number|null} TAE en porcentaje (ej: 9.85). 0 si no hay financiación que valorar
+ *   y `null` si la TIR no tiene solución (TAE no calculable).
  */
 export function calculateEffectiveApr(netFinancedCapital, monthlyPayment, months, balloonPayment = 0, upfrontFees = 0) {
   if (netFinancedCapital <= 0 || months <= 0 || monthlyPayment <= 0) return 0;
@@ -276,13 +389,14 @@ export function calculateEffectiveApr(netFinancedCapital, monthlyPayment, months
     cashflows.push(payment);
   }
 
-  const monthlyIrr = calculateIRR(cashflows, 0.008);
-  if (monthlyIrr === null || monthlyIrr < -0.99) {
-    return 0;
+  const monthlyIrr = calculateIRR(cashflows, APR_IRR_GUESS);
+  if (monthlyIrr === null || monthlyIrr < IRR_MIN_RATE) {
+    return null;
   }
 
   const apr = (Math.pow(1 + monthlyIrr, 12) - 1) * 100;
-  return Number(apr.toFixed(2));
+  // `|| 0` evita devolver -0 cuando la TIR es prácticamente nula (financiación al 0%)
+  return Number(apr.toFixed(2)) || 0;
 }
 
 /**
@@ -313,14 +427,14 @@ export function reverseEngineerInterestRate(principal, monthlyPayment, months, b
   }
 
   let low = 0;
-  let high = 0.5;
+  let high = REVERSE_TIN_MAX_MONTHLY_RATE;
   let monthlyRate = 0;
 
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < REVERSE_TIN_MAX_ITERATIONS; i++) {
     monthlyRate = (low + high) / 2;
     const calcPayment = calculateMonthlyPayment(principal, monthlyRate * 12 * 100, months, balloonPayment);
 
-    if (Math.abs(calcPayment - monthlyPayment) < 0.001) {
+    if (Math.abs(calcPayment - monthlyPayment) < REVERSE_TIN_PAYMENT_TOLERANCE) {
       break;
     }
 

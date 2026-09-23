@@ -4,6 +4,7 @@
  */
 
 import { getOfferVehicle } from '../core/types.js';
+import { formatAprPercent } from '../core/formatters.js';
 import { getVehicleImageUrl, FALLBACK_CAR_SVG } from '../core/vehicleCatalog.js';
 
 /**
@@ -146,7 +147,7 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
   if (!offer.isCash) {
     specs.appendChild(createSpecRow('Entrada aportada:', `${offer.downPayment.toLocaleString('es-ES')} €`));
     specs.appendChild(createSpecRow('Cuota mensual:', `${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`));
-    specs.appendChild(createSpecRow('TIN / TAE:', `${offer.nominalTin}% / ${offer.effectiveApr}%`));
+    specs.appendChild(createSpecRow('TIN / TAE:', `${offer.nominalTin}% / ${formatAprPercent(offer.effectiveApr)}`));
     specs.appendChild(createSpecRow('Total intereses:', `+${offer.totalInterest.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
     if (offer.isEarlyCancellation) {
       if (offer.isFlexible && offer.balloonPayment > 0) {
