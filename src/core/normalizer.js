@@ -16,7 +16,7 @@ import { generateVerdict } from './verdicts.js';
 export function normalizeOffer(offer) {
   const isCash = offer.modality === OFFER_MODALITIES.CASH;
   const isFlexible = offer.modality === OFFER_MODALITIES.FLEXIBLE_FINANCE;
-  const isEarlyCancellation = offer.modality === OFFER_MODALITIES.EARLY_CANCELLATION;
+  const isEarlyCancellation = offer.modality === OFFER_MODALITIES.EARLY_CANCELLATION || (isFlexible && Boolean(offer.cancelEarly));
 
   // 1. Productos vinculados
   const products = offer.linkedProducts || [];
@@ -142,7 +142,8 @@ export function normalizeOffer(offer) {
   const cancelMonth = Number(offer.earlyCancellationMonth) || 24;
   const penaltyRate = offer.earlyCancellationPenaltyRate !== undefined ? Number(offer.earlyCancellationPenaltyRate) : 1.0;
 
-  let balloon = isFlexible ? (Number(offer.balloonPayment) || 0) : 0;
+  const originalBalloon = isFlexible ? (Number(offer.balloonPayment) || 0) : 0;
+  let balloon = originalBalloon;
   let monthlyPayment = 0;
   let totalInterest = 0;
   let effectiveTin = tin;
@@ -160,11 +161,11 @@ export function normalizeOffer(offer) {
     if (offer.manualMonthlyPayment && Number(offer.manualMonthlyPayment) > 0) {
       monthlyPayment = Number(offer.manualMonthlyPayment);
       if (effectiveTin <= 0) {
-        const rev = reverseEngineerInterestRate(financedPrincipal, monthlyPayment, contractMonths, 0);
+        const rev = reverseEngineerInterestRate(financedPrincipal, monthlyPayment, contractMonths, originalBalloon);
         effectiveTin = rev.tin;
       }
     }
-    const earlyCalc = calculateEarlyCancellationSettlement(financedPrincipal, effectiveTin, contractMonths, cancelMonth, penaltyRate);
+    const earlyCalc = calculateEarlyCancellationSettlement(financedPrincipal, effectiveTin, contractMonths, cancelMonth, penaltyRate, originalBalloon);
     if (!offer.manualMonthlyPayment || Number(offer.manualMonthlyPayment) <= 0) {
       monthlyPayment = earlyCalc.monthlyPayment;
     }
@@ -241,7 +242,7 @@ export function normalizeOffer(offer) {
 
   // Cuadro de amortización
   const amortizationSchedule = isEarlyCancellation
-    ? generateAmortizationSchedule(financedPrincipal, effectiveTin, contractMonths, 0, { cancelMonth, penaltyRate })
+    ? generateAmortizationSchedule(financedPrincipal, effectiveTin, contractMonths, originalBalloon, { cancelMonth, penaltyRate })
     : generateAmortizationSchedule(financedPrincipal, effectiveTin, months, balloon);
 
   return {
@@ -256,6 +257,7 @@ export function normalizeOffer(offer) {
     isEarlyCancellation,
     isFlexible,
     isFlexibleFinance: isFlexible,
+    cancelEarly: Boolean(offer.cancelEarly && isFlexible),
     principalFinanced: Number(financedPrincipal.toFixed(2)),
     monthlyPayment,
     totalMonths: months,
@@ -266,7 +268,7 @@ export function normalizeOffer(offer) {
     cancellationPenalty,
     finalSettlementPayment,
     futureInterestSaved,
-    balloonPayment: balloon,
+    balloonPayment: isFlexible ? originalBalloon : balloon,
     effectiveApr: effectiveApr || Number((effectiveTin * 1.05).toFixed(2)), // Si TAE da 0 aproximar
     nominalTin: effectiveTin,
     tin: effectiveTin,

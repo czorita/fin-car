@@ -424,6 +424,47 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     // Entrada requerida: 25.000 - 2.000 + 500 - 18.000 = 5.500 €
     assert.equal(norm.downPayment, 5500, 'La entrada calculada debe ser 5.500 €');
   });
+
+  test('Test 18: Normalización de oferta flexible combinada con cancelación anticipada', () => {
+    // Coche precio final 28.500 € (con 3.500 € descuento incluido, ref 32.000 €)
+    // Entrada 5.000 € -> 23.500 € a financiar
+    // Contrato 48m, balloon final de 14.000 €, TIN 8%
+    // Cancelación pactada en mes 24 (1% comisión)
+    const offer = {
+      id: 'test_flex_early',
+      vehicle: 'Toyota RAV4',
+      modality: OFFER_MODALITIES.FLEXIBLE_FINANCE,
+      offerPrice: 28500,
+      financeDiscount: 3500,
+      downPayment: 5000,
+      tradeInValue: 0,
+      months: 48,
+      contractMonths: 48,
+      earlyCancellationMonth: 24,
+      earlyCancellationPenaltyRate: 1.0,
+      cancelEarly: true,
+      balloonPayment: 14000,
+      tin: 8.0
+    };
+
+    const norm = normalizeOffer(offer);
+
+    assert.equal(norm.isFlexible, true);
+    assert.equal(norm.isEarlyCancellation, true);
+    assert.equal(norm.cancelEarly, true);
+    assert.equal(norm.totalMonths, 24, 'Total cuotas regulares debe ser 24 meses');
+    assert.equal(norm.contractMonths, 48, 'Plazo original del contrato era 48 meses');
+    assert.equal(norm.earlyCancellationMonth, 24);
+    assert.equal(norm.balloonPayment, 14000, 'Debe preservar el balloon pactado');
+    assert.ok(norm.settlementCapital > 17500 && norm.settlementCapital < 20000, `Capital de liquidación esperado ~18.8k €, obtenido ${norm.settlementCapital}`);
+    assert.ok(Math.abs(norm.cancellationPenalty - (norm.settlementCapital * 0.01)) < 0.05);
+    assert.equal(norm.finalSettlementPayment, Number((norm.settlementCapital + norm.cancellationPenalty).toFixed(2)));
+    assert.ok(norm.futureInterestSaved > 2000, `Ahorro esperado de intereses > 2000 €, obtenido ${norm.futureInterestSaved}`);
+    assert.equal(norm.amortizationSchedule.length, 24);
+    assert.equal(norm.amortizationSchedule[23].isCancellation, true);
+    assert.equal(norm.amortizationSchedule[23].remainingBalance, 0);
+  });
 });
+
 
 

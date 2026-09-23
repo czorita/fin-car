@@ -193,5 +193,29 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
     assert.equal(offer.downPayment, 4000, 'La entrada deducida debe ser 4.000 €');
     assert.equal(offer.financedAmount, 18000);
   });
+
+  test('Test 13: Soporte para financiación flexible combinada con cancelación anticipada', () => {
+    const offer = createDefaultOffer({
+      vehicle: 'Cupra Formentor',
+      modality: OFFER_MODALITIES.FLEXIBLE_FINANCE,
+      months: 48,
+      contractMonths: 48,
+      earlyCancellationMonth: 24,
+      cancelEarly: true,
+      balloonPayment: 14000
+    });
+
+    assert.equal(offer.modality, OFFER_MODALITIES.FLEXIBLE_FINANCE);
+    assert.equal(offer.cancelEarly, true);
+    assert.equal(offer.balloonPayment, 14000);
+    assert.equal(offer.earlyCancellationMonth, 24);
+
+    const sub = getOfferFinanceSubtitle(offer);
+    assert.equal(sub, 'Compra flexible (cancelación mes 24 de 48m)');
+
+    const title = getOfferDisplayTitle(offer);
+    assert.equal(title, 'Cupra Formentor - Compra flexible (cancelación mes 24 de 48m)');
+  });
 });
+
 

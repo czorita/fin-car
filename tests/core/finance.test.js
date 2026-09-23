@@ -85,4 +85,21 @@ describe('Cálculos Financieros y Normalización de Ofertas', () => {
     assert.equal(lastRow.remainingBalance, 0, 'El saldo al final del mes 24 debe ser 0');
     assert.ok(lastRow.cancellationDetails.penaltyAmount > 0);
   });
+
+  test('Test 8: calculateEarlyCancellationSettlement con financiación flexible (balloon / VFG)', () => {
+    // 20.000 € a 48 meses al 8.5% con balloon final de 10.000 €
+    // Cancelación en mes 24 con penalización del 1%
+    const res = calculateEarlyCancellationSettlement(20000, 8.5, 48, 24, 1.0, 10000);
+
+    assert.equal(res.cancelMonth, 24);
+    assert.equal(res.contractMonths, 48);
+    // Cuota flexible con balloon de 10k debe ser menor que cuota lineal sin balloon (~300€ vs ~492€)
+    assert.ok(res.monthlyPayment > 280 && res.monthlyPayment < 320, `Cuota flexible esperada ~300 €, obtenida ${res.monthlyPayment}`);
+    // Capital de liquidación en mes 24 (debe incorporar el saldo vivo incluyendo el balloon a valor presente)
+    assert.ok(res.settlementCapital > 13500 && res.settlementCapital < 16000, `Capital pendiente esperado ~14.7k €, obtenido ${res.settlementCapital}`);
+    assert.equal(res.finalSettlementPayment, Number((res.settlementCapital + res.penaltyAmount).toFixed(2)));
+    // Ahorro en intereses futuros al evitar los 24 meses restantes del balloon
+    assert.ok(res.futureInterestSaved > 1500, `Ahorro esperado > 1500 €, obtenido ${res.futureInterestSaved}`);
+  });
 });
+

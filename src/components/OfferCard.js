@@ -103,7 +103,9 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
   let paymentPlanSubtext = '';
   if (!isCash) {
-    if (isEarlyCancel) {
+    if (isEarlyCancel && isFlexible) {
+      paymentPlanSubtext = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas de ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} € (cuota final cancelada)`;
+    } else if (isEarlyCancel) {
       paymentPlanSubtext = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas de ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} €`;
     } else if (isFlexible) {
       paymentPlanSubtext = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas de ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Cuota final de ${offer.balloonPayment.toLocaleString('es-ES')} €`;
@@ -185,7 +187,11 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
     }
 
     if (isFlexible && offer.balloonPayment > 0) {
-      specsList.appendChild(createSpecRow('Cuota final / VFG:', `${offer.balloonPayment.toLocaleString('es-ES')} €`));
+      if (isEarlyCancel) {
+        specsList.appendChild(createSpecRow('Cuota final evitada (VFG):', `${offer.balloonPayment.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
+      } else {
+        specsList.appendChild(createSpecRow('Cuota final / VFG:', `${offer.balloonPayment.toLocaleString('es-ES')} €`));
+      }
     }
 
     if (isEarlyCancel) {

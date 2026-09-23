@@ -86,6 +86,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   const loanTinInput = document.getElementById('loan-tin');
   const manualMonthlyInput = document.getElementById('manual-monthly');
   const balloonPaymentInput = document.getElementById('balloon-payment');
+  const flexibleCancelEarly = document.getElementById('flexible-cancel-early');
   const btnUnlockTin = document.getElementById('btn-unlock-tin');
   const btnUnlockMonthly = document.getElementById('btn-unlock-monthly');
   const loanTinHelper = document.getElementById('loan-tin-helper');
@@ -351,17 +352,21 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   }
 
   function updateEarlyCancelLiveSummary() {
-    if (currentModality !== OFFER_MODALITIES.EARLY_CANCELLATION) return;
+    const isEarlyCancel = currentModality === OFFER_MODALITIES.EARLY_CANCELLATION;
+    const isFlexibleEarly = currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE && Boolean(flexibleCancelEarly?.checked);
+    if (!isEarlyCancel && !isFlexibleEarly) return;
+
     const principal = getFinancedPrincipal();
-    const contractMonths = Math.max(1, Math.round(Number(loanMonthsInput?.value) || 84));
+    const contractMonths = Math.max(1, Math.round(Number(loanMonthsInput?.value) || (isEarlyCancel ? 84 : 48)));
     const cancelMonth = Math.max(1, Math.round(Number(earlyCancelMonthInput?.value) || 24));
     const penaltyRate = parseLocaleNumber(earlyCancelPenaltyInput?.value || '1,0');
+    const balloon = isFlexibleEarly ? parseLocaleNumber(balloonPaymentInput?.value || 0) : 0;
 
     let tin = parseLocaleNumber(loanTinInput?.value || 0);
     if (activeFinancingMode === 'monthly' && (!tin || tin <= 0)) {
       const cuota = parseLocaleNumber(manualMonthlyInput?.value || 0);
       if (principal > 0 && contractMonths > 0 && cuota > 0) {
-        const deduced = reverseEngineerInterestRate(principal, cuota, contractMonths, 0);
+        const deduced = reverseEngineerInterestRate(principal, cuota, contractMonths, balloon);
         tin = deduced.tin;
       }
     }
@@ -369,7 +374,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       tin = 8.5;
     }
 
-    const res = calculateEarlyCancellationSettlement(principal, tin, contractMonths, cancelMonth, penaltyRate);
+    const res = calculateEarlyCancellationSettlement(principal, tin, contractMonths, cancelMonth, penaltyRate, balloon);
 
     if (cancelSummaryMonth) cancelSummaryMonth.textContent = String(res.cancelMonth);
     if (cancelSummaryCapital) cancelSummaryCapital.textContent = `${res.settlementCapital.toLocaleString('es-ES')} €`;
@@ -406,13 +411,20 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       if (flexibleBalloonContainer) {
         flexibleBalloonContainer.style.display = modality === OFFER_MODALITIES.FLEXIBLE_FINANCE ? 'block' : 'none';
       }
+      const showEarlyContainer = modality === OFFER_MODALITIES.EARLY_CANCELLATION || 
+        (modality === OFFER_MODALITIES.FLEXIBLE_FINANCE && Boolean(flexibleCancelEarly?.checked));
       if (earlyCancellationContainer) {
-        earlyCancellationContainer.style.display = modality === OFFER_MODALITIES.EARLY_CANCELLATION ? 'block' : 'none';
+        earlyCancellationContainer.style.display = showEarlyContainer ? 'block' : 'none';
       }
       if (modality === OFFER_MODALITIES.EARLY_CANCELLATION) {
         if (!loanMonthsInput.value || loanMonthsInput.value === '60') {
           loanMonthsInput.value = '84';
           updateMonthsUI('84');
+        }
+      } else if (modality === OFFER_MODALITIES.FLEXIBLE_FINANCE) {
+        if (!loanMonthsInput.value || loanMonthsInput.value === '84') {
+          loanMonthsInput.value = '48';
+          updateMonthsUI('48');
         }
       }
     }
@@ -480,6 +492,13 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   });
   balloonPaymentInput?.addEventListener('input', () => {
     syncFinancingInputs();
+    updateEarlyCancelLiveSummary();
+  });
+
+  flexibleCancelEarly?.addEventListener('change', () => {
+    if (earlyCancellationContainer) {
+      earlyCancellationContainer.style.display = flexibleCancelEarly.checked ? 'block' : 'none';
+    }
     updateEarlyCancelLiveSummary();
   });
 
@@ -765,10 +784,12 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     const months = Math.max(1, Math.round(Number(loanMonthsInput.value) || 60));
     const detectedImg = getVehicleImageUrl(vName);
 
-    const isEarlyCancel = currentModality === OFFER_MODALITIES.EARLY_CANCELLATION;
+    const isFlexible = currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE;
+    const cancelEarly = isFlexible && Boolean(flexibleCancelEarly?.checked);
+    const isEarlyCancel = currentModality === OFFER_MODALITIES.EARLY_CANCELLATION || cancelEarly;
     const cancelMonth = isEarlyCancel ? Math.max(1, Math.round(Number(earlyCancelMonthInput?.value) || 24)) : 0;
     const penaltyRate = isEarlyCancel ? parseLocaleNumber(earlyCancelPenaltyInput?.value || '1,0') : 0;
-    const balloonPayment = parseLocaleNumber(balloonPaymentInput.value);
+    const balloonPayment = isFlexible ? parseLocaleNumber(balloonPaymentInput.value) : 0;
     const principal = getFinancedPrincipal();
 
     let finalTin = parseLocaleNumber(loanTinInput.value);
@@ -797,10 +818,11 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       id: idInput.value || generateId(ID_PREFIX_OFFER),
       vehicle: vName || 'Vehículo sin especificar',
       imageUrl: detectedImg || '',
-      title: getOfferDisplayTitle({ vehicle: vName, modality: currentModality, months, contractMonths: months, earlyCancellationMonth: cancelMonth }),
+      title: getOfferDisplayTitle({ vehicle: vName, modality: currentModality, months, contractMonths: months, earlyCancellationMonth: cancelMonth, cancelEarly }),
       dealer: dealerInput.value.trim(),
       notes: notesInput.value.trim(),
       modality: currentModality,
+      cancelEarly,
       vehiclePrice,
       financeDiscount,
       cashPriceReference: cashPriceRef,
@@ -929,12 +951,18 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
               marketValue: parseLocaleNumber(s.marketValue)
             }))
           : [];
+        if (flexibleCancelEarly) {
+          flexibleCancelEarly.checked = Boolean(offer.cancelEarly);
+        }
         updateModalityUI(offer.modality || OFFER_MODALITIES.STANDARD_FINANCE);
         updateNetCalcPriceUI();
         updateEarlyCancelLiveSummary();
       } else {
         modalTitle.textContent = 'Nueva oferta de concesionario';
         idInput.value = '';
+        if (flexibleCancelEarly) {
+          flexibleCancelEarly.checked = false;
+        }
         const initialVeh = defaultVehicle || '';
         if (vehicleInput) vehicleInput.value = initialVeh;
         offerPriceInput.value = '';

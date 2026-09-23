@@ -73,7 +73,12 @@ export function getCrossVehicleOffers(normalizedOffers, modality = 'cash') {
       // El de menor coste total del coche sin importar modalidad
       candidate = [...vehicleOffers].sort((a, b) => a.totalOutOfPocketCost - b.totalOutOfPocketCost)[0];
     } else {
-      const matching = vehicleOffers.filter(o => o.modality === modality);
+      const matching = vehicleOffers.filter(o => {
+        if (modality === 'early_cancellation') {
+          return o.modality === 'early_cancellation' || o.isEarlyCancellation;
+        }
+        return o.modality === modality;
+      });
       if (matching.length > 0) {
         // El de menor coste de esa modalidad
         candidate = [...matching].sort((a, b) => a.totalOutOfPocketCost - b.totalOutOfPocketCost)[0];

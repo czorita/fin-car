@@ -46,6 +46,11 @@ export function getOfferFinanceSubtitle(offer) {
     const contract = offer?.contractMonths || offer?.months || 84;
     return `Cancelación mes ${cancelMonth} (de ${contract}m)`;
   }
+  if (modality === OFFER_MODALITIES.FLEXIBLE_FINANCE && offer?.cancelEarly) {
+    const cancelMonth = offer?.earlyCancellationMonth || 24;
+    const contract = offer?.contractMonths || offer?.months || 48;
+    return `Compra flexible (cancelación mes ${cancelMonth} de ${contract}m)`;
+  }
   const months = offer?.months || offer?.totalMonths;
   return months ? `${modLabel} (${months}m)` : modLabel;
 }
@@ -194,6 +199,7 @@ export function createDefaultOffer(overrides = {}) {
       : 0,
 
     // Financiación con cancelación anticipada (permanencia)
+    cancelEarly: Boolean(overrides.cancelEarly),
     earlyCancellationMonth: overrides.earlyCancellationMonth !== undefined
       ? Number(overrides.earlyCancellationMonth)
       : DEFAULTS.earlyCancellationMonth,

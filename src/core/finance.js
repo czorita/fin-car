@@ -38,11 +38,13 @@ export function calculateMonthlyPayment(principal, annualTin, months, balloonPay
 
 /**
  * Calcula la liquidación anticipada de un préstamo francés en el mes k con penalización.
+ * Soporta tanto préstamos lineales estándar como financiación flexible con cuota final (balloon / VFG).
  * @param {number} principal - Capital financiado
  * @param {number} annualTin - TIN anual (%)
  * @param {number} contractMonths - Plazo original del contrato (ej: 84)
  * @param {number} cancelMonth - Mes en el que se liquida totalmente (ej: 24)
  * @param {number} [penaltyRate=1.0] - Comisión de cancelación anticipada en % (ej: 1.0)
+ * @param {number} [balloonPayment=0] - Cuota final / balloon residual al término del contrato original
  * @returns {{
  *   monthlyPayment: number,
  *   contractMonths: number,
@@ -58,7 +60,7 @@ export function calculateMonthlyPayment(principal, annualTin, months, balloonPay
  *   futureInterestSaved: number
  * }}
  */
-export function calculateEarlyCancellationSettlement(principal, annualTin, contractMonths, cancelMonth, penaltyRate = 1.0) {
+export function calculateEarlyCancellationSettlement(principal, annualTin, contractMonths, cancelMonth, penaltyRate = 1.0, balloonPayment = 0) {
   if (principal <= 0 || contractMonths <= 0 || cancelMonth <= 0) {
     return {
       monthlyPayment: 0,
@@ -78,7 +80,8 @@ export function calculateEarlyCancellationSettlement(principal, annualTin, contr
 
   const effectiveCancelMonth = Math.min(contractMonths, Math.max(1, cancelMonth));
   const r = (annualTin / 100) / 12;
-  const monthlyPayment = calculateMonthlyPayment(principal, annualTin, contractMonths, 0);
+  const vf = Number(balloonPayment) || 0;
+  const monthlyPayment = calculateMonthlyPayment(principal, annualTin, contractMonths, vf);
 
   let balance = principal;
   let totalInterestPaid = 0;
@@ -97,8 +100,8 @@ export function calculateEarlyCancellationSettlement(principal, annualTin, contr
   const regularPaymentsTotal = Number((monthlyPayment * effectiveCancelMonth).toFixed(2));
   const totalPaidLoan = Number((regularPaymentsTotal + finalSettlementPayment).toFixed(2));
 
-  // Intereses originales que se habrían pagado en todo el contrato
-  const originalTotalPayments = monthlyPayment * contractMonths;
+  // Intereses originales que se habrían pagado en todo el contrato (incluyendo el balloon al final si existe)
+  const originalTotalPayments = (monthlyPayment * contractMonths) + vf;
   const originalTotalInterest = Math.max(0, originalTotalPayments - principal);
 
   // Ahorro en intereses futuros al cortar en el mes k (restando la penalización que hubo que pagar)

@@ -118,7 +118,9 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
   if (!offer.isCash) {
     const heroSub = document.createElement('div');
     heroSub.className = 'cost-hero-sub';
-    if (offer.isEarlyCancellation) {
+    if (offer.isEarlyCancellation && offer.isFlexible) {
+      heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} € (cuota final cancelada)`;
+    } else if (offer.isEarlyCancellation) {
       heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} €`;
     } else {
       heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`;
@@ -147,6 +149,9 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
     specs.appendChild(createSpecRow('TIN / TAE:', `${offer.nominalTin}% / ${offer.effectiveApr}%`));
     specs.appendChild(createSpecRow('Total intereses:', `+${offer.totalInterest.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
     if (offer.isEarlyCancellation) {
+      if (offer.isFlexible && offer.balloonPayment > 0) {
+        specs.appendChild(createSpecRow('Cuota final evitada (VFG):', `${offer.balloonPayment.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
+      }
       specs.appendChild(createSpecRow(`Finiquito mes ${offer.earlyCancellationMonth}:`, `${offer.finalSettlementPayment.toLocaleString('es-ES')} €`));
       if (offer.futureInterestSaved > 0) {
         specs.appendChild(createSpecRow('Ahorro intereses:', `-${offer.futureInterestSaved.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save', isEmphasized: true }));
