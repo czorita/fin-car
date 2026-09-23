@@ -34,26 +34,40 @@ export function normalizeOffer(offer) {
 
   const tradeInValue = Number(offer.tradeInValue) || 0;
 
-  // Precio del vehículo y descuento por financiar
-  const vehiclePrice = Number(offer.vehiclePrice) || Number(offer.cashPriceReference) || Number(offer.offerPrice) || 0;
+  // Precios y descuentos
+  let offerPrice;
+  let vehiclePrice;
+  let cashPriceRef;
   let financeDiscount = 0;
-  if (!isCash) {
-    if (offer.financeDiscount !== undefined) {
-      financeDiscount = Number(offer.financeDiscount);
-    } else if (offer.advertisedDiscount !== undefined) {
-      financeDiscount = Number(offer.advertisedDiscount);
-    } else if (offer.cashPriceReference !== undefined && offer.offerPrice !== undefined && Number(offer.cashPriceReference) > Number(offer.offerPrice)) {
-      financeDiscount = Number(offer.cashPriceReference) - Number(offer.offerPrice);
+
+  if (isCash) {
+    offerPrice = Number(offer.offerPrice ?? offer.vehiclePrice ?? offer.cashPriceReference ?? 0);
+    vehiclePrice = offerPrice;
+    cashPriceRef = offerPrice;
+    financeDiscount = 0;
+  } else {
+    financeDiscount = Number(offer.financeDiscount ?? offer.advertisedDiscount ?? 0);
+
+    if (offer.offerPrice !== undefined) {
+      offerPrice = Number(offer.offerPrice);
+      cashPriceRef = offer.cashPriceReference !== undefined
+        ? Number(offer.cashPriceReference)
+        : (offer.vehiclePrice !== undefined ? Number(offer.vehiclePrice) : (offerPrice + financeDiscount));
+      vehiclePrice = offer.vehiclePrice !== undefined ? Number(offer.vehiclePrice) : cashPriceRef;
+    } else if (offer.vehiclePrice !== undefined) {
+      vehiclePrice = Number(offer.vehiclePrice);
+      offerPrice = Math.max(0, vehiclePrice - financeDiscount);
+      cashPriceRef = offer.cashPriceReference !== undefined ? Number(offer.cashPriceReference) : vehiclePrice;
+    } else if (offer.cashPriceReference !== undefined) {
+      cashPriceRef = Number(offer.cashPriceReference);
+      vehiclePrice = cashPriceRef;
+      offerPrice = Math.max(0, cashPriceRef - financeDiscount);
+    } else {
+      offerPrice = 0;
+      vehiclePrice = 0;
+      cashPriceRef = 0;
     }
   }
-
-  // La resta será el precio con el que se hagan todos los cálculos
-  let calculationPrice = isCash ? vehiclePrice : Math.max(0, vehiclePrice - financeDiscount);
-  if (offer.offerPrice !== undefined && offer.vehiclePrice === undefined && offer.financeDiscount === undefined) {
-    calculationPrice = Number(offer.offerPrice);
-  }
-  const offerPrice = calculationPrice;
-  const cashPriceRef = vehiclePrice;
 
   // Si es contado
   if (isCash) {
@@ -111,7 +125,12 @@ export function normalizeOffer(offer) {
   }
 
   // Si es financiación (estándar, flexible o cancelación anticipada)
-  const downPayment = Number(offer.downPayment) || 0;
+  let downPayment = 0;
+  if (offer.downPayment !== undefined && offer.downPayment !== null) {
+    downPayment = Number(offer.downPayment);
+  } else if (offer.financedAmount !== undefined && offer.financedAmount !== null) {
+    downPayment = Math.max(0, offerPrice - tradeInValue + productsFinanced - Number(offer.financedAmount));
+  }
   const tin = Number(offer.tin) || 0;
 
   // Capital base del vehículo a financiar
@@ -230,7 +249,9 @@ export function normalizeOffer(offer) {
     vehiclePrice,
     financeDiscount,
     offerPrice,
-    cashPriceReference: vehiclePrice,
+    cashPriceReference: cashPriceRef,
+    downPayment,
+    financedAmount: Number(financedPrincipal.toFixed(2)),
     isCash: false,
     isEarlyCancellation,
     isFlexible,

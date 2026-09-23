@@ -66,8 +66,19 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   const offerPriceInput = document.getElementById('offer-price');
   const financeDiscountInput = document.getElementById('finance-discount');
   const netCalcPriceIndicator = document.getElementById('net-calc-price-indicator');
+  const netCalcPriceLabel = document.getElementById('net-calc-price-label');
   const netCalcPriceVal = document.getElementById('net-calc-price-val');
+  const cashRefSummaryBox = document.getElementById('cash-ref-summary-box');
+  const cashRefSummaryText = document.getElementById('cash-ref-summary-text');
+
+  const downPaymentFieldsContainer = document.getElementById('down-payment-fields-container');
   const downPaymentInput = document.getElementById('down-payment');
+  const financedAmountInput = document.getElementById('financed-amount');
+  const btnUnlockDown = document.getElementById('btn-unlock-down');
+  const btnUnlockFinanced = document.getElementById('btn-unlock-financed');
+  const downPaymentHelper = document.getElementById('down-payment-helper');
+  const financedAmountHelper = document.getElementById('financed-amount-helper');
+
   const tradeInValueInput = document.getElementById('trade-in-value');
   const loanMonthsInput = document.getElementById('loan-months');
   const loanMonthsBadge = document.getElementById('loan-months-badge');
@@ -84,6 +95,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
 
   let currentModality = OFFER_MODALITIES.STANDARD_FINANCE;
   let activeFinancingMode = null; // 'tin' | 'monthly' | null
+  let activeDownPaymentMode = null; // 'down' | 'financed' | null
   let linkedProductsState = [];
   let includedServicesState = [];
 
@@ -102,10 +114,21 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
 
     const price = parseLocaleNumber(offerPriceInput?.value || 0);
     const discount = parseLocaleNumber(financeDiscountInput?.value || 0);
-    const net = Math.max(0, price - discount);
+    const cashRef = price + discount;
 
     if (netCalcPriceVal) {
-      netCalcPriceVal.textContent = `${net.toLocaleString('es-ES')} €`;
+      netCalcPriceVal.textContent = `${price.toLocaleString('es-ES')} €`;
+    }
+    if (netCalcPriceLabel) {
+      netCalcPriceLabel.textContent = 'Precio final financiado:';
+    }
+    if (cashRefSummaryBox && cashRefSummaryText) {
+      if (discount > 0) {
+        cashRefSummaryBox.style.display = 'block';
+        cashRefSummaryText.textContent = `Equivalente al contado: ${cashRef.toLocaleString('es-ES')} € (+${discount.toLocaleString('es-ES')} € descuento prometido)`;
+      } else {
+        cashRefSummaryBox.style.display = 'none';
+      }
     }
   }
 
@@ -123,14 +146,107 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
 
   function getFinancedPrincipal() {
     const price = parseLocaleNumber(offerPriceInput?.value || 0);
-    const discount = currentModality === OFFER_MODALITIES.CASH ? 0 : parseLocaleNumber(financeDiscountInput?.value || 0);
     const downPayment = parseLocaleNumber(downPaymentInput?.value || 0);
     const tradeIn = parseLocaleNumber(tradeInValueInput?.value || 0);
     const productsFinanced = linkedProductsState
       .filter(p => p.financed !== false)
       .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
-    const netVehicle = Math.max(0, price - discount - downPayment - tradeIn);
+    const netVehicle = Math.max(0, price - downPayment - tradeIn);
     return netVehicle + productsFinanced;
+  }
+
+  function syncDownPaymentInputs(forcedMode = null) {
+    if (forcedMode !== null) {
+      activeDownPaymentMode = forcedMode;
+    } else {
+      const downVal = downPaymentInput?.value.trim();
+      const finVal = financedAmountInput?.value.trim();
+
+      if (activeDownPaymentMode === 'down') {
+        if (!downVal) activeDownPaymentMode = null;
+      } else if (activeDownPaymentMode === 'financed') {
+        if (!finVal) activeDownPaymentMode = null;
+      } else {
+        if (downVal && !finVal) {
+          activeDownPaymentMode = 'down';
+        } else if (finVal && !downVal) {
+          activeDownPaymentMode = 'financed';
+        } else {
+          activeDownPaymentMode = null;
+        }
+      }
+    }
+
+    const price = parseLocaleNumber(offerPriceInput?.value || 0);
+    const tradeIn = parseLocaleNumber(tradeInValueInput?.value || 0);
+    const productsFinanced = linkedProductsState
+      .filter(p => p.financed !== false)
+      .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
+    const netBeforeDown = Math.max(0, price - tradeIn) + productsFinanced;
+
+    if (activeDownPaymentMode === 'down') {
+      downPaymentInput.disabled = false;
+      downPaymentInput.classList.remove('input-derived');
+      if (financedAmountInput) {
+        financedAmountInput.disabled = true;
+        financedAmountInput.classList.add('input-derived');
+      }
+      if (btnUnlockDown) btnUnlockDown.style.display = 'none';
+      if (btnUnlockFinanced) btnUnlockFinanced.style.display = 'inline-block';
+
+      if (downPaymentHelper) {
+        downPaymentHelper.textContent = 'Modo activo: Calculando capital financiado';
+      }
+
+      const down = parseLocaleNumber(downPaymentInput.value);
+      if (price > 0 && downPaymentInput.value.trim() !== '') {
+        const fin = Math.max(0, netBeforeDown - down);
+        if (financedAmountInput) financedAmountInput.value = formatLocaleNumber(fin);
+        if (financedAmountHelper) {
+          financedAmountHelper.textContent = `Capital a financiar: ${fin.toLocaleString('es-ES')} €`;
+        }
+      } else {
+        if (financedAmountInput) financedAmountInput.value = '';
+        if (financedAmountHelper) financedAmountHelper.textContent = '';
+      }
+    } else if (activeDownPaymentMode === 'financed') {
+      if (financedAmountInput) {
+        financedAmountInput.disabled = false;
+        financedAmountInput.classList.remove('input-derived');
+      }
+      downPaymentInput.disabled = true;
+      downPaymentInput.classList.add('input-derived');
+
+      if (btnUnlockFinanced) btnUnlockFinanced.style.display = 'none';
+      if (btnUnlockDown) btnUnlockDown.style.display = 'inline-block';
+
+      if (financedAmountHelper) {
+        financedAmountHelper.textContent = 'Modo activo: Calculando entrada requerida';
+      }
+
+      const fin = parseLocaleNumber(financedAmountInput.value);
+      if (price > 0 && financedAmountInput.value.trim() !== '') {
+        const down = Math.max(0, netBeforeDown - fin);
+        downPaymentInput.value = formatLocaleNumber(down);
+        if (downPaymentHelper) {
+          downPaymentHelper.textContent = `Entrada calculada: ${down.toLocaleString('es-ES')} €`;
+        }
+      } else {
+        downPaymentInput.value = '';
+        if (downPaymentHelper) downPaymentHelper.textContent = '';
+      }
+    } else {
+      downPaymentInput.disabled = false;
+      downPaymentInput.classList.remove('input-derived');
+      if (financedAmountInput) {
+        financedAmountInput.disabled = false;
+        financedAmountInput.classList.remove('input-derived');
+      }
+      if (btnUnlockDown) btnUnlockDown.style.display = 'none';
+      if (btnUnlockFinanced) btnUnlockFinanced.style.display = 'none';
+      if (downPaymentHelper) downPaymentHelper.textContent = '';
+      if (financedAmountHelper) financedAmountHelper.textContent = '';
+    }
   }
 
   function syncFinancingInputs(forcedMode = null) {
@@ -273,13 +389,18 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
 
     if (modality === OFFER_MODALITIES.CASH) {
       if (financeFieldsContainer) financeFieldsContainer.style.display = 'none';
+      if (downPaymentFieldsContainer) downPaymentFieldsContainer.style.display = 'none';
       if (groupDownPayment) groupDownPayment.style.display = 'none';
       downPaymentInput.value = '0';
+      if (financedAmountInput) financedAmountInput.value = '0';
     } else {
       if (financeFieldsContainer) financeFieldsContainer.style.display = 'block';
+      if (downPaymentFieldsContainer) downPaymentFieldsContainer.style.display = 'grid';
       if (groupDownPayment) groupDownPayment.style.display = 'block';
       if (downPaymentInput.value === '0' || !downPaymentInput.value) {
-        downPaymentInput.value = '4000';
+        if (!financedAmountInput || !financedAmountInput.value) {
+          downPaymentInput.value = '4000';
+        }
       }
 
       if (flexibleBalloonContainer) {
@@ -295,12 +416,14 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         }
       }
     }
+    syncDownPaymentInputs();
     syncFinancingInputs();
     updateEarlyCancelLiveSummary();
   }
 
   offerPriceInput?.addEventListener('input', () => {
     updateNetCalcPriceUI();
+    syncDownPaymentInputs();
     syncFinancingInputs();
     updateEarlyCancelLiveSummary();
   });
@@ -310,10 +433,48 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     updateEarlyCancelLiveSummary();
   });
   downPaymentInput?.addEventListener('input', () => {
+    activeDownPaymentMode = downPaymentInput.value.trim() ? 'down' : null;
+    syncDownPaymentInputs(activeDownPaymentMode);
     syncFinancingInputs();
     updateEarlyCancelLiveSummary();
   });
+  financedAmountInput?.addEventListener('input', () => {
+    activeDownPaymentMode = financedAmountInput.value.trim() ? 'financed' : null;
+    syncDownPaymentInputs(activeDownPaymentMode);
+    syncFinancingInputs();
+    updateEarlyCancelLiveSummary();
+  });
+
+  btnUnlockDown?.addEventListener('click', () => {
+    if (financedAmountInput) financedAmountInput.value = '';
+    downPaymentInput.value = '';
+    downPaymentInput.disabled = false;
+    if (financedAmountInput) financedAmountInput.disabled = false;
+    downPaymentInput.classList.remove('input-derived');
+    if (financedAmountInput) financedAmountInput.classList.remove('input-derived');
+    activeDownPaymentMode = null;
+    syncDownPaymentInputs(null);
+    downPaymentInput.focus();
+    syncFinancingInputs();
+    updateEarlyCancelLiveSummary();
+  });
+
+  btnUnlockFinanced?.addEventListener('click', () => {
+    downPaymentInput.value = '';
+    if (financedAmountInput) financedAmountInput.value = '';
+    downPaymentInput.disabled = false;
+    if (financedAmountInput) financedAmountInput.disabled = false;
+    downPaymentInput.classList.remove('input-derived');
+    if (financedAmountInput) financedAmountInput.classList.remove('input-derived');
+    activeDownPaymentMode = null;
+    syncDownPaymentInputs(null);
+    if (financedAmountInput) financedAmountInput.focus();
+    syncFinancingInputs();
+    updateEarlyCancelLiveSummary();
+  });
+
   tradeInValueInput?.addEventListener('input', () => {
+    syncDownPaymentInputs();
     syncFinancingInputs();
     updateEarlyCancelLiveSummary();
   });
@@ -599,7 +760,8 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     const vName = vehicleInput ? vehicleInput.value.trim() : '';
     const vehiclePrice = parseLocaleNumber(offerPriceInput.value);
     const financeDiscount = currentModality === OFFER_MODALITIES.CASH ? 0 : parseLocaleNumber(financeDiscountInput.value);
-    const calculationPrice = currentModality === OFFER_MODALITIES.CASH ? vehiclePrice : Math.max(0, vehiclePrice - financeDiscount);
+    const calculationPrice = vehiclePrice; // Precio final con descuento de financiación ya incluido
+    const cashPriceRef = currentModality === OFFER_MODALITIES.CASH ? vehiclePrice : (vehiclePrice + financeDiscount);
     const months = Math.max(1, Math.round(Number(loanMonthsInput.value) || 60));
     const detectedImg = getVehicleImageUrl(vName);
 
@@ -628,6 +790,9 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       }
     }
 
+    const downPayment = currentModality === OFFER_MODALITIES.CASH ? 0 : parseLocaleNumber(downPaymentInput.value);
+    const financedAmount = currentModality === OFFER_MODALITIES.CASH ? 0 : (financedAmountInput && financedAmountInput.value ? parseLocaleNumber(financedAmountInput.value) : principal);
+
     const offerData = {
       id: idInput.value || generateId(ID_PREFIX_OFFER),
       vehicle: vName || 'Vehículo sin especificar',
@@ -638,10 +803,11 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       modality: currentModality,
       vehiclePrice,
       financeDiscount,
-      cashPriceReference: vehiclePrice,
+      cashPriceReference: cashPriceRef,
       offerPrice: calculationPrice,
       advertisedDiscount: financeDiscount,
-      downPayment: currentModality === OFFER_MODALITIES.CASH ? 0 : parseLocaleNumber(downPaymentInput.value),
+      downPayment,
+      financedAmount,
       tradeInValue: parseLocaleNumber(tradeInValueInput.value),
       months,
       contractMonths: months,
@@ -691,7 +857,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         notesInput.value = offer.notes || '';
         
         // Precio del vehículo y descuento por financiar
-        const vPrice = offer.vehiclePrice || offer.cashPriceReference || offer.offerPrice || '';
+        const vPrice = offer.offerPrice || offer.vehiclePrice || offer.cashPriceReference || '';
         offerPriceInput.value = formatLocaleNumber(vPrice);
         const fDisc = offer.financeDiscount !== undefined 
           ? offer.financeDiscount 
@@ -702,7 +868,23 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         const currentImg = getVehicleImageUrl(vName, offer.imageUrl);
         updateImagePreview(currentImg);
 
-        downPaymentInput.value = offer.modality === OFFER_MODALITIES.CASH ? '0' : formatLocaleNumber(offer.downPayment || '');
+        if (offer.modality === OFFER_MODALITIES.CASH) {
+          downPaymentInput.value = '0';
+          if (financedAmountInput) financedAmountInput.value = '0';
+          activeDownPaymentMode = null;
+          syncDownPaymentInputs(null);
+        } else if (offer.financedAmount && (offer.downPayment === undefined || offer.downPayment === null)) {
+          if (financedAmountInput) financedAmountInput.value = formatLocaleNumber(offer.financedAmount);
+          downPaymentInput.value = '';
+          activeDownPaymentMode = 'financed';
+          syncDownPaymentInputs('financed');
+        } else {
+          downPaymentInput.value = formatLocaleNumber(offer.downPayment || '');
+          if (financedAmountInput) financedAmountInput.value = '';
+          activeDownPaymentMode = 'down';
+          syncDownPaymentInputs('down');
+        }
+
         tradeInValueInput.value = formatLocaleNumber(offer.tradeInValue || '');
         loanMonthsInput.value = String(offer.contractMonths || offer.months || 60);
         updateMonthsUI(offer.contractMonths || offer.months || 60);
@@ -758,6 +940,9 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         offerPriceInput.value = '';
         financeDiscountInput.value = '';
         downPaymentInput.value = '';
+        if (financedAmountInput) financedAmountInput.value = '';
+        activeDownPaymentMode = null;
+        syncDownPaymentInputs(null);
         loanMonthsInput.value = '';
         if (loanMonthsBadge) loanMonthsBadge.textContent = '';
         if (loanMonthsPills) {

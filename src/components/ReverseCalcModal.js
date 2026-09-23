@@ -24,6 +24,7 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
 
   const priceInput = document.getElementById('rev-price');
   const downInput = document.getElementById('rev-down');
+  const financedInput = document.getElementById('rev-financed');
   const monthlyInput = document.getElementById('rev-monthly');
   const monthsInput = document.getElementById('rev-months');
   const monthsBadge = document.getElementById('rev-months-badge');
@@ -49,6 +50,35 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
     }
   }
 
+  priceInput?.addEventListener('input', () => {
+    const price = parseLocaleNumber(priceInput.value);
+    if (price > 0) {
+      if (downInput && downInput.value.trim() !== '') {
+        const down = parseLocaleNumber(downInput.value);
+        if (financedInput) financedInput.value = formatLocaleNumber(Math.max(0, price - down));
+      } else if (financedInput && financedInput.value.trim() !== '') {
+        const fin = parseLocaleNumber(financedInput.value);
+        if (downInput) downInput.value = formatLocaleNumber(Math.max(0, price - fin));
+      }
+    }
+  });
+
+  downInput?.addEventListener('input', () => {
+    const price = parseLocaleNumber(priceInput.value);
+    if (price > 0 && downInput.value.trim() !== '') {
+      const down = parseLocaleNumber(downInput.value);
+      if (financedInput) financedInput.value = formatLocaleNumber(Math.max(0, price - down));
+    }
+  });
+
+  financedInput?.addEventListener('input', () => {
+    const price = parseLocaleNumber(priceInput.value);
+    if (price > 0 && financedInput.value.trim() !== '') {
+      const fin = parseLocaleNumber(financedInput.value);
+      if (downInput) downInput.value = formatLocaleNumber(Math.max(0, price - fin));
+    }
+  });
+
   monthsInput?.addEventListener('input', () => {
     updateMonthsUI(monthsInput.value);
   });
@@ -64,12 +94,23 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const price = parseLocaleNumber(priceInput.value);
-    const down = parseLocaleNumber(downInput.value);
+    let down = parseLocaleNumber(downInput?.value || 0);
+    let principal = 0;
+
+    if (financedInput && financedInput.value.trim() !== '' && (!downInput || downInput.value.trim() === '')) {
+      principal = parseLocaleNumber(financedInput.value);
+      down = Math.max(0, price - principal);
+    } else {
+      principal = Math.max(0, price - down);
+      if (financedInput && financedInput.value.trim() !== '') {
+        principal = parseLocaleNumber(financedInput.value);
+      }
+    }
+
     const monthly = parseLocaleNumber(monthlyInput.value);
     const months = Math.max(1, Math.round(Number(monthsInput.value) || 60));
     const balloon = parseLocaleNumber(balloonInput.value);
 
-    const principal = Math.max(0, price - down);
     const rev = reverseEngineerInterestRate(principal, monthly, months, balloon);
     const totalOutOfPocket = down + rev.totalPaid;
 

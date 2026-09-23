@@ -57,18 +57,18 @@
       <div class="form-group" id="group-vehicle-price" style="margin-bottom: 0.5rem;">
         <label class="form-label" for="offer-price">
           Precio del vehículo *
-          <span class="helper-icon" title="Precio base o presupuesto del vehículo sin descontar la financiación">ⓘ</span>
+          <span class="helper-icon" title="Precio ofertado del vehículo con el descuento por financiar ya incluido (si aplica)">ⓘ</span>
         </label>
         <div class="input-wrapper">
-          <input type="text" inputmode="decimal" id="offer-price" class="form-input has-addon" placeholder="Ej: 27500 o 27.500,00" required />
+          <input type="text" inputmode="decimal" id="offer-price" class="form-input has-addon" placeholder="Ej: 24200 o 24.200,00" required />
           <span class="input-addon">€</span>
         </div>
       </div>
 
       <div class="form-group" id="group-finance-discount" style="margin-bottom: 0.5rem;">
         <label class="form-label" for="finance-discount">
-          Descuento por financiar
-          <span class="helper-icon" title="Descuento en el precio del coche que promete el concesionario a cambio de financiar">ⓘ</span>
+          Descuento por financiar aplicado
+          <span class="helper-icon" title="Descuento que promete el concesionario respecto al precio al contado (se suma al precio financiado para obtener el equivalente al contado)">ⓘ</span>
         </label>
         <div class="input-wrapper">
           <input type="text" inputmode="decimal" id="finance-discount" class="form-input has-addon" placeholder="Ej: 3300 o 3.300,00" />
@@ -78,22 +78,52 @@
     </div>
 
     <!-- Indicador dinámico del Precio Resultante para Cálculos -->
-    <div id="net-calc-price-indicator" class="calc-price-summary" style="margin-bottom: 1rem;">
-      <span class="calc-price-label">Precio base de cálculo (Precio - Descuento):</span>
-      <span class="calc-price-val" id="net-calc-price-val">24.200 €</span>
+    <div id="net-calc-price-indicator" class="calc-price-summary" style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+      <div>
+        <span class="calc-price-label" id="net-calc-price-label">Precio base financiado:</span>
+        <span class="calc-price-val" id="net-calc-price-val">24.200 €</span>
+      </div>
+      <div id="cash-ref-summary-box" style="font-size: 0.8rem; color: var(--text-muted);">
+        <span id="cash-ref-summary-text">Equivalente al contado: 27.500 €</span>
+      </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;" id="down-payment-fields-container">
       <div class="form-group" id="group-down-payment">
-        <label class="form-label" for="down-payment">Entrada (€)</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+          <label class="form-label" for="down-payment" style="margin-bottom: 0;">
+            Entrada (€)
+            <span class="helper-icon" title="Dinero aportado de tu bolsillo al inicio">ⓘ</span>
+          </label>
+          <button type="button" id="btn-unlock-down" class="btn-link-action" style="display: none; font-size: 0.72rem; color: var(--accent-cyan); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline;" title="Permite introducir la entrada en lugar de la cantidad a financiar">Editar entrada</button>
+        </div>
         <div class="input-wrapper">
           <input type="text" inputmode="decimal" id="down-payment" class="form-input has-addon" placeholder="4000 o 4.000,00" />
           <span class="input-addon">€</span>
         </div>
+        <span class="form-helper" id="down-payment-helper" style="font-size: 0.73rem; color: var(--text-muted); display: block; margin-top: 0.2rem; min-height: 1rem;"></span>
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="trade-in-value">Tasación coche usado</label>
+      <div class="form-group" id="group-financed-amount">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+          <label class="form-label" for="financed-amount" style="margin-bottom: 0;">
+            O cantidad a financiar (€)
+            <span class="helper-icon" title="Importe neto del préstamo solicitado a la entidad">ⓘ</span>
+          </label>
+          <button type="button" id="btn-unlock-financed" class="btn-link-action" style="display: none; font-size: 0.72rem; color: var(--accent-cyan); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline;" title="Permite fijar la cantidad total a financiar">Editar financiado</button>
+        </div>
+        <div class="input-wrapper">
+          <input type="text" inputmode="decimal" id="financed-amount" class="form-input has-addon" placeholder="Autocalcular (ej: 20.200)" />
+          <span class="input-addon">€</span>
+        </div>
+        <span class="form-helper" id="financed-amount-helper" style="font-size: 0.73rem; color: var(--text-muted); display: block; margin-top: 0.2rem; min-height: 1rem;"></span>
+      </div>
+
+      <div class="form-group" id="group-trade-in">
+        <label class="form-label" for="trade-in-value" style="margin-bottom: 0.25rem;">
+          Tasación coche usado
+          <span class="helper-icon" title="Valor del vehículo antiguo entregado a cambio">ⓘ</span>
+        </label>
         <div class="input-wrapper">
           <input type="text" inputmode="decimal" id="trade-in-value" class="form-input has-addon" placeholder="0" />
           <span class="input-addon">€</span>

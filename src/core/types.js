@@ -96,36 +96,61 @@ export function createDefaultOffer(overrides = {}) {
 
   const isCash = overrides.modality === OFFER_MODALITIES.CASH;
 
-  // Precio del vehículo y descuento por financiar
-  let vehiclePrice = DEFAULTS.cashPriceReference;
-  if (overrides.vehiclePrice !== undefined) {
-    vehiclePrice = Number(overrides.vehiclePrice);
-  } else if (overrides.cashPriceReference !== undefined) {
-    vehiclePrice = Number(overrides.cashPriceReference);
-  } else if (overrides.offerPrice !== undefined) {
-    vehiclePrice = Number(overrides.offerPrice);
-  }
-
+  // Precios y descuentos
+  let offerPrice;
+  let vehiclePrice;
+  let cashPriceReference;
   let financeDiscount = 0;
-  if (!isCash) {
-    if (overrides.financeDiscount !== undefined) {
-      financeDiscount = Number(overrides.financeDiscount);
-    } else if (overrides.advertisedDiscount !== undefined) {
-      financeDiscount = Number(overrides.advertisedDiscount);
-    } else if (overrides.cashPriceReference !== undefined && overrides.offerPrice !== undefined && Number(overrides.cashPriceReference) > Number(overrides.offerPrice)) {
-      financeDiscount = Number(overrides.cashPriceReference) - Number(overrides.offerPrice);
-    } else if (overrides.offerPrice === undefined && overrides.vehiclePrice === undefined) {
-      financeDiscount = Math.max(0, DEFAULTS.cashPriceReference - DEFAULTS.offerPrice);
-    }
+
+  if (isCash) {
+    offerPrice = Number(overrides.offerPrice ?? overrides.vehiclePrice ?? overrides.cashPriceReference ?? DEFAULTS.cashPriceReference);
+    vehiclePrice = offerPrice;
+    cashPriceReference = offerPrice;
+    financeDiscount = 0;
+  } else if (overrides.offerPrice !== undefined) {
+    // Si viene offerPrice explícito (nueva convención o modal):
+    offerPrice = Number(overrides.offerPrice);
+    financeDiscount = Number(overrides.financeDiscount ?? overrides.advertisedDiscount ?? 0);
+    cashPriceReference = overrides.cashPriceReference !== undefined
+      ? Number(overrides.cashPriceReference)
+      : (overrides.vehiclePrice !== undefined ? Number(overrides.vehiclePrice) : (offerPrice + financeDiscount));
+    vehiclePrice = overrides.vehiclePrice !== undefined ? Number(overrides.vehiclePrice) : cashPriceReference;
+  } else if (overrides.vehiclePrice !== undefined) {
+    // Modo legacy / retrocompatible: vehiclePrice es el precio catálogo pre-descuento
+    vehiclePrice = Number(overrides.vehiclePrice);
+    financeDiscount = Number(overrides.financeDiscount ?? overrides.advertisedDiscount ?? 0);
+    offerPrice = Math.max(0, vehiclePrice - financeDiscount);
+    cashPriceReference = overrides.cashPriceReference !== undefined ? Number(overrides.cashPriceReference) : vehiclePrice;
+  } else {
+    // Valores por defecto
+    offerPrice = DEFAULTS.offerPrice;
+    cashPriceReference = DEFAULTS.cashPriceReference;
+    vehiclePrice = DEFAULTS.cashPriceReference;
+    financeDiscount = Math.max(0, cashPriceReference - offerPrice);
   }
 
-  // La resta es el precio con el que se hacen todos los cálculos
-  let calculationPrice = isCash ? vehiclePrice : Math.max(0, vehiclePrice - financeDiscount);
-  if (overrides.offerPrice !== undefined && overrides.vehiclePrice === undefined && overrides.financeDiscount === undefined) {
-    calculationPrice = Number(overrides.offerPrice);
-    if (!isCash && overrides.cashPriceReference !== undefined && Number(overrides.cashPriceReference) > calculationPrice) {
-      financeDiscount = Number(overrides.cashPriceReference) - calculationPrice;
-      vehiclePrice = Number(overrides.cashPriceReference);
+  const linkedProducts = overrides.linkedProducts || [];
+  const productsFinanced = linkedProducts
+    .filter(p => p.financed !== false)
+    .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
+
+  let downPayment = 0;
+  let financedAmount = overrides.financedAmount !== undefined && overrides.financedAmount !== null
+    ? Number(overrides.financedAmount)
+    : null;
+
+  if (!isCash) {
+    if (overrides.downPayment !== undefined && overrides.downPayment !== null) {
+      downPayment = Number(overrides.downPayment);
+      if (financedAmount === null) {
+        financedAmount = Math.max(0, offerPrice - downPayment - Number(overrides.tradeInValue || 0) + productsFinanced);
+      }
+    } else if (financedAmount !== null) {
+      const tradeIn = Number(overrides.tradeInValue || 0);
+      downPayment = Math.max(0, offerPrice - tradeIn + productsFinanced - financedAmount);
+    } else {
+      downPayment = DEFAULTS.downPayment;
+      financedAmount = Math.max(0, offerPrice - downPayment - Number(overrides.tradeInValue || 0) + productsFinanced);
     }
   }
 
@@ -138,14 +163,13 @@ export function createDefaultOffer(overrides = {}) {
     notes: overrides.notes || '',
     modality: overrides.modality || OFFER_MODALITIES.STANDARD_FINANCE,
     
-    // Precios de compra y venta base (la resta vehiclePrice - financeDiscount es offerPrice)
+    // Precios: vehiclePrice (catálogo/referencia) y offerPrice (precio base tras descuento)
     vehiclePrice,
     financeDiscount,
-    cashPriceReference: vehiclePrice,
-    offerPrice: calculationPrice,
-    downPayment: overrides.downPayment !== undefined 
-      ? Number(overrides.downPayment) 
-      : (overrides.modality === OFFER_MODALITIES.CASH ? 0 : DEFAULTS.downPayment),
+    cashPriceReference,
+    offerPrice,
+    downPayment,
+    financedAmount,
     tradeInValue: overrides.tradeInValue !== undefined 
       ? Number(overrides.tradeInValue) 
       : 0,

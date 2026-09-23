@@ -163,5 +163,35 @@ describe('Tipos y Estructuras de Datos (types.js)', () => {
     assert.equal(offer.earlyCancellationMonth, 18);
     assert.equal(offer.earlyCancellationPenaltyRate, 0.5);
   });
+
+  test('Test 11: Soporte para precio final financiado (offerPrice) y cálculo de referencia al contado', () => {
+    // Cuando el usuario introduce 22.500 € como precio final y 2.500 € de descuento
+    const offer = createDefaultOffer({
+      vehicle: 'Kia Sportage',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      offerPrice: 22500,
+      financeDiscount: 2500
+    });
+
+    assert.equal(offer.offerPrice, 22500, 'offerPrice debe ser el precio final introducido');
+    assert.equal(offer.financeDiscount, 2500, 'financeDiscount debe ser 2.500 €');
+    assert.equal(offer.cashPriceReference, 25000, 'cashPriceReference debe ser 22.500 + 2.500 = 25.000 €');
+    assert.equal(offer.vehiclePrice, 25000, 'vehiclePrice de catálogo debe ser 25.000 €');
+  });
+
+  test('Test 12: Soporte para cantidad a financiar (financedAmount) deduciendo la entrada', () => {
+    // Coche precio final 25.000 €, tasación 3.000 €, cantidad a financiar deseada 18.000 €
+    // Entrada requerida: 25.000 - 3.000 - 18.000 = 4.000 €
+    const offer = createDefaultOffer({
+      vehicle: 'Hyundai Tucson',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      offerPrice: 25000,
+      tradeInValue: 3000,
+      financedAmount: 18000
+    });
+
+    assert.equal(offer.downPayment, 4000, 'La entrada deducida debe ser 4.000 €');
+    assert.equal(offer.financedAmount, 18000);
+  });
 });
 

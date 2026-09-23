@@ -379,6 +379,51 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.equal(norm.balloonPayment, 12000);
     assert.ok(norm.totalInterest > 0, `Los intereses totales deben ser > 0, obtenido: ${norm.totalInterest}`);
   });
+
+  test('Test 16: Normalización con precio final financiado (offerPrice) no descuenta dos veces', () => {
+    // Si el usuario introduce precio final 25.000 € y descuento por financiar 3.000 €:
+    // El precio contado de referencia debe ser 28.000 € y el capital base de cálculo 25.000 €
+    const offer = {
+      id: 'test_offer_price',
+      vehicle: 'Seat León',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      offerPrice: 25000,
+      financeDiscount: 3000,
+      downPayment: 5000,
+      tradeInValue: 0,
+      months: 60,
+      tin: 8.0
+    };
+
+    const norm = normalizeOffer(offer);
+
+    assert.equal(norm.offerPrice, 25000, 'El precio base debe ser 25.000 €');
+    assert.equal(norm.cashPriceReference, 28000, 'La referencia al contado debe ser 28.000 €');
+    assert.equal(norm.principalFinanced, 20000, 'El capital financiado debe ser 25.000 - 5.000 = 20.000 € (no 17.000 €)');
+  });
+
+  test('Test 17: Normalización a partir de cantidad a financiar (financedAmount)', () => {
+    // Precio final 25.000 €, tasación 2.000 €, producto financiado 500 €
+    // Cantidad a financiar objetivo: 18.000 €
+    const offer = {
+      id: 'test_financed_amt',
+      vehicle: 'Hyundai Tucson',
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      offerPrice: 25000,
+      financeDiscount: 2500,
+      financedAmount: 18000,
+      tradeInValue: 2000,
+      linkedProducts: [{ id: 'p1', name: 'Seguro', cost: 500, financed: true }],
+      months: 60,
+      tin: 8.5
+    };
+
+    const norm = normalizeOffer(offer);
+
+    assert.equal(norm.principalFinanced, 18000, 'El capital financiado debe coincidir con la cantidad a financiar');
+    // Entrada requerida: 25.000 - 2.000 + 500 - 18.000 = 5.500 €
+    assert.equal(norm.downPayment, 5500, 'La entrada calculada debe ser 5.500 €');
+  });
 });
 
 

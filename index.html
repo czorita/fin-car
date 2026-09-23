@@ -177,7 +177,7 @@
         </p>
 
         <form id="form-reverse-calc">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
             <div class="form-group">
               <label class="form-label" for="rev-price">Precio del vehículo</label>
               <div class="input-wrapper">
@@ -189,7 +189,15 @@
             <div class="form-group">
               <label class="form-label" for="rev-down">Entrada aportada</label>
               <div class="input-wrapper">
-                <input type="text" inputmode="decimal" id="rev-down" class="form-input has-addon" placeholder="4000" required />
+                <input type="text" inputmode="decimal" id="rev-down" class="form-input has-addon" placeholder="4000" />
+                <span class="input-addon">€</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="rev-financed">O cantidad a financiar</label>
+              <div class="input-wrapper">
+                <input type="text" inputmode="decimal" id="rev-financed" class="form-input has-addon" placeholder="20000" />
                 <span class="input-addon">€</span>
               </div>
             </div>
