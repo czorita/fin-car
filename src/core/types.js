@@ -4,6 +4,7 @@
 
 import { generateId, ID_PREFIX_OFFER, DEFAULTS } from './constants.js';
 import { getVehicleImageUrl } from './vehicleCatalog.js';
+import { resolvePrices, resolveDownPayment, sumLinkedProducts } from './pricing.js';
 
 export { generateId };
 
@@ -29,6 +30,95 @@ export const MODALITY_SHORT_NAMES = {
 };
 
 /**
+ * Producto vinculado a la financiación (seguro, pack de mantenimiento...).
+ * @typedef {Object} LinkedProduct
+ * @property {string} id
+ * @property {string} name
+ * @property {number} cost
+ * @property {boolean} [financed] - Si es `false` se paga al contado; si no está informado, se financia
+ * @property {boolean} [required]
+ */
+
+/**
+ * Servicio incluido de serie o bonificado (mantenimiento, seguro, garantía...).
+ * @typedef {Object} IncludedService
+ * @property {string} id
+ * @property {string} name
+ * @property {number} marketValue - Valor de mercado si se contratara por libre
+ * @property {string} [category]
+ */
+
+/**
+ * Oferta de compra tal como la introduce el usuario (o la crea `createDefaultOffer`).
+ * @typedef {Object} Offer
+ * @property {string} id
+ * @property {string} vehicle
+ * @property {string} [imageUrl]
+ * @property {string} title
+ * @property {string} [dealer]
+ * @property {string} [notes]
+ * @property {string} modality - Uno de OFFER_MODALITIES
+ * @property {number} vehiclePrice - Precio de catálogo / referencia
+ * @property {number} financeDiscount - Descuento condicionado a financiar
+ * @property {number} cashPriceReference - Precio al contado de referencia
+ * @property {number} offerPrice - Precio base de cálculo tras descuentos
+ * @property {number} downPayment - Entrada
+ * @property {number|null} financedAmount - Capital a financiar informado
+ * @property {number} tradeInValue - Valor del vehículo entregado
+ * @property {number} months - Plazo en meses
+ * @property {number} contractMonths - Plazo del contrato original (cancelación anticipada)
+ * @property {number|null} tin - TIN anual (%)
+ * @property {number|null} manualMonthlyPayment - Cuota indicada por el concesionario
+ * @property {number} balloonPayment - Cuota final (VFG) en financiación flexible
+ * @property {boolean} cancelEarly - Compra flexible con cancelación anticipada
+ * @property {number} earlyCancellationMonth - Mes de cancelación
+ * @property {number} earlyCancellationPenaltyRate - Comisión de cancelación (%)
+ * @property {LinkedProduct[]} linkedProducts
+ * @property {IncludedService[]} includedServices
+ * @property {string} createdAt
+ */
+
+/**
+ * Oferta normalizada por `normalizeOffer`: la oferta original más sus métricas comparables.
+ * @typedef {Offer & {
+ *   isCash: boolean,
+ *   isEarlyCancellation: boolean,
+ *   isFlexible: boolean,
+ *   isFlexibleFinance: boolean,
+ *   principalFinanced: number,
+ *   monthlyPayment: number,
+ *   totalMonths: number,
+ *   settlementCapital: number,
+ *   cancellationPenalty: number,
+ *   finalSettlementPayment: number,
+ *   futureInterestSaved: number,
+ *   effectiveApr: number|null,
+ *   nominalTin: number,
+ *   totalInterest: number,
+ *   upfrontPayment: number,
+ *   totalFinancedPayments: number,
+ *   totalOutOfPocketCost: number,
+ *   includedServicesValue: number,
+ *   adjustedTcoCost: number,
+ *   costBreakdown: {
+ *     vehicleNet: number,
+ *     interests: number,
+ *     earlyCancellationPenalty: number,
+ *     linkedProducts: number,
+ *     includedServicesValue: number
+ *   },
+ *   advertisedDiscount: number,
+ *   financialSurcharge?: number,
+ *   netDifferenceVsCashRef: number,
+ *   netEquatedDifferenceVsCashRef: number,
+ *   baseCashReferenceTotal?: number,
+ *   verdict: import('./verdicts.js').Verdict,
+ *   amortizationSchedule: Array<Object>
+ * }} NormalizedOffer
+ * `effectiveApr` es `null` cuando la TAE no puede calcularse (TIR sin solución).
+ */
+
+/**
  * Devuelve el tipo de financiación con los meses (ej. "Al Contado", "Financiación Lineal (60m)").
  * Corresponde a la parte situada a la derecha del guion.
  * @param {Partial<Offer>} offer
@@ -42,13 +132,13 @@ export function getOfferFinanceSubtitle(offer) {
     return modLabel;
   }
   if (modality === OFFER_MODALITIES.EARLY_CANCELLATION) {
-    const cancelMonth = offer?.earlyCancellationMonth || 24;
-    const contract = offer?.contractMonths || offer?.months || 84;
+    const cancelMonth = offer?.earlyCancellationMonth || DEFAULTS.earlyCancellationMonth;
+    const contract = offer?.contractMonths || offer?.months || DEFAULTS.contractMonths;
     return `Cancelación mes ${cancelMonth} (de ${contract}m)`;
   }
   if (modality === OFFER_MODALITIES.FLEXIBLE_FINANCE && offer?.cancelEarly) {
-    const cancelMonth = offer?.earlyCancellationMonth || 24;
-    const contract = offer?.contractMonths || offer?.months || 48;
+    const cancelMonth = offer?.earlyCancellationMonth || DEFAULTS.earlyCancellationMonth;
+    const contract = offer?.contractMonths || offer?.months || DEFAULTS.flexibleContractMonths;
     return `Compra flexible (cancelación mes ${cancelMonth} de ${contract}m)`;
   }
   const months = offer?.months || offer?.totalMonths;
@@ -101,43 +191,8 @@ export function createDefaultOffer(overrides = {}) {
 
   const isCash = overrides.modality === OFFER_MODALITIES.CASH;
 
-  // Precios y descuentos
-  let offerPrice;
-  let vehiclePrice;
-  let cashPriceReference;
-  let financeDiscount = 0;
-
-  if (isCash) {
-    offerPrice = Number(overrides.offerPrice ?? overrides.vehiclePrice ?? overrides.cashPriceReference ?? DEFAULTS.cashPriceReference);
-    vehiclePrice = offerPrice;
-    cashPriceReference = offerPrice;
-    financeDiscount = 0;
-  } else if (overrides.offerPrice !== undefined) {
-    // Si viene offerPrice explícito (nueva convención o modal):
-    offerPrice = Number(overrides.offerPrice);
-    financeDiscount = Number(overrides.financeDiscount ?? overrides.advertisedDiscount ?? 0);
-    cashPriceReference = overrides.cashPriceReference !== undefined
-      ? Number(overrides.cashPriceReference)
-      : (overrides.vehiclePrice !== undefined ? Number(overrides.vehiclePrice) : (offerPrice + financeDiscount));
-    vehiclePrice = overrides.vehiclePrice !== undefined ? Number(overrides.vehiclePrice) : cashPriceReference;
-  } else if (overrides.vehiclePrice !== undefined) {
-    // Modo legacy / retrocompatible: vehiclePrice es el precio catálogo pre-descuento
-    vehiclePrice = Number(overrides.vehiclePrice);
-    financeDiscount = Number(overrides.financeDiscount ?? overrides.advertisedDiscount ?? 0);
-    offerPrice = Math.max(0, vehiclePrice - financeDiscount);
-    cashPriceReference = overrides.cashPriceReference !== undefined ? Number(overrides.cashPriceReference) : vehiclePrice;
-  } else {
-    // Valores por defecto
-    offerPrice = DEFAULTS.offerPrice;
-    cashPriceReference = DEFAULTS.cashPriceReference;
-    vehiclePrice = DEFAULTS.cashPriceReference;
-    financeDiscount = Math.max(0, cashPriceReference - offerPrice);
-  }
-
-  const linkedProducts = overrides.linkedProducts || [];
-  const productsFinanced = linkedProducts
-    .filter(p => p.financed !== false)
-    .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
+  // Precios y descuentos (lógica compartida con normalizeOffer)
+  const { offerPrice, vehiclePrice, cashPriceReference, financeDiscount } = resolvePrices(overrides, { defaults: DEFAULTS });
 
   let downPayment = 0;
   let financedAmount = overrides.financedAmount !== undefined && overrides.financedAmount !== null
@@ -145,18 +200,16 @@ export function createDefaultOffer(overrides = {}) {
     : null;
 
   if (!isCash) {
-    if (overrides.downPayment !== undefined && overrides.downPayment !== null) {
-      downPayment = Number(overrides.downPayment);
-      if (financedAmount === null) {
-        financedAmount = Math.max(0, offerPrice - downPayment - Number(overrides.tradeInValue || 0) + productsFinanced);
-      }
-    } else if (financedAmount !== null) {
-      const tradeIn = Number(overrides.tradeInValue || 0);
-      downPayment = Math.max(0, offerPrice - tradeIn + productsFinanced - financedAmount);
-    } else {
-      downPayment = DEFAULTS.downPayment;
-      financedAmount = Math.max(0, offerPrice - downPayment - Number(overrides.tradeInValue || 0) + productsFinanced);
-    }
+    const resolved = resolveDownPayment({
+      offerPrice,
+      tradeInValue: overrides.tradeInValue,
+      productsFinanced: sumLinkedProducts(overrides.linkedProducts).financed,
+      downPayment: overrides.downPayment,
+      financedAmount: overrides.financedAmount,
+      defaultDownPayment: DEFAULTS.downPayment
+    });
+    downPayment = resolved.downPayment;
+    financedAmount = resolved.financedAmount;
   }
 
   return {

@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateMonthlyPayment, reverseEngineerInterestRate, generateAmortizationSchedule, calculateEarlyCancellationSettlement } from '../../src/core/finance.js';
+import { calculateMonthlyPayment, reverseEngineerInterestRate, generateAmortizationSchedule, calculateEarlyCancellationSettlement, calculateIRR, calculateEffectiveApr } from '../../src/core/finance.js';
 import { normalizeOffer, rankOffers } from '../../src/core/normalizer.js';
 import { SAMPLE_OFFERS } from '../../src/core/presets.js';
 
@@ -100,6 +100,55 @@ describe('Cálculos Financieros y Normalización de Ofertas', () => {
     assert.equal(res.finalSettlementPayment, Number((res.settlementCapital + res.penaltyAmount).toFixed(2)));
     // Ahorro en intereses futuros al evitar los 24 meses restantes del balloon
     assert.ok(res.futureInterestSaved > 1500, `Ahorro esperado > 1500 €, obtenido ${res.futureInterestSaved}`);
+  });
+});
+
+describe('Fase 2: TIR robusta y cuota forzada (finance.js)', () => {
+  test('calculateEarlyCancellationSettlement usa monthlyPaymentOverride en amortización y totales', () => {
+    const theoretical = calculateEarlyCancellationSettlement(20000, 8, 84, 24, 1, 0);
+    const forced = calculateEarlyCancellationSettlement(20000, 8, 84, 24, 1, 0, 350);
+
+    assert.ok(theoretical.monthlyPayment < 350);
+    assert.equal(forced.monthlyPayment, 350);
+    assert.equal(forced.regularPaymentsTotal, 8400);
+    assert.ok(forced.settlementCapital < theoretical.settlementCapital, 'Pagando más cada mes queda menos capital pendiente');
+    assert.equal(forced.totalPaidLoan, Number((8400 + forced.finalSettlementPayment).toFixed(2)));
+    assert.ok(Math.abs(forced.originalTotalInterest - (350 * 84 - 20000)) < 0.01);
+
+    // Sin override (o con valores no positivos) se mantiene la cuota teórica
+    assert.deepEqual(calculateEarlyCancellationSettlement(20000, 8, 84, 24, 1, 0, null), theoretical);
+    assert.deepEqual(calculateEarlyCancellationSettlement(20000, 8, 84, 24, 1, 0, 0), theoretical);
+  });
+
+  test('generateAmortizationSchedule con cuota forzada coincide con la liquidación', () => {
+    const settlement = calculateEarlyCancellationSettlement(20000, 8, 84, 24, 1, 0, 350);
+    const schedule = generateAmortizationSchedule(20000, 8, 84, 0, { cancelMonth: 24, penaltyRate: 1 }, 350);
+    assert.equal(schedule[0].payment, 350);
+    const last = schedule[schedule.length - 1];
+    assert.equal(last.cancellationDetails.settlementCapital, settlement.settlementCapital);
+    assert.equal(last.cancellationDetails.penaltyAmount, settlement.penaltyAmount);
+  });
+
+  test('calculateIRR: la bisección de respaldo encuentra la tasa cuando Newton-Raphson no converge', () => {
+    const cashflows = [-10000, ...Array(12).fill(900)];
+    const reference = calculateIRR(cashflows, 0.01);
+    assert.ok(reference !== null);
+
+    // Con un punto de partida de 500% mensual, Newton-Raphson diverge; la bisección lo rescata
+    const rescued = calculateIRR(cashflows, 5);
+    assert.ok(rescued !== null, 'Debe encontrar la tasa con la bisección');
+    assert.ok(Math.abs(rescued - reference) < 1e-6, `Tasa ${rescued} vs ${reference}`);
+  });
+
+  test('calculateIRR devuelve null si no hay cambio de signo en los flujos', () => {
+    assert.equal(calculateIRR([-100, -10, -10]), null);
+    assert.equal(calculateIRR([100]), null);
+  });
+
+  test('calculateEffectiveApr: null si la TIR no tiene solución y 0 para financiación sin intereses', () => {
+    assert.equal(calculateEffectiveApr(1e30, 1, 12), null);
+    assert.ok(Object.is(calculateEffectiveApr(12000, 200, 60), 0), 'Al 0% la TAE es 0 (y no -0)');
+    assert.equal(calculateEffectiveApr(0, 200, 60), 0, 'Sin capital financiado no hay TAE que valorar');
   });
 });
 

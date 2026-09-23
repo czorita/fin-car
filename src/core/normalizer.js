@@ -7,26 +7,25 @@
 import { OFFER_MODALITIES } from './types.js';
 import { calculateMonthlyPayment, calculateEffectiveApr, reverseEngineerInterestRate, generateAmortizationSchedule, calculateEarlyCancellationSettlement } from './finance.js';
 import { generateVerdict } from './verdicts.js';
+import { resolvePrices, resolveDownPayment, sumLinkedProducts } from './pricing.js';
+import { DEFAULTS } from './constants.js';
 
 /**
  * Normaliza una oferta y genera su análisis financiero detallado.
  * @param {import('./types.js').Offer} offer 
- * @returns {NormalizedOffer}
+ * @returns {import('./types.js').NormalizedOffer}
  */
 export function normalizeOffer(offer) {
   const isCash = offer.modality === OFFER_MODALITIES.CASH;
   const isFlexible = offer.modality === OFFER_MODALITIES.FLEXIBLE_FINANCE;
   const isEarlyCancellation = offer.modality === OFFER_MODALITIES.EARLY_CANCELLATION || (isFlexible && Boolean(offer.cancelEarly));
 
-  // 1. Productos vinculados
-  const products = offer.linkedProducts || [];
-  const productsFinanced = products
-    .filter(p => p.financed)
-    .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
-  const productsUpfront = products
-    .filter(p => !p.financed)
-    .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
-  const totalProductsCost = productsFinanced + productsUpfront;
+  // 1. Productos vinculados (indefinido = financiado, igual que el formulario)
+  const {
+    financed: productsFinanced,
+    upfront: productsUpfront,
+    total: totalProductsCost
+  } = sumLinkedProducts(offer.linkedProducts);
 
   // 1b. Servicios adicionales incluidos de serie o bonificados (ej. mantenimiento oficial, seguro, garantía)
   const includedServices = Array.isArray(offer.includedServices) ? offer.includedServices : [];
@@ -34,40 +33,13 @@ export function normalizeOffer(offer) {
 
   const tradeInValue = Number(offer.tradeInValue) || 0;
 
-  // Precios y descuentos
-  let offerPrice;
-  let vehiclePrice;
-  let cashPriceRef;
-  let financeDiscount = 0;
-
-  if (isCash) {
-    offerPrice = Number(offer.offerPrice ?? offer.vehiclePrice ?? offer.cashPriceReference ?? 0);
-    vehiclePrice = offerPrice;
-    cashPriceRef = offerPrice;
-    financeDiscount = 0;
-  } else {
-    financeDiscount = Number(offer.financeDiscount ?? offer.advertisedDiscount ?? 0);
-
-    if (offer.offerPrice !== undefined) {
-      offerPrice = Number(offer.offerPrice);
-      cashPriceRef = offer.cashPriceReference !== undefined
-        ? Number(offer.cashPriceReference)
-        : (offer.vehiclePrice !== undefined ? Number(offer.vehiclePrice) : (offerPrice + financeDiscount));
-      vehiclePrice = offer.vehiclePrice !== undefined ? Number(offer.vehiclePrice) : cashPriceRef;
-    } else if (offer.vehiclePrice !== undefined) {
-      vehiclePrice = Number(offer.vehiclePrice);
-      offerPrice = Math.max(0, vehiclePrice - financeDiscount);
-      cashPriceRef = offer.cashPriceReference !== undefined ? Number(offer.cashPriceReference) : vehiclePrice;
-    } else if (offer.cashPriceReference !== undefined) {
-      cashPriceRef = Number(offer.cashPriceReference);
-      vehiclePrice = cashPriceRef;
-      offerPrice = Math.max(0, cashPriceRef - financeDiscount);
-    } else {
-      offerPrice = 0;
-      vehiclePrice = 0;
-      cashPriceRef = 0;
-    }
-  }
+  // Precios y descuentos (lógica compartida con createDefaultOffer; sin valores por defecto)
+  const {
+    offerPrice,
+    vehiclePrice,
+    cashPriceReference: cashPriceRef,
+    financeDiscount
+  } = resolvePrices(offer);
 
   // Si es contado
   if (isCash) {
@@ -125,22 +97,27 @@ export function normalizeOffer(offer) {
   }
 
   // Si es financiación (estándar, flexible o cancelación anticipada)
-  let downPayment = 0;
-  if (offer.downPayment !== undefined && offer.downPayment !== null) {
-    downPayment = Number(offer.downPayment);
-  } else if (offer.financedAmount !== undefined && offer.financedAmount !== null) {
-    downPayment = Math.max(0, offerPrice - tradeInValue + productsFinanced - Number(offer.financedAmount));
-  }
+  // Entrada y capital: el capital se recalcula siempre a partir de la entrada resuelta
+  const {
+    downPayment,
+    netVehicleToFinance,
+    principal: financedPrincipal
+  } = resolveDownPayment({
+    offerPrice,
+    tradeInValue,
+    productsFinanced,
+    downPayment: offer.downPayment,
+    financedAmount: offer.financedAmount
+  });
   const tin = Number(offer.tin) || 0;
 
-  // Capital base del vehículo a financiar
-  const netVehicleToFinance = Math.max(0, offerPrice - downPayment - tradeInValue);
-  const financedPrincipal = netVehicleToFinance + productsFinanced;
-
-  let months = Number(offer.months) || 60;
+  let months = Number(offer.months) || DEFAULTS.months;
   const contractMonths = Number(offer.contractMonths) || months;
-  const cancelMonth = Number(offer.earlyCancellationMonth) || 24;
-  const penaltyRate = offer.earlyCancellationPenaltyRate !== undefined ? Number(offer.earlyCancellationPenaltyRate) : 1.0;
+  const cancelMonth = Number(offer.earlyCancellationMonth) || DEFAULTS.earlyCancellationMonth;
+  const penaltyRate = offer.earlyCancellationPenaltyRate !== undefined
+    ? Number(offer.earlyCancellationPenaltyRate)
+    : DEFAULTS.earlyCancellationPenaltyRate;
+  const manualMonthlyPayment = Number(offer.manualMonthlyPayment) > 0 ? Number(offer.manualMonthlyPayment) : null;
 
   const originalBalloon = isFlexible ? (Number(offer.balloonPayment) || 0) : 0;
   let balloon = originalBalloon;
@@ -158,17 +135,22 @@ export function normalizeOffer(offer) {
   const initialCashOut = downPayment + productsUpfront;
 
   if (isEarlyCancellation) {
-    if (offer.manualMonthlyPayment && Number(offer.manualMonthlyPayment) > 0) {
-      monthlyPayment = Number(offer.manualMonthlyPayment);
-      if (effectiveTin <= 0) {
-        const rev = reverseEngineerInterestRate(financedPrincipal, monthlyPayment, contractMonths, originalBalloon);
-        effectiveTin = rev.tin;
-      }
+    if (manualMonthlyPayment !== null && effectiveTin <= 0) {
+      const rev = reverseEngineerInterestRate(financedPrincipal, manualMonthlyPayment, contractMonths, originalBalloon);
+      effectiveTin = rev.tin;
     }
-    const earlyCalc = calculateEarlyCancellationSettlement(financedPrincipal, effectiveTin, contractMonths, cancelMonth, penaltyRate, originalBalloon);
-    if (!offer.manualMonthlyPayment || Number(offer.manualMonthlyPayment) <= 0) {
-      monthlyPayment = earlyCalc.monthlyPayment;
-    }
+    // Con cuota manual, la liquidación (capital pendiente, intereses y totales) se calcula
+    // con la cuota que realmente se paga, no con la teórica del TIN.
+    const earlyCalc = calculateEarlyCancellationSettlement(
+      financedPrincipal,
+      effectiveTin,
+      contractMonths,
+      cancelMonth,
+      penaltyRate,
+      originalBalloon,
+      manualMonthlyPayment
+    );
+    monthlyPayment = manualMonthlyPayment ?? earlyCalc.monthlyPayment;
     totalInterest = earlyCalc.totalInterestPaid;
     settlementCapital = earlyCalc.settlementCapital;
     cancellationPenalty = earlyCalc.penaltyAmount;
@@ -178,9 +160,9 @@ export function normalizeOffer(offer) {
     totalInstallments = earlyCalc.regularPaymentsTotal;
     balloon = finalSettlementPayment;
     totalOutOfPocketCost = Number((initialCashOut + totalInstallments + finalSettlementPayment).toFixed(2));
-  } else if (offer.manualMonthlyPayment && Number(offer.manualMonthlyPayment) > 0) {
+  } else if (manualMonthlyPayment !== null) {
     // Si el usuario introdujo manualmente la cuota del concesionario, deducimos el TIN
-    monthlyPayment = Number(offer.manualMonthlyPayment);
+    monthlyPayment = manualMonthlyPayment;
     const rev = reverseEngineerInterestRate(financedPrincipal, monthlyPayment, months, balloon);
     effectiveTin = rev.tin;
     totalInterest = rev.totalInterest;
@@ -200,7 +182,7 @@ export function normalizeOffer(offer) {
   // Coste total equiparado (TCO: coste financiero menos el valor de mercado de los servicios incluidos que te ahorras de pagar a mano)
   const adjustedTcoCost = Number(Math.max(0, totalOutOfPocketCost - includedServicesValue).toFixed(2));
 
-  // TAE real efectiva
+  // TAE real efectiva (null si la TIR no tiene solución: no se inventa una aproximación)
   const effectiveApr = calculateEffectiveApr(
     netVehicleToFinance,
     monthlyPayment,
@@ -242,8 +224,8 @@ export function normalizeOffer(offer) {
 
   // Cuadro de amortización
   const amortizationSchedule = isEarlyCancellation
-    ? generateAmortizationSchedule(financedPrincipal, effectiveTin, contractMonths, originalBalloon, { cancelMonth, penaltyRate })
-    : generateAmortizationSchedule(financedPrincipal, effectiveTin, months, balloon);
+    ? generateAmortizationSchedule(financedPrincipal, effectiveTin, contractMonths, originalBalloon, { cancelMonth, penaltyRate }, manualMonthlyPayment)
+    : generateAmortizationSchedule(financedPrincipal, effectiveTin, months, balloon, null, manualMonthlyPayment);
 
   return {
     ...offer,
@@ -269,7 +251,7 @@ export function normalizeOffer(offer) {
     finalSettlementPayment,
     futureInterestSaved,
     balloonPayment: isFlexible ? originalBalloon : balloon,
-    effectiveApr: effectiveApr || Number((effectiveTin * 1.05).toFixed(2)), // Si TAE da 0 aproximar
+    effectiveApr,
     nominalTin: effectiveTin,
     tin: effectiveTin,
     totalInterest,

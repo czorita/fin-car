@@ -466,5 +466,131 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
   });
 });
 
+describe('Fase 2: coherencia del motor financiero (normalizer.js)', () => {
+  const productCases = [
+    ['indefinido', { id: 'p1', name: 'Seguro', cost: 600 }],
+    ['true', { id: 'p1', name: 'Seguro', cost: 600, financed: true }],
+    ['false', { id: 'p1', name: 'Seguro', cost: 600, financed: false }]
+  ];
+
+  for (const [label, product] of productCases) {
+    test(`Paridad createDefaultOffer ↔ normalizeOffer con producto financed ${label}`, () => {
+      const isFinanced = product.financed !== false;
+      const base = {
+        modality: OFFER_MODALITIES.STANDARD_FINANCE,
+        offerPrice: 20000,
+        cashPriceReference: 22000,
+        tradeInValue: 1000,
+        tin: 7,
+        months: 48,
+        linkedProducts: [product]
+      };
+
+      // a) Partiendo de la entrada
+      const fromDown = createDefaultOffer({ ...base, downPayment: 3000 });
+      const normDown = normalizeOffer(fromDown);
+      const expectedPrincipal = 20000 - 3000 - 1000 + (isFinanced ? 600 : 0);
+      assert.equal(fromDown.financedAmount, expectedPrincipal);
+      assert.equal(normDown.principalFinanced, expectedPrincipal);
+      assert.equal(normDown.downPayment, fromDown.downPayment);
+      assert.equal(normDown.upfrontPayment, 3000 + (isFinanced ? 0 : 600));
+
+      // b) Partiendo del capital a financiar
+      const fromFinanced = createDefaultOffer({ ...base, financedAmount: 15000 });
+      const expectedDown = 20000 - 1000 + (isFinanced ? 600 : 0) - 15000;
+      assert.equal(fromFinanced.downPayment, expectedDown);
+      const normFromOffer = normalizeOffer(fromFinanced);
+      assert.equal(normFromOffer.downPayment, expectedDown);
+      assert.equal(normFromOffer.principalFinanced, 15000);
+      // El normalizador deduce lo mismo aunque solo reciba el capital a financiar
+      const normOnlyFinanced = normalizeOffer({ ...fromFinanced, downPayment: undefined });
+      assert.equal(normOnlyFinanced.downPayment, expectedDown);
+      assert.equal(normOnlyFinanced.principalFinanced, 15000);
+    });
+  }
+
+  test('createDefaultOffer respeta cashPriceReference si es el único precio informado', () => {
+    const offer = createDefaultOffer({ modality: OFFER_MODALITIES.STANDARD_FINANCE, cashPriceReference: 30000, financeDiscount: 2000 });
+    const normalized = normalizeOffer(offer);
+    assert.equal(offer.offerPrice, 28000);
+    assert.equal(offer.cashPriceReference, 30000);
+    assert.equal(normalized.offerPrice, offer.offerPrice);
+    assert.equal(normalized.cashPriceReference, offer.cashPriceReference);
+  });
+
+  test('Cancelación anticipada con cuota manual y TIN: totales coherentes con la cuota manual', () => {
+    const offer = {
+      id: 'ec_manual',
+      modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+      offerPrice: 25000,
+      cashPriceReference: 27000,
+      downPayment: 5000,
+      tin: 8,
+      manualMonthlyPayment: 350, // la cuota teórica al 8% en 84 meses sería ~311,72 €
+      months: 84,
+      contractMonths: 84,
+      earlyCancellationMonth: 24,
+      earlyCancellationPenaltyRate: 1,
+      linkedProducts: []
+    };
+    const n = normalizeOffer(offer);
+
+    assert.equal(n.monthlyPayment, 350);
+    assert.equal(n.nominalTin, 8, 'El TIN informado se conserva');
+    assert.equal(n.totalFinancedPayments, 350 * 24, 'Las cuotas pagadas salen de la cuota manual');
+
+    // Capital pendiente e intereses recalculados a mano con la cuota manual
+    const r = 0.08 / 12;
+    let balance = 20000;
+    let interest = 0;
+    for (let m = 1; m <= 24; m++) {
+      const i = balance * r;
+      interest += i;
+      balance -= 350 - i;
+    }
+    assert.ok(Math.abs(n.settlementCapital - balance) < 0.01, `Capital pendiente ${n.settlementCapital} vs ${balance.toFixed(2)}`);
+    assert.ok(Math.abs(n.totalInterest - interest) < 0.01);
+    assert.equal(n.totalOutOfPocketCost, Number((5000 + 350 * 24 + n.finalSettlementPayment).toFixed(2)));
+    // Identidad contable: lo pagado al banco = capital + intereses + comisión
+    assert.ok(Math.abs((n.totalFinancedPayments + n.finalSettlementPayment) - (20000 + n.totalInterest + n.cancellationPenalty)) < 0.05);
+
+    // El cuadro de amortización cuadra con la misma cuota
+    const schedule = n.amortizationSchedule;
+    assert.equal(schedule.length, 24);
+    assert.equal(schedule[0].payment, 350);
+    const last = schedule[schedule.length - 1];
+    assert.equal(last.isCancellation, true);
+    assert.equal(last.cancellationDetails.settlementCapital, n.settlementCapital);
+  });
+
+  test('TAE no calculable (TIR sin solución) → effectiveApr === null, sin aproximaciones', () => {
+    const n = normalizeOffer({
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      offerPrice: 1e30,
+      cashPriceReference: 1e30,
+      downPayment: 0,
+      manualMonthlyPayment: 1,
+      months: 12,
+      linkedProducts: []
+    });
+    assert.equal(n.effectiveApr, null);
+  });
+
+  test('Financiación al 0% sin productos → TAE 0 (no null)', () => {
+    const n = normalizeOffer({
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      offerPrice: 12000,
+      cashPriceReference: 12000,
+      downPayment: 0,
+      tin: 0,
+      months: 60,
+      linkedProducts: []
+    });
+    assert.equal(n.monthlyPayment, 200);
+    assert.equal(n.effectiveApr, 0);
+    assert.equal(n.nominalTin, 0);
+  });
+});
+
 
 

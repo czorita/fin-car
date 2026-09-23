@@ -3,7 +3,7 @@
  * Separa la lógica de presentación y evaluación del cálculo matemático puro.
  */
 
-import { AFFORDABLE_SURCHARGE_FACTOR } from './constants.js';
+import { AFFORDABLE_SURCHARGE_FACTOR, DEFAULTS } from './constants.js';
 
 /**
  * @typedef {Object} Verdict
@@ -63,7 +63,7 @@ export function generateVerdict({
       return {
         status: 'success',
         badge: '⚡ Ahorro neto cancelando',
-        message: `Estrategia rentable: al cancelar en el mes ${cancelMonth || 24} cumples la permanencia y ganas ${Math.abs(netDifferenceVsCashRef).toLocaleString('es-ES')} € netos frente al contado tras pagar intereses y comisión (evitándote ${futureInterestSaved.toLocaleString('es-ES')} € en intereses futuros)${srvText}`
+        message: `Estrategia rentable: al cancelar en el mes ${cancelMonth || DEFAULTS.earlyCancellationMonth} cumples la permanencia y ganas ${Math.abs(netDifferenceVsCashRef).toLocaleString('es-ES')} € netos frente al contado tras pagar intereses y comisión (evitándote ${futureInterestSaved.toLocaleString('es-ES')} € en intereses futuros)${srvText}`
       };
     }
 
@@ -71,7 +71,7 @@ export function generateVerdict({
       return {
         status: 'success',
         badge: '💎 Ahorro equiparado cancelando',
-        message: `Cancelando en el mes ${cancelMonth || 24} y computando los ${includedServicesValue.toLocaleString('es-ES')} € en servicios incluidos, ahorras ${Math.abs(equatedDiff).toLocaleString('es-ES')} € reales frente al contado.`
+        message: `Cancelando en el mes ${cancelMonth || DEFAULTS.earlyCancellationMonth} y computando los ${includedServicesValue.toLocaleString('es-ES')} € en servicios incluidos, ahorras ${Math.abs(equatedDiff).toLocaleString('es-ES')} € reales frente al contado.`
       };
     }
 
@@ -79,7 +79,7 @@ export function generateVerdict({
       return {
         status: 'neutral',
         badge: 'Mismo coste que contado',
-        message: `La cancelación en el mes ${cancelMonth || 24} iguala exactamente el coste al contado (los intereses y comisión neutralizan el descuento).`
+        message: `La cancelación en el mes ${cancelMonth || DEFAULTS.earlyCancellationMonth} iguala exactamente el coste al contado (los intereses y comisión neutralizan el descuento).`
       };
     }
 
@@ -87,14 +87,14 @@ export function generateVerdict({
       return {
         status: 'info',
         badge: 'Permanencia con sobrecoste mínimo',
-        message: `Al liquidar en el mes ${cancelMonth || 24} te ahorras ${futureInterestSaved.toLocaleString('es-ES')} € en intereses futuros. El sobrecoste final queda reducido a ${equatedDiff.toLocaleString('es-ES')} €.`
+        message: `Al liquidar en el mes ${cancelMonth || DEFAULTS.earlyCancellationMonth} te ahorras ${futureInterestSaved.toLocaleString('es-ES')} € en intereses futuros. El sobrecoste final queda reducido a ${equatedDiff.toLocaleString('es-ES')} €.`
       };
     }
 
     return {
       status: 'danger',
       badge: '⚠️ Ni cancelando compensa',
-      message: `El descuento de ${advertisedDiscount.toLocaleString('es-ES')} € no compensa: pese a cancelar en el mes ${cancelMonth || 24} y evitarte ${futureInterestSaved.toLocaleString('es-ES')} € en intereses futuros, los intereses de los ${cancelMonth || 24} meses y la comisión dejan un sobrecoste de ${equatedDiff.toLocaleString('es-ES')} € frente al contado.`
+      message: `El descuento de ${advertisedDiscount.toLocaleString('es-ES')} € no compensa: pese a cancelar en el mes ${cancelMonth || DEFAULTS.earlyCancellationMonth} y evitarte ${futureInterestSaved.toLocaleString('es-ES')} € en intereses futuros, los intereses de los ${cancelMonth || DEFAULTS.earlyCancellationMonth} meses y la comisión dejan un sobrecoste de ${equatedDiff.toLocaleString('es-ES')} € frente al contado.`
     };
   }
 
