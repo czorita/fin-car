@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseLocaleNumber, formatLocaleNumber, formatMonthsDuration } from '../../src/core/formatters.js';
+import { parseLocaleNumber, parseLocaleRate, formatLocaleNumber, formatMonthsDuration } from '../../src/core/formatters.js';
 
 describe('Soporte de Comas y Puntos Decimales (Formatters)', () => {
   test('Parsea enteros estándar', () => {
@@ -24,6 +24,42 @@ describe('Soporte de Comas y Puntos Decimales (Formatters)', () => {
     assert.equal(parseLocaleNumber('26000.50'), 26000.5);
     assert.equal(parseLocaleNumber('26,000.50'), 26000.5);
     assert.equal(parseLocaleNumber('8.5'), 8.5);
+  });
+
+  test('Interpreta puntos con grupos de 3 dígitos y sin coma como miles españoles', () => {
+    assert.equal(parseLocaleNumber('30.000'), 30000);
+    assert.equal(parseLocaleNumber('24.200'), 24200);
+    assert.equal(parseLocaleNumber('1.250.000'), 1250000);
+    assert.equal(parseLocaleNumber('-30.000'), -30000);
+    assert.equal(parseLocaleNumber(' 30.000 '), 30000);
+  });
+
+  test('Mantiene el punto decimal cuando no encaja el patrón de miles', () => {
+    assert.equal(parseLocaleNumber('8.5'), 8.5);
+    assert.equal(parseLocaleNumber('30.00'), 30);
+    assert.equal(parseLocaleNumber('1234.567'), 1234.567);
+    assert.equal(parseLocaleNumber('26000.50'), 26000.5);
+    assert.equal(parseLocaleNumber('1.2345'), 1.2345);
+  });
+
+  test('Mantiene coma decimal, notaciones mixtas y números JS', () => {
+    assert.equal(parseLocaleNumber('8,5'), 8.5);
+    assert.equal(parseLocaleNumber('26.000,50'), 26000.5);
+    assert.equal(parseLocaleNumber('26,000.50'), 26000.5);
+    assert.equal(parseLocaleNumber(123.45), 123.45);
+    assert.equal(parseLocaleNumber(4000), 4000);
+  });
+
+  test('parseLocaleRate trata siempre el punto sin coma como decimal (TIN con 3 decimales)', () => {
+    assert.equal(parseLocaleRate('7.495'), 7.495);
+    assert.equal(parseLocaleRate('1.250'), 1.25);
+    assert.equal(parseLocaleRate('8.5'), 8.5);
+    assert.equal(parseLocaleRate('8,5'), 8.5);
+    assert.equal(parseLocaleRate('7,495'), 7.495);
+    assert.equal(parseLocaleRate(6.99), 6.99);
+    assert.equal(parseLocaleRate(''), 0);
+    // Contraste: como importe, "7.495" son 7.495 € (miles)
+    assert.equal(parseLocaleNumber('7.495'), 7495);
   });
 
   test('Maneja valores nulos, vacíos e inválidos retornando 0', () => {

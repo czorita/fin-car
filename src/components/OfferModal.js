@@ -9,7 +9,7 @@
  */
 
 import { OFFER_MODALITIES } from '../core/types.js';
-import { parseLocaleNumber, formatLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
+import { parseLocaleNumber, parseLocaleRate, formatLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
 import { generateId, ID_PREFIX_PRODUCT, ID_PREFIX_SERVICE, DEFAULTS } from '../core/constants.js';
 import { getVehicleImageUrl } from '../core/vehicleCatalog.js';
 import { calculateMonthlyPayment, reverseEngineerInterestRate } from '../core/finance.js';
@@ -202,7 +202,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       derive: () => {
         const principal = getFinancedPrincipal();
         const months = getMonths();
-        const tin = parseLocaleNumber(els.loanTinInput.value);
+        const tin = parseLocaleRate(els.loanTinInput.value);
         if (!(principal > 0 && months > 0 && tin >= 0 && els.loanTinInput.value.trim() !== '')) return null;
         const cuota = calculateMonthlyPayment(principal, tin, months, getBalloon());
         const cuotaText = cuota.toLocaleString('es-ES', TWO_DECIMALS);
