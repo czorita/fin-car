@@ -34,5 +34,15 @@ export default [
       // nodeBuiltin (no node): son módulos ESM, así que __dirname/require no existen
       globals: { ...globals.nodeBuiltin }
     }
+  },
+  {
+    // Tests de interfaz: DOM simulado con happy-dom (tests/helpers/dom.js); las fixtures sí usan innerHTML
+    files: ['tests/ui/**/*.js', 'tests/helpers/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.browser }
+    },
+    rules: {
+      'no-restricted-properties': 'off'
+    }
   }
 ];
