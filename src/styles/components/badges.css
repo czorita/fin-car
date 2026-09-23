@@ -1,0 +1,36 @@
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  line-height: 1.2;
+}
+
+.badge-winner {
+  background: var(--badge-winner-bg);
+  border: 1px solid var(--badge-winner-border);
+  color: var(--badge-winner-text);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.badge-trap {
+  background: var(--badge-trap-bg);
+  border: 1px solid var(--badge-trap-border);
+  color: var(--badge-trap-text);
+}
+
+.badge-info {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+
+.badge-neutral {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+}

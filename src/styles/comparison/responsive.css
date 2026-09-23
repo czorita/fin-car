@@ -1,0 +1,28 @@
+/* Floating Action Button para móvil */
+.mobile-fab {
+  display: none;
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 99;
+}
+
+@media (max-width: 768px) {
+  .app-layout {
+    padding: 1rem 1rem 5rem 1rem;
+  }
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .mobile-fab {
+    display: block;
+  }
+  .segmented-control:not(.cross-modality-selector):not(.cross-view-switcher) {
+    grid-template-columns: 1fr;
+  }
+}

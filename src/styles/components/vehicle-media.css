@@ -1,0 +1,112 @@
+/* ==========================================================================
+   Fotografías y Medios de Vehículos (Chips, Tarjetas, Tablas y Modal)
+   ========================================================================== */
+.vehicle-chip-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: var(--bg-surface);
+}
+
+.cross-card-media {
+  position: relative;
+  width: calc(100% + 2.5rem);
+  margin: -1.25rem -1.25rem 1.15rem -1.25rem;
+  height: 165px;
+  overflow: hidden;
+  border-top-left-radius: calc(var(--radius-xl) - 1px);
+  border-top-right-radius: calc(var(--radius-xl) - 1px);
+  background: var(--bg-surface-elevated);
+}
+
+.cross-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cross-card-img.is-fallback {
+  object-fit: contain;
+  padding: 1.5rem;
+  opacity: 0.55;
+}
+
+.offer-card:hover .cross-card-img {
+  transform: scale(1.05);
+}
+
+.cross-card-media-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(15, 23, 42, 0.6) 100%);
+  pointer-events: none;
+}
+
+.table-th-thumb {
+  width: 64px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin: 0 auto 0.45rem auto;
+  display: block;
+  border: 1px solid var(--border-medium);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  background: var(--bg-surface);
+}
+
+/* Modal: Vista Previa Automática del Modelo Detectado */
+.vehicle-auto-preview-container {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.85rem;
+  margin-top: -0.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.vehicle-auto-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.vehicle-auto-preview-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-emerald, #10b981);
+  letter-spacing: 0.01em;
+}
+
+.vehicle-image-preview-box {
+  width: 72px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.vehicle-image-placeholder {
+  font-size: 1.5rem;
+  opacity: 0.65;
+}
+
+#vehicle-image-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

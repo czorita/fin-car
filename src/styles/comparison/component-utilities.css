@@ -1,0 +1,28 @@
+/* Utilidades de componentes (antes estilos inline en JS) */
+.btn-flex-1 {
+  flex: 1;
+}
+
+.table-th-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.amortization-cancel-details {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.amortization-principal {
+  color: var(--accent-emerald);
+}
+
+.amortization-interest {
+  color: var(--accent-rose);
+}
+
+.amortization-balance-settled {
+  color: var(--accent-emerald);
+  font-weight: 700;
+}
