@@ -583,3 +583,77 @@
 .price-fields--single {
   grid-template-columns: 1fr;
 }
+
+/* Notificaciones flotantes (toast.js) */
+.app-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  max-width: 90vw;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.85rem 1.35rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.app-toast--success {
+  background: var(--accent-emerald, #10b981);
+  color: #064e3b;
+}
+
+.app-toast--error {
+  background: var(--accent-rose, #f43f5e);
+  color: #ffffff;
+}
+
+.app-toast--warning {
+  background: var(--accent-amber, #f59e0b);
+  color: #1c1917;
+}
+
+.app-toast--info {
+  background: var(--accent-cyan, #06b6d4);
+  color: #083344;
+}
+
+/* Utilidades de componentes (antes estilos inline en JS) */
+.btn-flex-1 {
+  flex: 1;
+}
+
+.table-th-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.amortization-cancel-details {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.amortization-principal {
+  color: var(--accent-emerald);
+}
+
+.amortization-interest {
+  color: var(--accent-rose);
+}
+
+.amortization-balance-settled {
+  color: var(--accent-emerald);
+  font-weight: 700;
+}

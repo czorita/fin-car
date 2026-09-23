@@ -1,16 +1,16 @@
 /**
  * Controlador de la Guía de Negociación y Detección de Trampas.
- * Conecta el banner interactivo y el diálogo modal de consejos.
- * Se activa ÚNICAMENTE cuando al menos una oferta analizada contiene una trampa de financiación.
+ * Gestiona el diálogo modal de consejos, que se abre desde el enlace de cada tarjeta
+ * y lista las ofertas analizadas que contienen una trampa de financiación.
  */
 
+import { el, setVisible } from '../ui/dom.js';
+
 /**
- * Inicializa el controlador del banner y diálogo de la trampa del descuento.
+ * Inicializa el controlador del diálogo de la trampa del descuento.
  * @returns {{ update: (offers: Array<object>) => void, open: () => void, close: () => void }}
  */
 export function initTrapGuideModal() {
-  const banner = document.getElementById('trap-guide-banner');
-  const btnOpen = document.getElementById('btn-open-trap-guide');
   const dialog = document.getElementById('modal-trap-guide');
   const btnClose = document.getElementById('btn-close-trap-guide');
   const btnUnderstood = document.getElementById('btn-understood-trap-guide');
@@ -29,7 +29,6 @@ export function initTrapGuideModal() {
     }
   }
 
-  btnOpen?.addEventListener('click', open);
   btnClose?.addEventListener('click', close);
   btnUnderstood?.addEventListener('click', close);
 
@@ -43,32 +42,20 @@ export function initTrapGuideModal() {
     open,
     close,
     update(offers) {
-      if (!banner) return;
-
       const trapOffers = (offers || []).filter(o => !o.isCash && o.verdict && o.verdict.status === 'danger');
-
-      if (trapOffers.length === 0) {
-        banner.style.display = 'none';
-        return;
-      }
-
-      // Si hay ofertas con trampa de financiación, mostrar el banner clicable
-      banner.style.display = 'block';
-
-      // Rellenar lista con los detalles de las ofertas afectadas
-      if (alertBox && listEl) {
-        listEl.replaceChildren();
-        trapOffers.forEach(o => {
-          const li = document.createElement('li');
-          const title = o.title || 'Oferta';
-          const discount = Number(o.advertisedDiscount) || 0;
-          const extraCost = Number(o.netDifferenceVsCashRef) || 0;
-
-          li.innerHTML = `<strong>${title}</strong>: Descuento anunciado de ${discount.toLocaleString('es-ES')} € ficticio; acabas pagando <strong>+${extraCost.toLocaleString('es-ES')} € MÁS</strong> que al contado.`;
-          listEl.appendChild(li);
-        });
-        alertBox.style.display = 'block';
-      }
+      // Rellenar el aviso del modal con las ofertas afectadas (el modal se abre desde cada tarjeta)
+      if (!alertBox || !listEl) return;
+      listEl.replaceChildren(...trapOffers.map(o => {
+        const discount = Number(o.advertisedDiscount) || 0;
+        const extraCost = Number(o.netDifferenceVsCashRef) || 0;
+        return el('li', {}, [
+          el('strong', { text: o.title || 'Oferta' }),
+          `: Descuento anunciado de ${discount.toLocaleString('es-ES')} € ficticio; acabas pagando `,
+          el('strong', { text: `+${extraCost.toLocaleString('es-ES')} € MÁS` }),
+          ' que al contado.'
+        ]);
+      }));
+      setVisible(alertBox, trapOffers.length > 0);
     }
   };
 }

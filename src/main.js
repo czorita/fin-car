@@ -48,7 +48,7 @@ const { store, dom, renderApp } = createAppShell({
         } catch {
           // El borrado queda pendiente de sincronizar: reflejar la caché local en la UI
           store.setState({ offers: getStoredOffers() });
-          showToast('Eliminada localmente. Error al sincronizar con el servidor.', { type: 'danger' });
+          showToast('Eliminada localmente. Error al sincronizar con el servidor.', { type: 'error' });
         }
       }
     }),
@@ -79,7 +79,7 @@ async function saveOffer(fullOffer, successMessage, celebrate) {
   } catch {
     // La oferta queda en la caché local (pendiente de sincronizar): reflejarla en la UI
     store.setState({ offers: getStoredOffers(), selectedVehicle: fullOffer.vehicle });
-    showToast(SYNC_ERROR_MESSAGE, { type: 'danger' });
+    showToast(SYNC_ERROR_MESSAGE, { type: 'error' });
   }
 }
 

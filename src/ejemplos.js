@@ -46,7 +46,7 @@ function addCopyButton(card, offer, exampleOffers) {
       showToast(`¡"${offer.title}" copiada a tus presupuestos!`, { type: 'success' });
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
     } catch {
-      showToast(COPY_ERROR_MESSAGE, { type: 'danger' });
+      showToast(COPY_ERROR_MESSAGE, { type: 'error' });
     }
   });
 
@@ -77,7 +77,7 @@ offerModalCtrl = initOfferModal({
       showToast('¡Oferta guardada en tus presupuestos personales!', { type: 'success' });
       confetti({ particleCount: 60, spread: 70, origin: { y: 0.7 } });
     } catch {
-      showToast(COPY_ERROR_MESSAGE, { type: 'danger' });
+      showToast(COPY_ERROR_MESSAGE, { type: 'error' });
     }
   }
 });

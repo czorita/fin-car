@@ -6,6 +6,7 @@
 import { getOfferVehicle } from '../core/types.js';
 import { formatAprPercent } from '../core/formatters.js';
 import { getVehicleImageUrl, FALLBACK_CAR_SVG } from '../core/vehicleCatalog.js';
+import { createIcon } from '../ui/dom.js';
 
 /**
  * Crea una fila de especificación para la tarjeta de coche.
@@ -204,12 +205,8 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
   if (typeof onInspectVehicle === 'function') {
     const btnInspect = document.createElement('button');
     btnInspect.type = 'button';
-    btnInspect.className = 'btn btn-secondary btn-sm';
-    btnInspect.style.flex = '1';
-    btnInspect.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-      Ver este coche
-    `;
+    btnInspect.className = 'btn btn-secondary btn-sm btn-flex-1';
+    btnInspect.append(createIcon('externalLink'), ' Ver este coche');
     btnInspect.addEventListener('click', () => onInspectVehicle(offer.vehicle));
     actions.appendChild(btnInspect);
   }
