@@ -70,6 +70,10 @@ const offerModalCtrl = initOfferModal({
         triggerConfetti();
       }
     } catch {
+      // La oferta queda en la caché local (pendiente de sincronizar): reflejarla en la UI
+      rawOffers = getStoredOffers();
+      selectedVehicle = fullOffer.vehicle;
+      renderApp();
       showToast('Guardado localmente. Error al sincronizar con el servidor.', { type: 'danger' });
     }
   }
@@ -88,6 +92,10 @@ const reverseCalcModalCtrl = initReverseCalcModal({
       showToast('Presupuesto inverso añadido a tus ofertas.', { type: 'success' });
       triggerConfetti();
     } catch {
+      // La oferta queda en la caché local (pendiente de sincronizar): reflejarla en la UI
+      rawOffers = getStoredOffers();
+      selectedVehicle = fullOffer.vehicle;
+      renderApp();
       showToast('Guardado localmente. Error al sincronizar con el servidor.', { type: 'danger' });
     }
   }
@@ -161,6 +169,9 @@ const renderer = createAppRenderer({
           renderApp();
           showToast(`Oferta "${targetOffer.title}" eliminada.`, { type: 'info' });
         } catch {
+          // El borrado queda pendiente de sincronizar: reflejar la caché local en la UI
+          rawOffers = getStoredOffers();
+          renderApp();
           showToast('Eliminada localmente. Error al sincronizar con el servidor.', { type: 'danger' });
         }
       }
