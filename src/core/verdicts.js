@@ -33,7 +33,6 @@ export function generateVerdict({
   isEarlyCancellation = false,
   cancelMonth = 0,
   futureInterestSaved = 0,
-  cancellationPenalty = 0,
   netDifferenceVsCashRef = 0,
   advertisedDiscount = 0,
   monthlyPayment = 0,

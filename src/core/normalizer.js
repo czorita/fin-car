@@ -121,15 +121,15 @@ export function normalizeOffer(offer) {
 
   const originalBalloon = isFlexible ? (Number(offer.balloonPayment) || 0) : 0;
   let balloon = originalBalloon;
-  let monthlyPayment = 0;
-  let totalInterest = 0;
+  let monthlyPayment;
+  let totalInterest;
   let effectiveTin = tin;
   let settlementCapital = 0;
   let cancellationPenalty = 0;
   let finalSettlementPayment = 0;
   let futureInterestSaved = 0;
-  let totalInstallments = 0;
-  let totalOutOfPocketCost = 0;
+  let totalInstallments;
+  let totalOutOfPocketCost;
 
   // Desembolso inicial (de tu bolsillo al firmar)
   const initialCashOut = downPayment + productsUpfront;

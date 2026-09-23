@@ -8,7 +8,7 @@
 import { OFFER_MODALITIES, getOfferVehicle, getOfferDisplayTitle } from '../core/types.js';
 import { parseLocaleNumber, formatLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
 import { generateId, ID_PREFIX_OFFER, ID_PREFIX_PRODUCT, ID_PREFIX_SERVICE } from '../core/constants.js';
-import { getVehicleImageUrl, findVehicleInCatalog } from '../core/vehicleCatalog.js';
+import { getVehicleImageUrl } from '../core/vehicleCatalog.js';
 import { calculateEarlyCancellationSettlement, calculateMonthlyPayment, reverseEngineerInterestRate } from '../core/finance.js';
 
 /**
@@ -57,7 +57,6 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   const vehicleAutoPreview = document.getElementById('vehicle-auto-preview');
   const imageThumb = document.getElementById('vehicle-image-thumb');
   const imagePlaceholder = document.getElementById('vehicle-image-placeholder');
-  const imageStatus = document.getElementById('vehicle-image-status');
 
   const dealerInput = document.getElementById('offer-dealer');
   const notesInput = document.getElementById('offer-notes');

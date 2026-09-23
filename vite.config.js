@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { handleApiRequest } from './src/server/apiHandlers.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Plugin de Vite para procesar directivas <!-- @include partials/file.html -->

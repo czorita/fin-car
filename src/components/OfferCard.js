@@ -3,7 +3,7 @@
  * Utiliza la plantilla nativa <template id="tmpl-offer-card"> y crea nodos DOM seguros sin innerHTML.
  */
 
-import { MODALITY_LABELS, OFFER_MODALITIES, getOfferFinanceSubtitle } from '../core/types.js';
+import { OFFER_MODALITIES, getOfferFinanceSubtitle } from '../core/types.js';
 import { formatAprPercent } from '../core/formatters.js';
 
 /**

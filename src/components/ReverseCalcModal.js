@@ -6,7 +6,7 @@
 
 import { reverseEngineerInterestRate } from '../core/finance.js';
 import { OFFER_MODALITIES } from '../core/types.js';
-import { parseLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
+import { parseLocaleNumber, formatLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
 
 /**
  * Inicializa el modal de ingeniería inversa.
@@ -95,7 +95,7 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
     e.preventDefault();
     const price = parseLocaleNumber(priceInput.value);
     let down = parseLocaleNumber(downInput?.value || 0);
-    let principal = 0;
+    let principal;
 
     if (financedInput && financedInput.value.trim() !== '' && (!downInput || downInput.value.trim() === '')) {
       principal = parseLocaleNumber(financedInput.value);

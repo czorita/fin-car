@@ -206,7 +206,6 @@ export function generateAmortizationSchedule(principal, annualTin, months, ballo
       // En este mes se paga la cuota normal + el saldo restante + la penalización
       payment = Number((monthlyPayment + settlementCapital + penaltyAmount).toFixed(2));
       principalPaid = Number((principalPaid + settlementCapital).toFixed(2));
-      balance = 0;
 
       schedule.push({
         month: m,

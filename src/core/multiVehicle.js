@@ -133,7 +133,7 @@ export function rankCrossVehicleOffers(crossOffers) {
     const winnerTcoVal = winnerTco.adjustedTcoCost !== undefined ? winnerTco.adjustedTcoCost : winnerTco.totalOutOfPocketCost;
     const crossTcoDiffVsWinner = Number((offerTco - winnerTcoVal).toFixed(2));
 
-    let crossHighlight = '';
+    let crossHighlight;
     if (index === 0) {
       crossHighlight = '';
     } else if (index === 1 && sorted.length > 2) {
@@ -152,7 +152,7 @@ export function rankCrossVehicleOffers(crossOffers) {
     };
   });
 
-  let summaryMessage = '';
+  let summaryMessage;
   if (sorted.length === 1) {
     summaryMessage = `Solo hay 1 vehículo disponible con esta modalidad (${getOfferVehicle(winner)}: ${winner.totalOutOfPocketCost.toLocaleString('es-ES')} €). Añade ofertas de otros coches para ver la comparativa.`;
   } else {

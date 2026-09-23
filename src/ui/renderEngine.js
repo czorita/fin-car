@@ -6,7 +6,7 @@
  */
 
 import { normalizeOffer, rankOffers } from '../core/normalizer.js';
-import { getOfferVehicle, MODALITY_LABELS } from '../core/types.js';
+import { MODALITY_LABELS } from '../core/types.js';
 import {
   getUniqueVehicles,
   filterOffersByVehicle,
