@@ -5,7 +5,7 @@
  */
 
 import { OFFER_MODALITIES, getOfferVehicle, getOfferDisplayTitle } from '../../core/types.js';
-import { parseLocaleNumber, formatLocaleNumber } from '../../core/formatters.js';
+import { parseLocaleNumber, parseLocaleRate, formatLocaleNumber } from '../../core/formatters.js';
 import { generateId, ID_PREFIX_OFFER, ID_PREFIX_PRODUCT, ID_PREFIX_SERVICE, DEFAULTS } from '../../core/constants.js';
 import { getVehicleImageUrl } from '../../core/vehicleCatalog.js';
 import { reverseEngineerInterestRate } from '../../core/finance.js';
@@ -93,11 +93,11 @@ export function formValuesToOffer(values, { modality, financingMode, linkedProdu
   const cashPriceReference = isCash ? offerPrice : offerPrice + financeDiscount;
   const months = parseMonths(values.months);
   const cancelMonth = isEarlyCancel ? parseMonths(values.earlyCancelMonth, DEFAULTS.earlyCancellationMonth) : 0;
-  const penaltyRate = isEarlyCancel ? parseLocaleNumber(values.earlyCancelPenalty || '1,0') : 0;
+  const penaltyRate = isEarlyCancel ? parseLocaleRate(values.earlyCancelPenalty || '1,0') : 0;
   const balloonPayment = isFlexible ? parseLocaleNumber(values.balloonPayment) : 0;
   const principal = computeFinancedPrincipal({ ...values, linkedProducts });
 
-  let tin = parseLocaleNumber(values.tin);
+  let tin = parseLocaleRate(values.tin);
   let manualMonthlyPayment = values.manualMonthly ? parseLocaleNumber(values.manualMonthly) : null;
 
   if (!isCash) {

@@ -5,20 +5,19 @@
 import { NOT_AVAILABLE_LABEL } from './constants.js';
 
 /**
+ * Patrón de separador de miles español sin parte decimal: 1-3 dígitos iniciales
+ * seguidos de uno o más grupos ".ddd" (ej. "30.000", "1.250.000", "-24.200").
+ */
+const DOT_THOUSANDS_PATTERN = /^-?\d{1,3}(\.\d{3})+$/;
+
+/**
  * Parsea un número admitiendo comas o puntos decimales y separadores de miles.
- * Soporta formatos:
- *  - "26000,50" -> 26000.5
- *  - "26.000,50" -> 26000.5
- *  - "26000.50" -> 26000.5
- *  - "26,000.50" -> 26000.5
- *  - "8,5" -> 8.5
- *  - "8.5" -> 8.5
- *  - 123.45 -> 123.45
- * 
  * @param {string|number} value
+ * @param {{ dotThousands: boolean }} options - si `dotThousands` es true, un valor
+ *   sin coma que encaje en {@link DOT_THOUSANDS_PATTERN} se interpreta como miles.
  * @returns {number}
  */
-export function parseLocaleNumber(value) {
+function parseLocale(value, { dotThousands }) {
   if (value === null || value === undefined) return 0;
   if (typeof value === 'number') return isNaN(value) ? 0 : value;
 
@@ -37,12 +36,59 @@ export function parseLocaleNumber(value) {
   } else if (str.includes(',')) {
     // Solo contiene coma (ej: 26000,50 o 8,5)
     str = str.replace(',', '.');
+  } else if (dotThousands && DOT_THOUSANDS_PATTERN.test(str)) {
+    // Solo puntos con grupos de exactamente 3 dígitos (ej: 30.000 o 1.250.000) -> miles
+    str = str.replace(/\./g, '');
   }
 
   // Eliminar cualquier caracter ajeno a números, punto o signo negativo
   str = str.replace(/[^\d.-]/g, '');
   const num = parseFloat(str);
   return isNaN(num) ? 0 : num;
+}
+
+/**
+ * Parsea un importe (precio, entrada, cuota...) admitiendo comas o puntos decimales
+ * y separadores de miles.
+ *
+ * Regla para valores con punto(s) y sin coma: si tras cada punto hay exactamente
+ * 3 dígitos y el primer grupo tiene 1-3 dígitos (notación de miles española), los
+ * puntos se tratan como separadores de miles; en cualquier otro caso el punto es
+ * decimal. Para porcentajes (TIN, penalizaciones) usar {@link parseLocaleRate},
+ * donde "7.495" debe ser 7,495 % y no 7495.
+ *
+ * Soporta formatos:
+ *  - "30.000" -> 30000 (miles españoles)
+ *  - "1.250.000" -> 1250000 (miles españoles)
+ *  - "26000,50" -> 26000.5
+ *  - "26.000,50" -> 26000.5
+ *  - "26000.50" -> 26000.5
+ *  - "26,000.50" -> 26000.5
+ *  - "1234.567" -> 1234.567 (primer grupo de más de 3 dígitos: punto decimal)
+ *  - "8,5" -> 8.5
+ *  - "8.5" -> 8.5
+ *  - 123.45 -> 123.45
+ *
+ * @param {string|number} value
+ * @returns {number}
+ */
+export function parseLocaleNumber(value) {
+  return parseLocale(value, { dotThousands: true });
+}
+
+/**
+ * Parsea un porcentaje (TIN, penalización...) con coma o punto decimal.
+ * A diferencia de {@link parseLocaleNumber}, un punto sin coma es siempre decimal,
+ * ya que un tipo con 3 decimales ("7.495") es habitual y un tipo >= 1000 % no lo es.
+ *  - "7.495" -> 7.495
+ *  - "8,5" -> 8.5
+ *  - "1.250" -> 1.25
+ *
+ * @param {string|number} value
+ * @returns {number}
+ */
+export function parseLocaleRate(value) {
+  return parseLocale(value, { dotThousands: false });
 }
 
 /**

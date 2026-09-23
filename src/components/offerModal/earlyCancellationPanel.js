@@ -3,7 +3,7 @@
  * mes de cancelación, comisión y resumen en vivo del finiquito.
  */
 
-import { parseLocaleNumber, formatLocaleNumber } from '../../core/formatters.js';
+import { parseLocaleNumber, parseLocaleRate, formatLocaleNumber } from '../../core/formatters.js';
 import { DEFAULTS } from '../../core/constants.js';
 import { calculateEarlyCancellationSettlement, reverseEngineerInterestRate } from '../../core/finance.js';
 import { parseMonths } from './formSerializer.js';
@@ -43,17 +43,17 @@ export function createEarlyCancellationPanel(els, { getMode, getPrincipal, getFi
     const principal = getPrincipal();
     const contractMonths = parseMonths(els.loanMonthsInput?.value, isEarlyCancel ? DEFAULTS.contractMonths : FLEXIBLE_DEFAULT_MONTHS);
     const cancelMonth = parseMonths(earlyCancelMonthInput?.value, DEFAULTS.earlyCancellationMonth);
-    const penaltyRate = parseLocaleNumber(earlyCancelPenaltyInput?.value || '1,0');
+    const penaltyRate = parseLocaleRate(earlyCancelPenaltyInput?.value || '1,0');
     const balloon = isFlexibleEarly ? parseLocaleNumber(els.balloonPaymentInput?.value || 0) : 0;
 
     // Cuota manual: la liquidación se calcula con ella (igual que en normalizeOffer)
     const isMonthlyMode = getFinancingMode() === 'monthly';
     const manualCuota = isMonthlyMode ? parseLocaleNumber(els.manualMonthlyInput?.value || 0) : 0;
-    let tin = parseLocaleNumber(els.loanTinInput?.value || 0);
+    let tin = parseLocaleRate(els.loanTinInput?.value || 0);
     if (isMonthlyMode && (!tin || tin <= 0) && principal > 0 && contractMonths > 0 && manualCuota > 0) {
       tin = reverseEngineerInterestRate(principal, manualCuota, contractMonths, balloon).tin;
     }
-    if (tin <= 0 && (!els.loanTinInput?.value || parseLocaleNumber(els.loanTinInput.value) <= 0)) {
+    if (tin <= 0 && (!els.loanTinInput?.value || parseLocaleRate(els.loanTinInput.value) <= 0)) {
       tin = DEFAULTS.tin;
     }
 
@@ -97,7 +97,7 @@ export function createEarlyCancellationPanel(els, { getMode, getPrincipal, getFi
       if (earlyCancelMonthInput) earlyCancelMonthInput.value = month;
       if (earlyCancelPenaltyInput) earlyCancelPenaltyInput.value = penalty;
       togglePills(cancelMonthsPills, b => Number(b.dataset.cancel) === Number(month));
-      togglePills(penaltyQuickPills, b => Number(b.dataset.penalty) === parseLocaleNumber(penalty));
+      togglePills(penaltyQuickPills, b => Number(b.dataset.penalty) === parseLocaleRate(penalty));
     }
   };
 }
