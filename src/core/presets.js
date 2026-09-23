@@ -4,6 +4,8 @@
 import { OFFER_MODALITIES } from './types.js';
 import { getVehicleImageUrl } from './vehicleCatalog.js';
 
+/** Ofertas de ejemplo de respaldo (formato de entrada: normalizeOffer completa los campos ausentes) */
+/** @type {Array<Partial<import('./types.js').Offer>>} */
 export const SAMPLE_OFFERS = [
   {
     id: 'sample_cash_1',

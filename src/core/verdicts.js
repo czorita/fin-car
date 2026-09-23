@@ -14,13 +14,13 @@ import { AFFORDABLE_SURCHARGE_FACTOR, DEFAULTS } from './constants.js';
  */
 
 /**
- * Genera el veredicto para una oferta en base a sus métricas normalizadas.
- * @param {Object} metrics
- * @param {boolean} metrics.isCash
-/**
  * Genera el veredicto para una oferta en base a sus métricas normalizadas y servicios incluidos.
  * @param {Object} metrics
  * @param {boolean} metrics.isCash
+ * @param {boolean} [metrics.isEarlyCancellation=false]
+ * @param {number} [metrics.cancelMonth=0]
+ * @param {number} [metrics.futureInterestSaved=0]
+ * @param {number} [metrics.cancellationPenalty] - Informativo (no interviene en el veredicto)
  * @param {number} [metrics.netDifferenceVsCashRef=0]
  * @param {number} [metrics.advertisedDiscount=0]
  * @param {number} [metrics.monthlyPayment=0]

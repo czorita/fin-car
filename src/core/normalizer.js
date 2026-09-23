@@ -283,8 +283,8 @@ export const OFFER_HIGHLIGHTS = {
 
 /**
  * Compara un array de ofertas normalizadas y marca los mejores indicadores.
- * @param {NormalizedOffer[]} normalizedOffers 
- * @returns {Array<NormalizedOffer & { bestIn: string[] }>}
+ * @param {import('./types.js').NormalizedOffer[]} normalizedOffers
+ * @returns {Array<import('./types.js').NormalizedOffer & { highlights: string[] }>}
  */
 export function rankOffers(normalizedOffers) {
   if (!normalizedOffers.length) return [];

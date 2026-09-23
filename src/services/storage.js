@@ -57,9 +57,7 @@ function apiFetch(url, init) {
  * @returns {Error & {status: number}}
  */
 function createSyncError(action, status) {
-  const err = new Error(`${action} devolvió status ${status}`);
-  err.status = status;
-  return err;
+  return Object.assign(new Error(`${action} devolvió status ${status}`), { status });
 }
 
 /**
@@ -77,7 +75,7 @@ function toServerPayload(offer) {
 /**
  * Marca de tiempo (ms) de la última modificación de una oferta.
  * Usa `updatedAt` y, como respaldo, `createdAt`. Devuelve 0 si no hay ninguna válida.
- * @param {object} offer
+ * @param {{ updatedAt?: string, createdAt?: string }} offer
  * @returns {number}
  */
 function getOfferTimestamp(offer) {
@@ -251,7 +249,7 @@ function mergeOffers(serverOffers, localOffers, deletedIds, pendingIds) {
 
   // Orden cronológico descendente, igual que el que devuelve el servidor
   return [...merged.values()].sort(
-    (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
   );
 }
 
@@ -327,7 +325,7 @@ export async function fetchUserOffers() {
 
 /**
  * Consulta la API del servidor para obtener las ofertas de ejemplo de /app/data/examples.
- * @returns {Promise<Array<import('../core/types.js').Offer>>}
+ * @returns {Promise<Array<Partial<import('../core/types.js').Offer>>>} Ofertas en formato de entrada (pueden faltar campos opcionales)
  */
 export async function fetchExampleOffers() {
   try {

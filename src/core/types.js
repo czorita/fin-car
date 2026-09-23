@@ -63,19 +63,24 @@ export const MODALITY_SHORT_NAMES = {
  * @property {number} cashPriceReference - Precio al contado de referencia
  * @property {number} offerPrice - Precio base de cálculo tras descuentos
  * @property {number} downPayment - Entrada
- * @property {number|null} financedAmount - Capital a financiar informado
+ * @property {number|null} [financedAmount] - Capital a financiar informado
  * @property {number} tradeInValue - Valor del vehículo entregado
  * @property {number} months - Plazo en meses
  * @property {number} contractMonths - Plazo del contrato original (cancelación anticipada)
  * @property {number|null} tin - TIN anual (%)
  * @property {number|null} manualMonthlyPayment - Cuota indicada por el concesionario
  * @property {number} balloonPayment - Cuota final (VFG) en financiación flexible
- * @property {boolean} cancelEarly - Compra flexible con cancelación anticipada
+ * @property {boolean} [cancelEarly] - Compra flexible con cancelación anticipada
  * @property {number} earlyCancellationMonth - Mes de cancelación
  * @property {number} earlyCancellationPenaltyRate - Comisión de cancelación (%)
  * @property {LinkedProduct[]} linkedProducts
  * @property {IncludedService[]} includedServices
  * @property {string} createdAt
+ * @property {string} [updatedAt] - Última modificación (storage.js)
+ * @property {boolean} [pendingSync] - Pendiente de sincronizar con el servidor (solo caché local)
+ * @property {number} [advertisedDiscount] - Alias legado de financeDiscount
+ * @property {number} [totalMonths] - Plazo efectivo (presente en ofertas normalizadas)
+ * @property {boolean} [isExample] - Oferta de ejemplo precargada
  */
 
 /**

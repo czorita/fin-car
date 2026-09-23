@@ -169,7 +169,7 @@ export function calculateEarlyCancellationSettlement(
  * @param {number} annualTin - TIN anual (%)
  * @param {number} months - Plazo en meses
  * @param {number} [balloonPayment=0] - Cuota final (VFG)
- * @param {object|null} [earlyCancellation=null] - Configuración de cancelación anticipada { cancelMonth, penaltyRate }
+ * @param {{ cancelMonth?: number, penaltyRate?: number }|null} [earlyCancellation=null] - Configuración de cancelación anticipada
  * @param {number|null} [monthlyPaymentOverride=null] - Cuota real a aplicar en lugar de la teórica del TIN
  * @returns {Array<{month: number, payment: number, principalPayment: number, interestPayment: number, remainingBalance: number, isCancellation?: boolean, cancellationDetails?: object}>}
  */

@@ -45,9 +45,9 @@ export function filterOffersByVehicle(offers, vehicleName) {
 /**
  * Selecciona una oferta representativa por cada vehículo para una modalidad determinada.
  * Si un vehículo tiene varias ofertas de esa modalidad, selecciona la de menor coste total.
- * @param {Array<import('./normalizer.js').NormalizedOffer>} normalizedOffers
+ * @param {Array<import('./types.js').NormalizedOffer>} normalizedOffers
  * @param {'cash' | 'standard_finance' | 'flexible_finance' | 'early_cancellation' | 'best_overall'} modality
- * @returns {Array<import('./normalizer.js').NormalizedOffer>}
+ * @returns {Array<import('./types.js').NormalizedOffer>}
  */
 export function getCrossVehicleOffers(normalizedOffers, modality = 'cash') {
   if (!Array.isArray(normalizedOffers) || normalizedOffers.length === 0) {
@@ -97,10 +97,11 @@ export function getCrossVehicleOffers(normalizedOffers, modality = 'cash') {
 /**
  * Clasifica y analiza las ofertas entre distintos vehículos bajo una misma modalidad.
  * Determina el coche ganador y las diferencias de desembolso entre ellos.
- * @param {Array<import('./normalizer.js').NormalizedOffer>} crossOffers
+ * @param {Array<import('./types.js').NormalizedOffer>} crossOffers
  * @returns {{
- *   rankedOffers: Array<import('./normalizer.js').NormalizedOffer & { crossDiffVsWinner: number, crossHighlight: string }>,
- *   winnerOffer: import('./normalizer.js').NormalizedOffer | null,
+ *   rankedOffers: Array<import('./types.js').NormalizedOffer & { crossDiffVsWinner: number, crossHighlight: string }>,
+ *   winnerOffer: import('./types.js').NormalizedOffer | null,
+ *   winnerTcoOffer?: import('./types.js').NormalizedOffer | null,
  *   maxDiff: number,
  *   summaryMessage: string
  * }}
