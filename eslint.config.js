@@ -3,7 +3,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist/', 'dist-ssr/', 'node_modules/', 'data/', 'coverage/']
+    ignores: ['dist/', 'dist-ssr/', 'node_modules/', 'data/', 'coverage/', '.claude/']
   },
   js.configs.recommended,
   {
@@ -12,14 +12,14 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module'
     },
-    // Reglas rebajadas a 'warn' temporalmente: el código actual tiene hallazgos
-    // reales pendientes de corregir (ver plan de calidad, Fase 5). Volver a 'error'
-    // una vez resueltos.
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', caughtErrors: 'none' }],
-      'no-undef': 'warn',
-      'no-useless-assignment': 'warn',
-      'no-useless-escape': 'warn'
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrors: 'none' }],
+      // Nada de innerHTML/outerHTML: construir nodos con ui/dom.js o <template>
+      'no-restricted-properties': [
+        'error',
+        { property: 'innerHTML', message: 'Usa ui/dom.js (el, createIcon) o <template> en lugar de innerHTML.' },
+        { property: 'outerHTML', message: 'Usa ui/dom.js (el, createIcon) o <template> en lugar de outerHTML.' }
+      ]
     }
   },
   {
@@ -34,6 +34,16 @@ export default [
     languageOptions: {
       // nodeBuiltin (no node): son módulos ESM, así que __dirname/require no existen
       globals: { ...globals.nodeBuiltin }
+    }
+  },
+  {
+    // Tests de interfaz: DOM simulado con happy-dom (tests/helpers/dom.js); las fixtures sí usan innerHTML
+    files: ['tests/ui/**/*.js', 'tests/helpers/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.browser }
+    },
+    rules: {
+      'no-restricted-properties': 'off'
     }
   }
 ];

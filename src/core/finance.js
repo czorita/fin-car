@@ -32,7 +32,7 @@ function pickMonthlyPayment(override, theoretical) {
 
 /**
  * Calcula la cuota mensual para un préstamo estándar o con valor residual (cuota final).
- * 
+ *
  * @param {number} principal - Capital neto financiado
  * @param {number} annualTin - TIN anual en porcentaje (ej: 7.95 para 7.95%)
  * @param {number} months - Plazo en meses
@@ -41,8 +41,8 @@ function pickMonthlyPayment(override, theoretical) {
  */
 export function calculateMonthlyPayment(principal, annualTin, months, balloonPayment = 0) {
   if (principal <= 0 || months <= 0) return 0;
-  
-  const r = (annualTin / 100) / 12;
+
+  const r = annualTin / 100 / 12;
   const n = months;
   const vf = balloonPayment || 0;
 
@@ -115,7 +115,7 @@ export function calculateEarlyCancellationSettlement(
   }
 
   const effectiveCancelMonth = Math.min(contractMonths, Math.max(1, cancelMonth));
-  const r = (annualTin / 100) / 12;
+  const r = annualTin / 100 / 12;
   const vf = Number(balloonPayment) || 0;
   const monthlyPayment = pickMonthlyPayment(
     monthlyPaymentOverride,
@@ -140,11 +140,14 @@ export function calculateEarlyCancellationSettlement(
   const totalPaidLoan = Number((regularPaymentsTotal + finalSettlementPayment).toFixed(2));
 
   // Intereses originales que se habrían pagado en todo el contrato (incluyendo el balloon al final si existe)
-  const originalTotalPayments = (monthlyPayment * contractMonths) + vf;
+  const originalTotalPayments = monthlyPayment * contractMonths + vf;
   const originalTotalInterest = Math.max(0, originalTotalPayments - principal);
 
   // Ahorro en intereses futuros al cortar en el mes k (restando la penalización que hubo que pagar)
-  const futureInterestSaved = Math.max(0, Number((originalTotalInterest - totalInterestPaid - penaltyAmount).toFixed(2)));
+  const futureInterestSaved = Math.max(
+    0,
+    Number((originalTotalInterest - totalInterestPaid - penaltyAmount).toFixed(2))
+  );
 
   return {
     monthlyPayment: Number(monthlyPayment.toFixed(2)),
@@ -164,31 +167,43 @@ export function calculateEarlyCancellationSettlement(
 
 /**
  * Genera el cuadro de amortización mes a mes.
- * 
+ *
  * @param {number} principal - Capital financiado
  * @param {number} annualTin - TIN anual (%)
  * @param {number} months - Plazo en meses
  * @param {number} [balloonPayment=0] - Cuota final (VFG)
- * @param {object|null} [earlyCancellation=null] - Configuración de cancelación anticipada { cancelMonth, penaltyRate }
+ * @param {{ cancelMonth?: number, penaltyRate?: number }|null} [earlyCancellation=null] - Configuración de cancelación anticipada
  * @param {number|null} [monthlyPaymentOverride=null] - Cuota real a aplicar en lugar de la teórica del TIN
  * @returns {Array<{month: number, payment: number, principalPayment: number, interestPayment: number, remainingBalance: number, isCancellation?: boolean, cancellationDetails?: object}>}
  */
-export function generateAmortizationSchedule(principal, annualTin, months, balloonPayment = 0, earlyCancellation = null, monthlyPaymentOverride = null) {
+export function generateAmortizationSchedule(
+  principal,
+  annualTin,
+  months,
+  balloonPayment = 0,
+  earlyCancellation = null,
+  monthlyPaymentOverride = null
+) {
   if (principal <= 0 || months <= 0) return [];
-  
-  const r = (annualTin / 100) / 12;
+
+  const r = annualTin / 100 / 12;
   const monthlyPayment = pickMonthlyPayment(
     monthlyPaymentOverride,
     calculateMonthlyPayment(principal, annualTin, months, balloonPayment)
   );
   const vf = balloonPayment || 0;
-  
+
   const schedule = [];
   let balance = principal;
 
-  const isEarlyCancel = Boolean(earlyCancellation && earlyCancellation.cancelMonth && earlyCancellation.cancelMonth < months);
+  const isEarlyCancel = Boolean(
+    earlyCancellation && earlyCancellation.cancelMonth && earlyCancellation.cancelMonth < months
+  );
   const limitMonths = isEarlyCancel ? Math.min(months, earlyCancellation.cancelMonth) : months;
-  const penaltyRate = (earlyCancellation && earlyCancellation.penaltyRate !== undefined) ? Number(earlyCancellation.penaltyRate) : DEFAULTS.earlyCancellationPenaltyRate;
+  const penaltyRate =
+    earlyCancellation && earlyCancellation.penaltyRate !== undefined
+      ? Number(earlyCancellation.penaltyRate)
+      : DEFAULTS.earlyCancellationPenaltyRate;
 
   for (let m = 1; m <= limitMonths; m++) {
     const interest = balance * r;
@@ -202,7 +217,7 @@ export function generateAmortizationSchedule(principal, annualTin, months, ballo
 
       const settlementCapital = Number(balance.toFixed(2));
       const penaltyAmount = Number((settlementCapital * (penaltyRate / 100)).toFixed(2));
-      
+
       // En este mes se paga la cuota normal + el saldo restante + la penalización
       payment = Number((monthlyPayment + settlementCapital + penaltyAmount).toFixed(2));
       principalPaid = Number((principalPaid + settlementCapital).toFixed(2));
@@ -345,8 +360,8 @@ function irrByBisection(cashflows) {
  * recurre a bisección como respaldo.
  * cashflows[0] = flujo inicial (negativo: dinero recibido por el comprador o coste del coche)
  * cashflows[1..n] = pagos mensuales (positivos)
- * 
- * @param {number[]} cashflows 
+ *
+ * @param {number[]} cashflows
  * @param {number} [guess=IRR_DEFAULT_GUESS] - Estimación inicial (ej: 0.01)
  * @returns {number|null} Tasa periódica mensual o null si no hay solución
  */
@@ -364,7 +379,7 @@ export function calculateIRR(cashflows, guess = IRR_DEFAULT_GUESS) {
 /**
  * Calcula la TAE real efectiva a partir de flujos de caja reales
  * (teniendo en cuenta comisiones iniciales, seguros vinculados y cuotas).
- * 
+ *
  * @param {number} netFinancedCapital - Capital líquido dispuesto
  * @param {number} monthlyPayment - Cuota mensual que se paga
  * @param {number} months - Plazo en meses
@@ -401,7 +416,7 @@ export function calculateEffectiveApr(netFinancedCapital, monthlyPayment, months
 /**
  * Deducción inversa: A partir del capital a financiar, la cuota mensual y el número de meses,
  * halla el TIN anual y la TAE implícita (Ingeniería Inversa).
- * 
+ *
  * @param {number} principal - Capital financiado
  * @param {number} monthlyPayment - Cuota mensual
  * @param {number} months - Plazo en meses
@@ -413,7 +428,7 @@ export function reverseEngineerInterestRate(principal, monthlyPayment, months, b
     return { tin: 0, apr: 0, totalPaid: 0, totalInterest: 0 };
   }
 
-  const totalPayments = (monthlyPayment * months) + balloonPayment;
+  const totalPayments = monthlyPayment * months + balloonPayment;
   const totalInterest = Math.max(0, totalPayments - principal);
 
   if (totalPayments <= principal) {

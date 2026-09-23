@@ -74,7 +74,9 @@ export function renderSameVehicleView({ dom, normalizedList, activeVehicle, view
   trapGuide?.update(rankedVehicleOffers);
 
   if (rankedVehicleOffers.length === 0) {
-    displaySlot.replaceChildren(el('div', { className: 'empty-slot-message', text: 'No hay ofertas registradas para este coche.' }));
+    displaySlot.replaceChildren(
+      el('div', { className: 'empty-slot-message', text: 'No hay ofertas registradas para este coche.' })
+    );
     return [];
   }
 

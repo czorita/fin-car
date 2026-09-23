@@ -34,7 +34,8 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
-.data-table th:first-child, .data-table td:first-child {
+.data-table th:first-child,
+.data-table td:first-child {
   text-align: center;
 }
 

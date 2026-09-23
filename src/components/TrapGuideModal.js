@@ -32,7 +32,7 @@ export function initTrapGuideModal() {
   btnClose?.addEventListener('click', close);
   btnUnderstood?.addEventListener('click', close);
 
-  dialog?.addEventListener('click', (e) => {
+  dialog?.addEventListener('click', e => {
     if (e.target === dialog) {
       close();
     }
@@ -45,16 +45,18 @@ export function initTrapGuideModal() {
       const trapOffers = (offers || []).filter(o => !o.isCash && o.verdict && o.verdict.status === 'danger');
       // Rellenar el aviso del modal con las ofertas afectadas (el modal se abre desde cada tarjeta)
       if (!alertBox || !listEl) return;
-      listEl.replaceChildren(...trapOffers.map(o => {
-        const discount = Number(o.advertisedDiscount) || 0;
-        const extraCost = Number(o.netDifferenceVsCashRef) || 0;
-        return el('li', {}, [
-          el('strong', { text: o.title || 'Oferta' }),
-          `: Descuento anunciado de ${discount.toLocaleString('es-ES')} € ficticio; acabas pagando `,
-          el('strong', { text: `+${extraCost.toLocaleString('es-ES')} € MÁS` }),
-          ' que al contado.'
-        ]);
-      }));
+      listEl.replaceChildren(
+        ...trapOffers.map(o => {
+          const discount = Number(o.advertisedDiscount) || 0;
+          const extraCost = Number(o.netDifferenceVsCashRef) || 0;
+          return el('li', {}, [
+            el('strong', { text: o.title || 'Oferta' }),
+            `: Descuento anunciado de ${discount.toLocaleString('es-ES')} € ficticio; acabas pagando `,
+            el('strong', { text: `+${extraCost.toLocaleString('es-ES')} € MÁS` }),
+            ' que al contado.'
+          ]);
+        })
+      );
       setVisible(alertBox, trapOffers.length > 0);
     }
   };

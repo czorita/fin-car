@@ -83,7 +83,7 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
     updateMonthsUI(monthsInput.value);
   });
 
-  monthsPills?.addEventListener('click', (e) => {
+  monthsPills?.addEventListener('click', e => {
     const btn = e.target.closest('.months-pill-btn');
     if (btn && btn.dataset.months) {
       monthsInput.value = btn.dataset.months;
@@ -91,7 +91,7 @@ export function initReverseCalcModal({ onApplyAsOffer }) {
     }
   });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', e => {
     e.preventDefault();
     const price = parseLocaleNumber(priceInput.value);
     let down = parseLocaleNumber(downInput?.value || 0);

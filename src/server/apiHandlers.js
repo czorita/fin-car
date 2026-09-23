@@ -51,7 +51,7 @@ export function checkRateLimit(ip) {
 /**
  * Lee todos los documentos JSON de una carpeta dada
  * @param {string} dirPath
- * @returns {Promise<Array<object>>}
+ * @returns {Promise<Array<Record<string, any>>>}
  */
 export async function readJsonFilesFromDir(dirPath) {
   try {
@@ -73,7 +73,7 @@ export async function readJsonFilesFromDir(dirPath) {
 
     return items
       .filter(Boolean)
-      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   } catch (err) {
     console.error(`Error listando directorio ${dirPath}:`, err);
     return [];
@@ -83,7 +83,7 @@ export async function readJsonFilesFromDir(dirPath) {
 /**
  * Lee el cuerpo de una petición en formato JSON con límite seguro de tamaño y destrucción del socket.
  * @param {import('node:http').IncomingMessage} req
- * @returns {Promise<object>}
+ * @returns {Promise<Record<string, any>>}
  */
 export function readJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -148,7 +148,7 @@ export async function handleApiRequest(req, res, { offersDir, examplesDir }) {
   }
 
   // Rate Limiter
-  const clientIp = req.socket.remoteAddress || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const clientIp = req.socket.remoteAddress || String(req.headers['x-forwarded-for'] || '') || '127.0.0.1';
   if (!checkRateLimit(clientIp)) {
     res.writeHead(429, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ error: 'Demasiadas peticiones (Rate limit excedido)' }));

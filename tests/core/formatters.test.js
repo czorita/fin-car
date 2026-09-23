@@ -1,6 +1,11 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseLocaleNumber, parseLocaleRate, formatLocaleNumber, formatMonthsDuration } from '../../src/core/formatters.js';
+import {
+  parseLocaleNumber,
+  parseLocaleRate,
+  formatLocaleNumber,
+  formatMonthsDuration
+} from '../../src/core/formatters.js';
 
 describe('Soporte de Comas y Puntos Decimales (Formatters)', () => {
   test('Parsea enteros estándar', () => {

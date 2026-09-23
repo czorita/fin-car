@@ -35,12 +35,15 @@ const { store, dom, renderApp } = createAppShell({
   initialOffers: getStoredOffers(),
   createCallbacks: ({ store, inspectVehicle }) => ({
     getCardHandlers: () => ({
-      onEdit: (targetOffer) => {
+      onEdit: targetOffer => {
         const { offers, selectedVehicle } = store.getState();
-        offerModalCtrl.open(offers.find(o => o.id === targetOffer.id), selectedVehicle);
+        offerModalCtrl.open(
+          offers.find(o => o.id === targetOffer.id),
+          selectedVehicle
+        );
       },
-      onSchedule: (targetOffer) => amortizationModalCtrl.open(targetOffer),
-      onDelete: async (targetOffer) => {
+      onSchedule: targetOffer => amortizationModalCtrl.open(targetOffer),
+      onDelete: async targetOffer => {
         if (!confirm(`¿Eliminar la oferta "${targetOffer.title}"?`)) return;
         try {
           store.setState({ offers: await deleteOffer(targetOffer.id) });
@@ -53,7 +56,7 @@ const { store, dom, renderApp } = createAppShell({
       }
     }),
     onInspectVehicle: inspectVehicle,
-    onAddOfferForVehicle: (vName) => offerModalCtrl.open(null, vName),
+    onAddOfferForVehicle: vName => offerModalCtrl.open(null, vName),
     renderEmptyState: () => {
       const tmpl = document.getElementById('tmpl-empty-state');
       if (!tmpl) return null;
@@ -85,7 +88,7 @@ async function saveOffer(fullOffer, successMessage, celebrate) {
 
 offerModalCtrl = initOfferModal({
   getKnownVehicles: () => getUniqueVehicles(store.getState().offers).map(v => v.name),
-  onSave: (offerData) => {
+  onSave: offerData => {
     const isNew = !offerData.id;
     saveOffer(
       createDefaultOffer(offerData),
@@ -96,7 +99,7 @@ offerModalCtrl = initOfferModal({
 });
 
 const reverseCalcModalCtrl = initReverseCalcModal({
-  onApplyAsOffer: (computedOffer) => {
+  onApplyAsOffer: computedOffer => {
     const fullOffer = createDefaultOffer({
       ...computedOffer,
       vehicle: store.getState().selectedVehicle || 'Nuevo vehículo'

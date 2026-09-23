@@ -28,18 +28,24 @@ describe('Resolución de precios y productos vinculados (pricing.js)', () => {
   });
 
   test('resolvePrices: prioridad offerPrice → vehiclePrice → cashPriceReference', () => {
-    assert.deepEqual(
-      resolvePrices({ offerPrice: 20000, financeDiscount: 2000 }),
-      { offerPrice: 20000, vehiclePrice: 22000, cashPriceReference: 22000, financeDiscount: 2000 }
-    );
-    assert.deepEqual(
-      resolvePrices({ vehiclePrice: 30000, advertisedDiscount: 3500 }),
-      { offerPrice: 26500, vehiclePrice: 30000, cashPriceReference: 30000, financeDiscount: 3500 }
-    );
-    assert.deepEqual(
-      resolvePrices({ cashPriceReference: 25000, financeDiscount: 1000 }),
-      { offerPrice: 24000, vehiclePrice: 25000, cashPriceReference: 25000, financeDiscount: 1000 }
-    );
+    assert.deepEqual(resolvePrices({ offerPrice: 20000, financeDiscount: 2000 }), {
+      offerPrice: 20000,
+      vehiclePrice: 22000,
+      cashPriceReference: 22000,
+      financeDiscount: 2000
+    });
+    assert.deepEqual(resolvePrices({ vehiclePrice: 30000, advertisedDiscount: 3500 }), {
+      offerPrice: 26500,
+      vehiclePrice: 30000,
+      cashPriceReference: 30000,
+      financeDiscount: 3500
+    });
+    assert.deepEqual(resolvePrices({ cashPriceReference: 25000, financeDiscount: 1000 }), {
+      offerPrice: 24000,
+      vehiclePrice: 25000,
+      cashPriceReference: 25000,
+      financeDiscount: 1000
+    });
   });
 
   test('resolvePrices: sin precios usa los valores por defecto solo si se piden', () => {
@@ -53,7 +59,13 @@ describe('Resolución de precios y productos vinculados (pricing.js)', () => {
   });
 
   test('resolveDownPayment: la entrada manda sobre el capital informado', () => {
-    const result = resolveDownPayment({ offerPrice: 20000, tradeInValue: 1000, productsFinanced: 500, downPayment: 4000, financedAmount: 99999 });
+    const result = resolveDownPayment({
+      offerPrice: 20000,
+      tradeInValue: 1000,
+      productsFinanced: 500,
+      downPayment: 4000,
+      financedAmount: 99999
+    });
     assert.equal(result.downPayment, 4000);
     assert.equal(result.netVehicleToFinance, 15000);
     assert.equal(result.principal, 15500);

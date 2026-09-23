@@ -73,7 +73,9 @@ export function resolvePrices(offer = {}, { defaults = null } = {}) {
     const offerPrice = Number(offer.offerPrice);
     const cashPriceReference = isProvided(offer.cashPriceReference)
       ? Number(offer.cashPriceReference)
-      : (isProvided(offer.vehiclePrice) ? Number(offer.vehiclePrice) : offerPrice + financeDiscount);
+      : isProvided(offer.vehiclePrice)
+        ? Number(offer.vehiclePrice)
+        : offerPrice + financeDiscount;
     const vehiclePrice = isProvided(offer.vehiclePrice) ? Number(offer.vehiclePrice) : cashPriceReference;
     return { offerPrice, vehiclePrice, cashPriceReference, financeDiscount };
   }

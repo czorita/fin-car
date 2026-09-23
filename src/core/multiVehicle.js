@@ -45,9 +45,9 @@ export function filterOffersByVehicle(offers, vehicleName) {
 /**
  * Selecciona una oferta representativa por cada vehículo para una modalidad determinada.
  * Si un vehículo tiene varias ofertas de esa modalidad, selecciona la de menor coste total.
- * @param {Array<import('./normalizer.js').NormalizedOffer>} normalizedOffers
+ * @param {Array<import('./types.js').NormalizedOffer>} normalizedOffers
  * @param {'cash' | 'standard_finance' | 'flexible_finance' | 'early_cancellation' | 'best_overall'} modality
- * @returns {Array<import('./normalizer.js').NormalizedOffer>}
+ * @returns {Array<import('./types.js').NormalizedOffer>}
  */
 export function getCrossVehicleOffers(normalizedOffers, modality = 'cash') {
   if (!Array.isArray(normalizedOffers) || normalizedOffers.length === 0) {
@@ -97,10 +97,11 @@ export function getCrossVehicleOffers(normalizedOffers, modality = 'cash') {
 /**
  * Clasifica y analiza las ofertas entre distintos vehículos bajo una misma modalidad.
  * Determina el coche ganador y las diferencias de desembolso entre ellos.
- * @param {Array<import('./normalizer.js').NormalizedOffer>} crossOffers
+ * @param {Array<import('./types.js').NormalizedOffer>} crossOffers
  * @returns {{
- *   rankedOffers: Array<import('./normalizer.js').NormalizedOffer & { crossDiffVsWinner: number, crossHighlight: string }>,
- *   winnerOffer: import('./normalizer.js').NormalizedOffer | null,
+ *   rankedOffers: Array<import('./types.js').NormalizedOffer & { crossDiffVsWinner: number, crossHighlight: string }>,
+ *   winnerOffer: import('./types.js').NormalizedOffer | null,
+ *   winnerTcoOffer?: import('./types.js').NormalizedOffer | null,
  *   maxDiff: number,
  *   summaryMessage: string
  * }}
@@ -117,12 +118,15 @@ export function rankCrossVehicleOffers(crossOffers) {
 
   const sorted = [...crossOffers].sort((a, b) => a.totalOutOfPocketCost - b.totalOutOfPocketCost);
   const winner = sorted[0];
-  const maxDiff = sorted.length > 1
-    ? Number((sorted[sorted.length - 1].totalOutOfPocketCost - winner.totalOutOfPocketCost).toFixed(2))
-    : 0;
+  const maxDiff =
+    sorted.length > 1
+      ? Number((sorted[sorted.length - 1].totalOutOfPocketCost - winner.totalOutOfPocketCost).toFixed(2))
+      : 0;
 
   // Análisis por coste equiparado (TCO) considerando servicios incluidos
-  const sortedByTco = [...crossOffers].sort((a, b) => (a.adjustedTcoCost ?? a.totalOutOfPocketCost) - (b.adjustedTcoCost ?? b.totalOutOfPocketCost));
+  const sortedByTco = [...crossOffers].sort(
+    (a, b) => (a.adjustedTcoCost ?? a.totalOutOfPocketCost) - (b.adjustedTcoCost ?? b.totalOutOfPocketCost)
+  );
   const winnerTco = sortedByTco[0];
   const hasIncludedServices = crossOffers.some(o => (o.includedServicesValue || 0) > 0);
 
@@ -130,7 +134,8 @@ export function rankCrossVehicleOffers(crossOffers) {
     const diffVsWinner = Number((offer.totalOutOfPocketCost - winner.totalOutOfPocketCost).toFixed(2));
     const vehicleName = getOfferVehicle(offer);
     const offerTco = offer.adjustedTcoCost !== undefined ? offer.adjustedTcoCost : offer.totalOutOfPocketCost;
-    const winnerTcoVal = winnerTco.adjustedTcoCost !== undefined ? winnerTco.adjustedTcoCost : winnerTco.totalOutOfPocketCost;
+    const winnerTcoVal =
+      winnerTco.adjustedTcoCost !== undefined ? winnerTco.adjustedTcoCost : winnerTco.totalOutOfPocketCost;
     const crossTcoDiffVsWinner = Number((offerTco - winnerTcoVal).toFixed(2));
 
     let crossHighlight;

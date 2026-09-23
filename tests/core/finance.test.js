@@ -1,6 +1,13 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateMonthlyPayment, reverseEngineerInterestRate, generateAmortizationSchedule, calculateEarlyCancellationSettlement, calculateIRR, calculateEffectiveApr } from '../../src/core/finance.js';
+import {
+  calculateMonthlyPayment,
+  reverseEngineerInterestRate,
+  generateAmortizationSchedule,
+  calculateEarlyCancellationSettlement,
+  calculateIRR,
+  calculateEffectiveApr
+} from '../../src/core/finance.js';
 import { normalizeOffer, rankOffers } from '../../src/core/normalizer.js';
 import { SAMPLE_OFFERS } from '../../src/core/presets.js';
 
@@ -28,7 +35,7 @@ describe('Cálculos Financieros y Normalización de Ofertas', () => {
     const ranked = rankOffers(normalized);
 
     assert.equal(ranked.length, SAMPLE_OFFERS.length, 'Todas las ofertas deben normalizarse');
-    
+
     const best = ranked.find(o => o.highlights && o.highlights.includes('🏆 Menor coste total'));
     assert.ok(best, 'Debe identificarse la oferta ganadora por menor coste total');
   });
@@ -45,7 +52,7 @@ describe('Cálculos Financieros y Normalización de Ofertas', () => {
     // 42 meses
     const payment42 = calculateMonthlyPayment(18000, 6.5, 42, 0);
     assert.ok(payment42 > 0, 'La cuota para 42 meses debe calcularse correctamente');
-    
+
     // Cuadro de amortización con 42 meses
     const sched42 = generateAmortizationSchedule(18000, 6.5, 42, 0);
     assert.equal(sched42.length, 42, 'El cuadro debe tener exactamente 42 filas');
@@ -68,10 +75,22 @@ describe('Cálculos Financieros y Normalización de Ofertas', () => {
 
     assert.equal(res.cancelMonth, 24);
     assert.equal(res.contractMonths, 84);
-    assert.ok(res.monthlyPayment > 300 && res.monthlyPayment < 330, `Cuota esperada ~317 €, obtenida ${res.monthlyPayment}`);
-    assert.ok(res.settlementCapital > 14000 && res.settlementCapital < 16000, `Capital pendiente esperado ~15.5k €, obtenido ${res.settlementCapital}`);
-    assert.ok(Math.abs(res.penaltyAmount - (res.settlementCapital * 0.01)) < 0.05, 'La penalización debe ser el 1% del capital pendiente');
-    assert.ok(res.futureInterestSaved > 2000, `El ahorro en intereses futuros debe ser sustancial (>2000 €), obtenido ${res.futureInterestSaved}`);
+    assert.ok(
+      res.monthlyPayment > 300 && res.monthlyPayment < 330,
+      `Cuota esperada ~317 €, obtenida ${res.monthlyPayment}`
+    );
+    assert.ok(
+      res.settlementCapital > 14000 && res.settlementCapital < 16000,
+      `Capital pendiente esperado ~15.5k €, obtenido ${res.settlementCapital}`
+    );
+    assert.ok(
+      Math.abs(res.penaltyAmount - res.settlementCapital * 0.01) < 0.05,
+      'La penalización debe ser el 1% del capital pendiente'
+    );
+    assert.ok(
+      res.futureInterestSaved > 2000,
+      `El ahorro en intereses futuros debe ser sustancial (>2000 €), obtenido ${res.futureInterestSaved}`
+    );
     assert.equal(res.finalSettlementPayment, Number((res.settlementCapital + res.penaltyAmount).toFixed(2)));
   });
 
@@ -94,9 +113,15 @@ describe('Cálculos Financieros y Normalización de Ofertas', () => {
     assert.equal(res.cancelMonth, 24);
     assert.equal(res.contractMonths, 48);
     // Cuota flexible con balloon de 10k debe ser menor que cuota lineal sin balloon (~300€ vs ~492€)
-    assert.ok(res.monthlyPayment > 280 && res.monthlyPayment < 320, `Cuota flexible esperada ~300 €, obtenida ${res.monthlyPayment}`);
+    assert.ok(
+      res.monthlyPayment > 280 && res.monthlyPayment < 320,
+      `Cuota flexible esperada ~300 €, obtenida ${res.monthlyPayment}`
+    );
     // Capital de liquidación en mes 24 (debe incorporar el saldo vivo incluyendo el balloon a valor presente)
-    assert.ok(res.settlementCapital > 13500 && res.settlementCapital < 16000, `Capital pendiente esperado ~14.7k €, obtenido ${res.settlementCapital}`);
+    assert.ok(
+      res.settlementCapital > 13500 && res.settlementCapital < 16000,
+      `Capital pendiente esperado ~14.7k €, obtenido ${res.settlementCapital}`
+    );
     assert.equal(res.finalSettlementPayment, Number((res.settlementCapital + res.penaltyAmount).toFixed(2)));
     // Ahorro en intereses futuros al evitar los 24 meses restantes del balloon
     assert.ok(res.futureInterestSaved > 1500, `Ahorro esperado > 1500 €, obtenido ${res.futureInterestSaved}`);
@@ -111,7 +136,10 @@ describe('Fase 2: TIR robusta y cuota forzada (finance.js)', () => {
     assert.ok(theoretical.monthlyPayment < 350);
     assert.equal(forced.monthlyPayment, 350);
     assert.equal(forced.regularPaymentsTotal, 8400);
-    assert.ok(forced.settlementCapital < theoretical.settlementCapital, 'Pagando más cada mes queda menos capital pendiente');
+    assert.ok(
+      forced.settlementCapital < theoretical.settlementCapital,
+      'Pagando más cada mes queda menos capital pendiente'
+    );
     assert.equal(forced.totalPaidLoan, Number((8400 + forced.finalSettlementPayment).toFixed(2)));
     assert.ok(Math.abs(forced.originalTotalInterest - (350 * 84 - 20000)) < 0.01);
 
@@ -151,4 +179,3 @@ describe('Fase 2: TIR robusta y cuota forzada (finance.js)', () => {
     assert.equal(calculateEffectiveApr(0, 200, 60), 0, 'Sin capital financiado no hay TAE que valorar');
   });
 });
-

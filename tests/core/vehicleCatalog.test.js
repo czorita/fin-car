@@ -1,13 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  VEHICLE_CATALOG,
-  findVehicleInCatalog,
-  getVehicleImageUrl
-} from '../../src/core/vehicleCatalog.js';
+import { VEHICLE_CATALOG, findVehicleInCatalog, getVehicleImageUrl } from '../../src/core/vehicleCatalog.js';
 import { createDefaultOffer } from '../../src/core/types.js';
 
-test('Catálogo de Modelos y Detección de Imágenes (vehicleCatalog.js)', async (t) => {
+test('Catálogo de Modelos y Detección de Imágenes (vehicleCatalog.js)', async t => {
   await t.test('Test 1: Catálogo contiene modelos populares y actualizados', () => {
     assert.ok(VEHICLE_CATALOG.length >= 5, 'El catálogo debe contener al menos 5 modelos');
     const tucson = VEHICLE_CATALOG.find(v => v.id === 'tucson');

@@ -150,11 +150,11 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   }
 
   const getLinkedProducts = () => productsList.getItems();
-  const getFinancedPrincipal = () => computeFinancedPrincipal({ ...readFormValues(), linkedProducts: getLinkedProducts() });
+  const getFinancedPrincipal = () =>
+    computeFinancedPrincipal({ ...readFormValues(), linkedProducts: getLinkedProducts() });
   const getMonths = () => parseMonths(els.loanMonthsInput?.value);
-  const getBalloon = () => (currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE
-    ? parseLocaleNumber(els.balloonPaymentInput?.value || 0)
-    : 0);
+  const getBalloon = () =>
+    currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE ? parseLocaleNumber(els.balloonPaymentInput?.value || 0) : 0;
 
   // ---------------------------------------------------------------------------
   // Paneles
@@ -238,7 +238,8 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   const earlyCancellationPanel = createEarlyCancellationPanel(els, {
     getMode: () => ({
       isEarlyCancel: currentModality === OFFER_MODALITIES.EARLY_CANCELLATION,
-      isFlexibleEarly: currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE && Boolean(els.flexibleCancelEarly?.checked)
+      isFlexibleEarly:
+        currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE && Boolean(els.flexibleCancelEarly?.checked)
     }),
     getPrincipal: getFinancedPrincipal,
     getFinancingMode: () => financingPair.getMode(),
@@ -360,15 +361,22 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       }
 
       setVisible(els.flexibleBalloonContainer, modality === OFFER_MODALITIES.FLEXIBLE_FINANCE);
-      const showEarlyContainer = modality === OFFER_MODALITIES.EARLY_CANCELLATION ||
+      const showEarlyContainer =
+        modality === OFFER_MODALITIES.EARLY_CANCELLATION ||
         (modality === OFFER_MODALITIES.FLEXIBLE_FINANCE && Boolean(els.flexibleCancelEarly?.checked));
       setVisible(els.earlyCancellationContainer, showEarlyContainer);
 
       const monthsValue = els.loanMonthsInput.value;
-      if (modality === OFFER_MODALITIES.EARLY_CANCELLATION && (!monthsValue || monthsValue === String(DEFAULTS.months))) {
+      if (
+        modality === OFFER_MODALITIES.EARLY_CANCELLATION &&
+        (!monthsValue || monthsValue === String(DEFAULTS.months))
+      ) {
         els.loanMonthsInput.value = EARLY_CANCELLATION_DEFAULT_MONTHS;
         updateMonthsUI(EARLY_CANCELLATION_DEFAULT_MONTHS);
-      } else if (modality === OFFER_MODALITIES.FLEXIBLE_FINANCE && (!monthsValue || monthsValue === EARLY_CANCELLATION_DEFAULT_MONTHS)) {
+      } else if (
+        modality === OFFER_MODALITIES.FLEXIBLE_FINANCE &&
+        (!monthsValue || monthsValue === EARLY_CANCELLATION_DEFAULT_MONTHS)
+      ) {
         els.loanMonthsInput.value = FLEXIBLE_DEFAULT_MONTHS;
         updateMonthsUI(FLEXIBLE_DEFAULT_MONTHS);
       }
@@ -410,8 +418,9 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   // Eventos
   // ---------------------------------------------------------------------------
 
-  [els.offerPriceInput, els.financeDiscountInput, els.tradeInValueInput, els.balloonPaymentInput]
-    .forEach(input => input?.addEventListener('input', () => recalculate()));
+  [els.offerPriceInput, els.financeDiscountInput, els.tradeInValueInput, els.balloonPaymentInput].forEach(input =>
+    input?.addEventListener('input', () => recalculate())
+  );
 
   els.flexibleCancelEarly?.addEventListener('change', () => {
     setVisible(els.earlyCancellationContainer, els.flexibleCancelEarly.checked);
@@ -427,7 +436,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     recalculate();
   });
 
-  els.loanMonthsPills?.addEventListener('click', (e) => {
+  els.loanMonthsPills?.addEventListener('click', e => {
     const btn = e.target.closest('.months-pill-btn');
     if (btn?.dataset.months) {
       els.loanMonthsInput.value = btn.dataset.months;
@@ -436,7 +445,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     }
   });
 
-  els.modalitySelector.addEventListener('click', (e) => {
+  els.modalitySelector.addEventListener('click', e => {
     const btn = e.target.closest('.segmented-btn');
     if (btn) updateModalityUI(btn.dataset.val);
   });
@@ -460,14 +469,16 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     servicesList.add({ id: generateId(ID_PREFIX_SERVICE), ...NEW_CUSTOM_SERVICE });
   });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', e => {
     e.preventDefault();
-    onSave(formValuesToOffer(readFormValues(), {
-      modality: currentModality,
-      financingMode: financingPair.getMode(),
-      linkedProducts: productsList.getItems(),
-      includedServices: servicesList.getItems()
-    }));
+    onSave(
+      formValuesToOffer(readFormValues(), {
+        modality: currentModality,
+        financingMode: financingPair.getMode(),
+        linkedProducts: productsList.getItems(),
+        includedServices: servicesList.getItems()
+      })
+    );
     dialog.close();
   });
 
@@ -483,7 +494,8 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
    * @param {import('../core/types.js').Offer} offer
    */
   function fillFromOffer(offer) {
-    const { values, modality, downPaymentMode, financingMode, linkedProducts, includedServices } = offerToFormValues(offer);
+    const { values, modality, downPaymentMode, financingMode, linkedProducts, includedServices } =
+      offerToFormValues(offer);
 
     els.modalTitle.textContent = 'Editar oferta';
     els.idInput.value = values.id;

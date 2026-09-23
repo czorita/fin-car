@@ -14,13 +14,13 @@ import { AFFORDABLE_SURCHARGE_FACTOR, DEFAULTS } from './constants.js';
  */
 
 /**
- * Genera el veredicto para una oferta en base a sus métricas normalizadas.
- * @param {Object} metrics
- * @param {boolean} metrics.isCash
-/**
  * Genera el veredicto para una oferta en base a sus métricas normalizadas y servicios incluidos.
  * @param {Object} metrics
  * @param {boolean} metrics.isCash
+ * @param {boolean} [metrics.isEarlyCancellation=false]
+ * @param {number} [metrics.cancelMonth=0]
+ * @param {number} [metrics.futureInterestSaved=0]
+ * @param {number} [metrics.cancellationPenalty] - Informativo (no interviene en el veredicto)
  * @param {number} [metrics.netDifferenceVsCashRef=0]
  * @param {number} [metrics.advertisedDiscount=0]
  * @param {number} [metrics.monthlyPayment=0]
@@ -39,14 +39,16 @@ export function generateVerdict({
   includedServicesValue = 0,
   netEquatedDifferenceVsCashRef = undefined
 }) {
-  const equatedDiff = netEquatedDifferenceVsCashRef !== undefined
-    ? netEquatedDifferenceVsCashRef
-    : (netDifferenceVsCashRef - includedServicesValue);
+  const equatedDiff =
+    netEquatedDifferenceVsCashRef !== undefined
+      ? netEquatedDifferenceVsCashRef
+      : netDifferenceVsCashRef - includedServicesValue;
 
   if (isCash) {
-    const srvText = includedServicesValue > 0
-      ? ` Incluye ${includedServicesValue.toLocaleString('es-ES')} € en servicios bonificados.`
-      : '';
+    const srvText =
+      includedServicesValue > 0
+        ? ` Incluye ${includedServicesValue.toLocaleString('es-ES')} € en servicios bonificados.`
+        : '';
     return {
       status: 'neutral',
       badge: 'Pago al contado',
@@ -58,7 +60,10 @@ export function generateVerdict({
   // Veredicto específico para Financiación con Cancelación Anticipada
   if (isEarlyCancellation) {
     if (netDifferenceVsCashRef < 0) {
-      const srvText = includedServicesValue > 0 ? ` y sumas ${includedServicesValue.toLocaleString('es-ES')} € en servicios de serie.` : '.';
+      const srvText =
+        includedServicesValue > 0
+          ? ` y sumas ${includedServicesValue.toLocaleString('es-ES')} € en servicios de serie.`
+          : '.';
       return {
         status: 'success',
         badge: '⚡ Ahorro neto cancelando',
@@ -99,9 +104,10 @@ export function generateVerdict({
 
   // 1. Ahorro neto directo en el precio financiado (sin necesitar servicios)
   if (netDifferenceVsCashRef < 0) {
-    const srvText = includedServicesValue > 0
-      ? ` y además incluye ${includedServicesValue.toLocaleString('es-ES')} € en servicios de serie.`
-      : ' gracias a las promociones.';
+    const srvText =
+      includedServicesValue > 0
+        ? ` y además incluye ${includedServicesValue.toLocaleString('es-ES')} € en servicios de serie.`
+        : ' gracias a las promociones.';
     return {
       status: 'success',
       badge: 'Ahorro neto',

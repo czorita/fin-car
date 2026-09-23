@@ -81,23 +81,27 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
   });
 
   test('Test 5: Ranking de ofertas identifica al ganador y no premia cuotas engañosas', () => {
-    const o1 = normalizeOffer(createDefaultOffer({
-      id: 'o1',
-      title: 'Menor coste',
-      modality: OFFER_MODALITIES.CASH,
-      offerPrice: 15000,
-      cashPriceReference: 15000
-    }));
+    const o1 = normalizeOffer(
+      createDefaultOffer({
+        id: 'o1',
+        title: 'Menor coste',
+        modality: OFFER_MODALITIES.CASH,
+        offerPrice: 15000,
+        cashPriceReference: 15000
+      })
+    );
 
-    const o2 = normalizeOffer(createDefaultOffer({
-      id: 'o2',
-      title: 'Cara pero cuota baja',
-      modality: OFFER_MODALITIES.STANDARD_FINANCE,
-      offerPrice: 22000,
-      downPayment: 5000,
-      months: 84,
-      tin: 7.5
-    }));
+    const o2 = normalizeOffer(
+      createDefaultOffer({
+        id: 'o2',
+        title: 'Cara pero cuota baja',
+        modality: OFFER_MODALITIES.STANDARD_FINANCE,
+        offerPrice: 22000,
+        downPayment: 5000,
+        months: 84,
+        tin: 7.5
+      })
+    );
 
     const ranked = rankOffers([o1, o2]);
     const winner = ranked.find(o => o.highlights.includes('🏆 Menor coste total'));
@@ -142,7 +146,11 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
 
     assert.equal(normalized.monthlyPayment, normalizedDirect.monthlyPayment, 'La cuota calculada debe ser idéntica');
     assert.equal(normalized.totalInterest, normalizedDirect.totalInterest, 'El total de intereses debe ser idéntico');
-    assert.equal(normalized.totalOutOfPocketCost, normalizedDirect.totalOutOfPocketCost, 'El desembolso total debe ser idéntico');
+    assert.equal(
+      normalized.totalOutOfPocketCost,
+      normalizedDirect.totalOutOfPocketCost,
+      'El desembolso total debe ser idéntico'
+    );
   });
 
   test('Test 7: Normalización con servicios adicionales incluidos (TCO Equiparado)', () => {
@@ -199,36 +207,43 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
 
   test('Test 9: rankOffers identifica 💎 Mejor valor equiparado (TCO)', () => {
     // Oferta 1: Contado pelado sin servicios: 25.000 €
-    const o1 = normalizeOffer(createDefaultOffer({
-      id: 'o_cash',
-      vehicle: 'Tucson',
-      modality: OFFER_MODALITIES.CASH,
-      vehiclePrice: 25000
-    }));
+    const o1 = normalizeOffer(
+      createDefaultOffer({
+        id: 'o_cash',
+        vehicle: 'Tucson',
+        modality: OFFER_MODALITIES.CASH,
+        vehiclePrice: 25000
+      })
+    );
 
     // Oferta 2: Financiada que cuesta 26.000 € en caja (1.000 € más que contado), pero incluye 1.800 € en servicios
     // TCO Ajustado de o2 = 26.000 - 1.800 = 24.200 € (¡menor coste en TCO que el contado!)
-    const o2 = normalizeOffer(createDefaultOffer({
-      id: 'o_fin',
-      vehicle: 'Tucson',
-      modality: OFFER_MODALITIES.STANDARD_FINANCE,
-      vehiclePrice: 25000,
-      financeDiscount: 1500,
-      downPayment: 5000,
-      months: 60,
-      tin: 4.5,
-      includedServices: [
-        { id: 's1', name: 'Mantenimiento 5 años', marketValue: 1200 },
-        { id: 's2', name: 'Extensión garantía', marketValue: 600 }
-      ]
-    }));
+    const o2 = normalizeOffer(
+      createDefaultOffer({
+        id: 'o_fin',
+        vehicle: 'Tucson',
+        modality: OFFER_MODALITIES.STANDARD_FINANCE,
+        vehiclePrice: 25000,
+        financeDiscount: 1500,
+        downPayment: 5000,
+        months: 60,
+        tin: 4.5,
+        includedServices: [
+          { id: 's1', name: 'Mantenimiento 5 años', marketValue: 1200 },
+          { id: 's2', name: 'Extensión garantía', marketValue: 600 }
+        ]
+      })
+    );
 
     const ranked = rankOffers([o1, o2]);
     const cashRanked = ranked.find(o => o.id === 'o_cash');
     const finRanked = ranked.find(o => o.id === 'o_fin');
 
     assert.ok(cashRanked.highlights.includes('🏆 Menor coste total'), 'El contado tiene menor desembolso financiero');
-    assert.ok(finRanked.highlights.includes('💎 Mejor valor equiparado (TCO)'), 'La oferta financiada ofrece mejor TCO equiparado');
+    assert.ok(
+      finRanked.highlights.includes('💎 Mejor valor equiparado (TCO)'),
+      'La oferta financiada ofrece mejor TCO equiparado'
+    );
   });
 
   test('Test 10: Normalización de oferta con modalidad EARLY_CANCELLATION', () => {
@@ -253,8 +268,14 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.equal(norm.contractMonths, 84);
     assert.equal(norm.earlyCancellationMonth, 24);
     assert.equal(norm.totalMonths, 24, 'Total meses de cuotas debe ser el mes de cancelación (24)');
-    assert.ok(norm.settlementCapital > 16000 && norm.settlementCapital < 18500, `Capital pendiente esperado ~17k €, obtenido ${norm.settlementCapital}`);
-    assert.ok(Math.abs(norm.cancellationPenalty - (norm.settlementCapital * 0.01)) < 0.05, 'Comisión debe ser el 1% del capital pendiente');
+    assert.ok(
+      norm.settlementCapital > 16000 && norm.settlementCapital < 18500,
+      `Capital pendiente esperado ~17k €, obtenido ${norm.settlementCapital}`
+    );
+    assert.ok(
+      Math.abs(norm.cancellationPenalty - norm.settlementCapital * 0.01) < 0.05,
+      'Comisión debe ser el 1% del capital pendiente'
+    );
     assert.equal(norm.finalSettlementPayment, Number((norm.settlementCapital + norm.cancellationPenalty).toFixed(2)));
     assert.ok(norm.futureInterestSaved > 2000, 'Debe reflejar el ahorro sustancial en intereses evitados');
     assert.equal(norm.costBreakdown.earlyCancellationPenalty, norm.cancellationPenalty);
@@ -322,9 +343,12 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.equal(norm.manualMonthlyPayment, 320);
     assert.ok(norm.tin > 0, `El TIN debe deducirse y ser > 0, obtenido: ${norm.tin}`);
     assert.ok(Math.abs(norm.tin - 10.07) < 0.2, `TIN esperado ~10.07%, obtenido: ${norm.tin}`);
-    assert.ok(norm.totalInterest > 3500 && norm.totalInterest < 4500, `Intereses esperados ~4200€, obtenido: ${norm.totalInterest}`);
+    assert.ok(
+      norm.totalInterest > 3500 && norm.totalInterest < 4500,
+      `Intereses esperados ~4200€, obtenido: ${norm.totalInterest}`
+    );
     assert.equal(norm.totalFinancedPayments, 320 * 60);
-    assert.equal(norm.totalOutOfPocketCost, 3000 + (320 * 60));
+    assert.equal(norm.totalOutOfPocketCost, 3000 + 320 * 60);
   });
 
   test('Test 14: Normalización con cuota ofertada manual en cancelación anticipada (EARLY_CANCELLATION)', () => {
@@ -351,9 +375,18 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.ok(norm.tin > 0, `El TIN deducido debe ser > 0, obtenido: ${norm.tin}`);
     // TIN para 18000 a 84m con cuota 285 es ~8.49%
     assert.ok(Math.abs(norm.tin - 8.49) < 0.1, `TIN esperado ~8.49%, obtenido: ${norm.tin}`);
-    assert.ok(norm.settlementCapital > 13000 && norm.settlementCapital < 15000, `Capital pendiente en mes 24 esperado ~13.9k, obtenido: ${norm.settlementCapital}`);
-    assert.ok(norm.cancellationPenalty > 130 && norm.cancellationPenalty < 155, `Penalización 1% esperada ~140€, obtenida: ${norm.cancellationPenalty}`);
-    assert.ok(norm.totalInterest > 2000, `Intereses pagados en 24 meses deben ser > 2000€ (no 0€), obtenido: ${norm.totalInterest}`);
+    assert.ok(
+      norm.settlementCapital > 13000 && norm.settlementCapital < 15000,
+      `Capital pendiente en mes 24 esperado ~13.9k, obtenido: ${norm.settlementCapital}`
+    );
+    assert.ok(
+      norm.cancellationPenalty > 130 && norm.cancellationPenalty < 155,
+      `Penalización 1% esperada ~140€, obtenida: ${norm.cancellationPenalty}`
+    );
+    assert.ok(
+      norm.totalInterest > 2000,
+      `Intereses pagados en 24 meses deben ser > 2000€ (no 0€), obtenido: ${norm.totalInterest}`
+    );
     assert.equal(norm.totalMonths, 24);
   });
 
@@ -399,7 +432,11 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
 
     assert.equal(norm.offerPrice, 25000, 'El precio base debe ser 25.000 €');
     assert.equal(norm.cashPriceReference, 28000, 'La referencia al contado debe ser 28.000 €');
-    assert.equal(norm.principalFinanced, 20000, 'El capital financiado debe ser 25.000 - 5.000 = 20.000 € (no 17.000 €)');
+    assert.equal(
+      norm.principalFinanced,
+      20000,
+      'El capital financiado debe ser 25.000 - 5.000 = 20.000 € (no 17.000 €)'
+    );
   });
 
   test('Test 17: Normalización a partir de cantidad a financiar (financedAmount)', () => {
@@ -456,10 +493,16 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.equal(norm.contractMonths, 48, 'Plazo original del contrato era 48 meses');
     assert.equal(norm.earlyCancellationMonth, 24);
     assert.equal(norm.balloonPayment, 14000, 'Debe preservar el balloon pactado');
-    assert.ok(norm.settlementCapital > 17500 && norm.settlementCapital < 20000, `Capital de liquidación esperado ~18.8k €, obtenido ${norm.settlementCapital}`);
-    assert.ok(Math.abs(norm.cancellationPenalty - (norm.settlementCapital * 0.01)) < 0.05);
+    assert.ok(
+      norm.settlementCapital > 17500 && norm.settlementCapital < 20000,
+      `Capital de liquidación esperado ~18.8k €, obtenido ${norm.settlementCapital}`
+    );
+    assert.ok(Math.abs(norm.cancellationPenalty - norm.settlementCapital * 0.01) < 0.05);
     assert.equal(norm.finalSettlementPayment, Number((norm.settlementCapital + norm.cancellationPenalty).toFixed(2)));
-    assert.ok(norm.futureInterestSaved > 2000, `Ahorro esperado de intereses > 2000 €, obtenido ${norm.futureInterestSaved}`);
+    assert.ok(
+      norm.futureInterestSaved > 2000,
+      `Ahorro esperado de intereses > 2000 €, obtenido ${norm.futureInterestSaved}`
+    );
     assert.equal(norm.amortizationSchedule.length, 24);
     assert.equal(norm.amortizationSchedule[23].isCancellation, true);
     assert.equal(norm.amortizationSchedule[23].remainingBalance, 0);
@@ -510,7 +553,11 @@ describe('Fase 2: coherencia del motor financiero (normalizer.js)', () => {
   }
 
   test('createDefaultOffer respeta cashPriceReference si es el único precio informado', () => {
-    const offer = createDefaultOffer({ modality: OFFER_MODALITIES.STANDARD_FINANCE, cashPriceReference: 30000, financeDiscount: 2000 });
+    const offer = createDefaultOffer({
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      cashPriceReference: 30000,
+      financeDiscount: 2000
+    });
     const normalized = normalizeOffer(offer);
     assert.equal(offer.offerPrice, 28000);
     assert.equal(offer.cashPriceReference, 30000);
@@ -548,11 +595,17 @@ describe('Fase 2: coherencia del motor financiero (normalizer.js)', () => {
       interest += i;
       balance -= 350 - i;
     }
-    assert.ok(Math.abs(n.settlementCapital - balance) < 0.01, `Capital pendiente ${n.settlementCapital} vs ${balance.toFixed(2)}`);
+    assert.ok(
+      Math.abs(n.settlementCapital - balance) < 0.01,
+      `Capital pendiente ${n.settlementCapital} vs ${balance.toFixed(2)}`
+    );
     assert.ok(Math.abs(n.totalInterest - interest) < 0.01);
     assert.equal(n.totalOutOfPocketCost, Number((5000 + 350 * 24 + n.finalSettlementPayment).toFixed(2)));
     // Identidad contable: lo pagado al banco = capital + intereses + comisión
-    assert.ok(Math.abs((n.totalFinancedPayments + n.finalSettlementPayment) - (20000 + n.totalInterest + n.cancellationPenalty)) < 0.05);
+    assert.ok(
+      Math.abs(n.totalFinancedPayments + n.finalSettlementPayment - (20000 + n.totalInterest + n.cancellationPenalty)) <
+        0.05
+    );
 
     // El cuadro de amortización cuadra con la misma cuota
     const schedule = n.amortizationSchedule;
@@ -591,6 +644,3 @@ describe('Fase 2: coherencia del motor financiero (normalizer.js)', () => {
     assert.equal(n.nominalTin, 0);
   });
 });
-
-
-

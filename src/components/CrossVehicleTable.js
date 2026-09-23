@@ -9,9 +9,9 @@ import { getVehicleImageUrl } from '../core/vehicleCatalog.js';
 
 /**
  * Añade una fila a la tabla comparativa de vehículos.
- * @param {HTMLTableSectionElement} tbody 
- * @param {string} labelText 
- * @param {Array<string|number>} values 
+ * @param {HTMLTableSectionElement} tbody
+ * @param {string} labelText
+ * @param {Array<string|number>} values
  * @param {object} [options]
  * @param {boolean} [options.isBold]
  * @param {string} [options.highlightClass]
@@ -80,7 +80,9 @@ export function createCrossVehicleTableElement(rankedCrossOffers) {
       thumb.src = imgUrl;
       thumb.alt = o.vehicle || o.title;
       thumb.loading = 'lazy';
-      thumb.onerror = () => { thumb.style.display = 'none'; };
+      thumb.onerror = () => {
+        thumb.style.display = 'none';
+      };
       th.appendChild(thumb);
     }
 
@@ -109,49 +111,133 @@ export function createCrossVehicleTableElement(rankedCrossOffers) {
   // Tbody
   const tbody = document.createElement('tbody');
 
-  appendRow(tbody, 'Modalidad evaluada', rankedCrossOffers.map(o => MODALITY_LABELS[o.modality] || o.modality));
-  appendRow(tbody, 'Concesionario', rankedCrossOffers.map(o => o.dealer || '—'));
-  appendRow(tbody, 'Precio del vehículo', rankedCrossOffers.map(o => `${(o.vehiclePrice || o.cashPriceReference || o.offerPrice).toLocaleString('es-ES')} €`), { isBold: true });
+  appendRow(
+    tbody,
+    'Modalidad evaluada',
+    rankedCrossOffers.map(o => MODALITY_LABELS[o.modality] || o.modality)
+  );
+  appendRow(
+    tbody,
+    'Concesionario',
+    rankedCrossOffers.map(o => o.dealer || '—')
+  );
+  appendRow(
+    tbody,
+    'Precio del vehículo',
+    rankedCrossOffers.map(o => `${(o.vehiclePrice || o.cashPriceReference || o.offerPrice).toLocaleString('es-ES')} €`),
+    { isBold: true }
+  );
 
-  const hasCrossDiscounts = rankedCrossOffers.some(o => !o.isCash && ((o.financeDiscount && o.financeDiscount > 0) || (o.advertisedDiscount && o.advertisedDiscount > 0)));
+  const hasCrossDiscounts = rankedCrossOffers.some(
+    o =>
+      !o.isCash && ((o.financeDiscount && o.financeDiscount > 0) || (o.advertisedDiscount && o.advertisedDiscount > 0))
+  );
   if (hasCrossDiscounts) {
-    appendRow(tbody, 'Descuento por financiar', rankedCrossOffers.map(o => {
-      const disc = o.financeDiscount !== undefined ? o.financeDiscount : (o.advertisedDiscount || 0);
-      return (!o.isCash && disc > 0) ? `-${disc.toLocaleString('es-ES')} €` : '—';
-    }), { highlightClass: 'highlight-save' });
-    appendRow(tbody, 'Precio base de cálculo', rankedCrossOffers.map(o => `${o.offerPrice.toLocaleString('es-ES')} €`), { isBold: true });
+    appendRow(
+      tbody,
+      'Descuento por financiar',
+      rankedCrossOffers.map(o => {
+        const disc = o.financeDiscount !== undefined ? o.financeDiscount : o.advertisedDiscount || 0;
+        return !o.isCash && disc > 0 ? `-${disc.toLocaleString('es-ES')} €` : '—';
+      }),
+      { highlightClass: 'highlight-save' }
+    );
+    appendRow(
+      tbody,
+      'Precio base de cálculo',
+      rankedCrossOffers.map(o => `${o.offerPrice.toLocaleString('es-ES')} €`),
+      { isBold: true }
+    );
   }
-  appendRow(tbody, 'Entrada aportada', rankedCrossOffers.map(o => o.isCash ? '—' : (o.downPayment > 0 ? `${o.downPayment.toLocaleString('es-ES')} €` : '0 €')));
-  appendRow(tbody, 'Plazo', rankedCrossOffers.map(o => {
-    if (o.isCash) return 'Al contado';
-    if (o.isEarlyCancellation) return `Mes ${o.earlyCancellationMonth} (de ${o.contractMonths}m)`;
-    return `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`;
-  }));
-  appendRow(tbody, 'Cuota mensual', rankedCrossOffers.map(o => o.isCash ? '—' : `${o.monthlyPayment.toLocaleString('es-ES')} €/mes`), { isBold: true });
-  appendRow(tbody, 'Cuota final / Finiquito', rankedCrossOffers.map(o => {
-    if (o.isEarlyCancellation) return `${o.finalSettlementPayment.toLocaleString('es-ES')} € (finiquito)`;
-    return o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—';
-  }));
+  appendRow(
+    tbody,
+    'Entrada aportada',
+    rankedCrossOffers.map(o =>
+      o.isCash ? '—' : o.downPayment > 0 ? `${o.downPayment.toLocaleString('es-ES')} €` : '0 €'
+    )
+  );
+  appendRow(
+    tbody,
+    'Plazo',
+    rankedCrossOffers.map(o => {
+      if (o.isCash) return 'Al contado';
+      if (o.isEarlyCancellation) return `Mes ${o.earlyCancellationMonth} (de ${o.contractMonths}m)`;
+      return `${o.totalMonths} meses (${formatMonthsDuration(o.totalMonths)})`;
+    })
+  );
+  appendRow(
+    tbody,
+    'Cuota mensual',
+    rankedCrossOffers.map(o => (o.isCash ? '—' : `${o.monthlyPayment.toLocaleString('es-ES')} €/mes`)),
+    { isBold: true }
+  );
+  appendRow(
+    tbody,
+    'Cuota final / Finiquito',
+    rankedCrossOffers.map(o => {
+      if (o.isEarlyCancellation) return `${o.finalSettlementPayment.toLocaleString('es-ES')} € (finiquito)`;
+      return o.balloonPayment > 0 ? `${o.balloonPayment.toLocaleString('es-ES')} €` : '—';
+    })
+  );
 
   const hasCrossEarlyCancel = rankedCrossOffers.some(o => o.isEarlyCancellation);
   if (hasCrossEarlyCancel) {
-    appendRow(tbody, 'Comisión cancelación', rankedCrossOffers.map(o => o.isEarlyCancellation ? `+${o.cancellationPenalty.toLocaleString('es-ES')} € (${o.earlyCancellationPenaltyRate}%)` : '—'));
-    appendRow(tbody, 'Intereses futuros ahorrados', rankedCrossOffers.map(o => (o.isEarlyCancellation && o.futureInterestSaved > 0) ? `-${o.futureInterestSaved.toLocaleString('es-ES')} €` : '—'), { highlightClass: 'highlight-save' });
+    appendRow(
+      tbody,
+      'Comisión cancelación',
+      rankedCrossOffers.map(o =>
+        o.isEarlyCancellation
+          ? `+${o.cancellationPenalty.toLocaleString('es-ES')} € (${o.earlyCancellationPenaltyRate}%)`
+          : '—'
+      )
+    );
+    appendRow(
+      tbody,
+      'Intereses futuros ahorrados',
+      rankedCrossOffers.map(o =>
+        o.isEarlyCancellation && o.futureInterestSaved > 0 ? `-${o.futureInterestSaved.toLocaleString('es-ES')} €` : '—'
+      ),
+      { highlightClass: 'highlight-save' }
+    );
   }
 
-  appendRow(tbody, 'TIN / TAE real', rankedCrossOffers.map(o => o.isCash ? '0%' : `${o.nominalTin}% / ${formatAprPercent(o.effectiveApr)} TAE`));
-  appendRow(tbody, 'Total intereses pagados', rankedCrossOffers.map(o => o.totalInterest > 0 ? `+${o.totalInterest.toLocaleString('es-ES')} €` : '0 €'), { isBold: true, highlightClass: 'highlight-trap' });
-  appendRow(tbody, 'Coste financiero compra', rankedCrossOffers.map(o => `${o.totalOutOfPocketCost.toLocaleString('es-ES')} €`), { isBold: true, isLargeText: true });
+  appendRow(
+    tbody,
+    'TIN / TAE real',
+    rankedCrossOffers.map(o => (o.isCash ? '0%' : `${o.nominalTin}% / ${formatAprPercent(o.effectiveApr)} TAE`))
+  );
+  appendRow(
+    tbody,
+    'Total intereses pagados',
+    rankedCrossOffers.map(o => (o.totalInterest > 0 ? `+${o.totalInterest.toLocaleString('es-ES')} €` : '0 €')),
+    { isBold: true, highlightClass: 'highlight-trap' }
+  );
+  appendRow(
+    tbody,
+    'Coste financiero compra',
+    rankedCrossOffers.map(o => `${o.totalOutOfPocketCost.toLocaleString('es-ES')} €`),
+    { isBold: true, isLargeText: true }
+  );
 
   const hasCrossServices = rankedCrossOffers.some(o => (o.includedServicesValue || 0) > 0);
   if (hasCrossServices) {
-    appendRow(tbody, 'Servicios bonificados (valor)', rankedCrossOffers.map(o => {
-      if (!o.includedServicesValue) return '—';
-      const srvNames = (o.includedServices || []).map(s => s.name).join(', ');
-      return `🎁 +${o.includedServicesValue.toLocaleString('es-ES')} €${srvNames ? ` (${srvNames})` : ''}`;
-    }), { highlightClass: 'highlight-save' });
+    appendRow(
+      tbody,
+      'Servicios bonificados (valor)',
+      rankedCrossOffers.map(o => {
+        if (!o.includedServicesValue) return '—';
+        const srvNames = (o.includedServices || []).map(s => s.name).join(', ');
+        return `🎁 +${o.includedServicesValue.toLocaleString('es-ES')} €${srvNames ? ` (${srvNames})` : ''}`;
+      }),
+      { highlightClass: 'highlight-save' }
+    );
 
-    appendRow(tbody, 'Coste equiparado (TCO)', rankedCrossOffers.map(o => `${(o.adjustedTcoCost ?? o.totalOutOfPocketCost).toLocaleString('es-ES')} €`), { isBold: true, highlightClass: 'highlight-save' });
+    appendRow(
+      tbody,
+      'Coste equiparado (TCO)',
+      rankedCrossOffers.map(o => `${(o.adjustedTcoCost ?? o.totalOutOfPocketCost).toLocaleString('es-ES')} €`),
+      { isBold: true, highlightClass: 'highlight-save' }
+    );
   }
 
   // Filas de diferencia frente a cada vehículo (si hay más de 1 vehículo)

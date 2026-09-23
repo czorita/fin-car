@@ -10,8 +10,8 @@ import { createIcon } from '../ui/dom.js';
 
 /**
  * Crea una fila de especificación para la tarjeta de coche.
- * @param {string} label 
- * @param {string} value 
+ * @param {string} label
+ * @param {string} value
  * @param {object} [options]
  * @returns {HTMLDivElement}
  */
@@ -41,7 +41,11 @@ function createSpecRow(label, value, options = {}) {
  * @param {(offer: object) => void} [handlers.onEditOffer]
  * @returns {HTMLElement}
  */
-export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicle, onEditOffer, allRankedOffers = [] } = {}) {
+export function createCrossVehicleCardElement(
+  offer,
+  isWinner,
+  { onInspectVehicle, onEditOffer, allRankedOffers = [] } = {}
+) {
   const card = document.createElement('article');
   card.className = `offer-card cross-vehicle-card ${isWinner ? 'is-winner' : ''}`;
   card.dataset.id = offer.id;
@@ -73,7 +77,6 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
 
   const badges = document.createElement('div');
   badges.className = 'offer-badges';
-
 
   if (offer.isTcoWinner && !isWinner) {
     const b = document.createElement('span');
@@ -139,24 +142,46 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
   const vPrice = offer.vehiclePrice || offer.cashPriceReference || offer.offerPrice;
   specs.appendChild(createSpecRow('Precio vehículo:', `${vPrice.toLocaleString('es-ES')} €`));
 
-  const disc = offer.financeDiscount !== undefined ? offer.financeDiscount : (offer.advertisedDiscount || 0);
+  const disc = offer.financeDiscount !== undefined ? offer.financeDiscount : offer.advertisedDiscount || 0;
   if (!offer.isCash && disc > 0) {
-    specs.appendChild(createSpecRow('Descuento financiar:', `-${disc.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
-    specs.appendChild(createSpecRow('Base de cálculo:', `${offer.offerPrice.toLocaleString('es-ES')} €`, { isEmphasized: true }));
+    specs.appendChild(
+      createSpecRow('Descuento financiar:', `-${disc.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' })
+    );
+    specs.appendChild(
+      createSpecRow('Base de cálculo:', `${offer.offerPrice.toLocaleString('es-ES')} €`, { isEmphasized: true })
+    );
   }
 
   if (!offer.isCash) {
     specs.appendChild(createSpecRow('Entrada aportada:', `${offer.downPayment.toLocaleString('es-ES')} €`));
     specs.appendChild(createSpecRow('Cuota mensual:', `${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`));
     specs.appendChild(createSpecRow('TIN / TAE:', `${offer.nominalTin}% / ${formatAprPercent(offer.effectiveApr)}`));
-    specs.appendChild(createSpecRow('Total intereses:', `+${offer.totalInterest.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-trap' }));
+    specs.appendChild(
+      createSpecRow('Total intereses:', `+${offer.totalInterest.toLocaleString('es-ES')} €`, {
+        highlightClass: 'highlight-trap'
+      })
+    );
     if (offer.isEarlyCancellation) {
       if (offer.isFlexible && offer.balloonPayment > 0) {
-        specs.appendChild(createSpecRow('Cuota final evitada (VFG):', `${offer.balloonPayment.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
+        specs.appendChild(
+          createSpecRow('Cuota final evitada (VFG):', `${offer.balloonPayment.toLocaleString('es-ES')} €`, {
+            highlightClass: 'highlight-save'
+          })
+        );
       }
-      specs.appendChild(createSpecRow(`Finiquito mes ${offer.earlyCancellationMonth}:`, `${offer.finalSettlementPayment.toLocaleString('es-ES')} €`));
+      specs.appendChild(
+        createSpecRow(
+          `Finiquito mes ${offer.earlyCancellationMonth}:`,
+          `${offer.finalSettlementPayment.toLocaleString('es-ES')} €`
+        )
+      );
       if (offer.futureInterestSaved > 0) {
-        specs.appendChild(createSpecRow('Ahorro intereses:', `-${offer.futureInterestSaved.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save', isEmphasized: true }));
+        specs.appendChild(
+          createSpecRow('Ahorro intereses:', `-${offer.futureInterestSaved.toLocaleString('es-ES')} €`, {
+            highlightClass: 'highlight-save',
+            isEmphasized: true
+          })
+        );
       }
     } else if (offer.balloonPayment > 0) {
       specs.appendChild(createSpecRow('Cuota final (VFG):', `${offer.balloonPayment.toLocaleString('es-ES')} €`));
@@ -164,8 +189,17 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
   }
 
   if (offer.includedServicesValue > 0) {
-    specs.appendChild(createSpecRow('Servicios incluidos (valor):', `-${offer.includedServicesValue.toLocaleString('es-ES')} €`, { highlightClass: 'highlight-save' }));
-    specs.appendChild(createSpecRow('Coste equiparado (TCO):', `${offer.adjustedTcoCost.toLocaleString('es-ES')} €`, { isEmphasized: true, highlightClass: 'highlight-save' }));
+    specs.appendChild(
+      createSpecRow('Servicios incluidos (valor):', `-${offer.includedServicesValue.toLocaleString('es-ES')} €`, {
+        highlightClass: 'highlight-save'
+      })
+    );
+    specs.appendChild(
+      createSpecRow('Coste equiparado (TCO):', `${offer.adjustedTcoCost.toLocaleString('es-ES')} €`, {
+        isEmphasized: true,
+        highlightClass: 'highlight-save'
+      })
+    );
   }
 
   if (Array.isArray(allRankedOffers) && allRankedOffers.length > 1) {
@@ -174,23 +208,21 @@ export function createCrossVehicleCardElement(offer, isWinner, { onInspectVehicl
         const otherModel = getOfferVehicle(other);
         const diff = Number((offer.totalOutOfPocketCost - other.totalOutOfPocketCost).toFixed(2));
         if (diff > 0) {
-          specs.appendChild(createSpecRow(
-            `Diferencia vs ${otherModel}:`,
-            `+${diff.toLocaleString('es-ES')} €`,
-            { highlightClass: 'highlight-trap', isEmphasized: true }
-          ));
+          specs.appendChild(
+            createSpecRow(`Diferencia vs ${otherModel}:`, `+${diff.toLocaleString('es-ES')} €`, {
+              highlightClass: 'highlight-trap',
+              isEmphasized: true
+            })
+          );
         } else if (diff < 0) {
-          specs.appendChild(createSpecRow(
-            `Diferencia vs ${otherModel}:`,
-            `${diff.toLocaleString('es-ES')} €`,
-            { highlightClass: 'highlight-save', isEmphasized: true }
-          ));
+          specs.appendChild(
+            createSpecRow(`Diferencia vs ${otherModel}:`, `${diff.toLocaleString('es-ES')} €`, {
+              highlightClass: 'highlight-save',
+              isEmphasized: true
+            })
+          );
         } else {
-          specs.appendChild(createSpecRow(
-            `Diferencia vs ${otherModel}:`,
-            '0 €',
-            { isEmphasized: true }
-          ));
+          specs.appendChild(createSpecRow(`Diferencia vs ${otherModel}:`, '0 €', { isEmphasized: true }));
         }
       }
     });

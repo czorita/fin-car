@@ -1,0 +1,57 @@
+/* Página de ejemplos (ejemplos.html): estilos antes inline en el HTML */
+
+.badge--xxs {
+  font-size: 0.65rem;
+}
+
+.examples-intro {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.4rem;
+  margin-bottom: 1.5rem;
+}
+
+.examples-intro-body {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.examples-intro-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.examples-intro-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin: 0 0 0.35rem 0;
+}
+
+.examples-intro-text {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.app-footer {
+  margin-top: 3rem;
+  text-align: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.app-footer-note {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.app-footer-link {
+  color: var(--accent-cyan);
+  text-decoration: none;
+}

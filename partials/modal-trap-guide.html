@@ -1,16 +1,16 @@
 <!-- Modal de Consejos de Negociación ante Trampa de Financiación -->
-<dialog id="modal-trap-guide" class="app-modal" style="max-width: 660px;">
+<dialog id="modal-trap-guide" class="app-modal">
   <div class="modal-header">
-    <h2 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.12rem; color: var(--accent-cyan); margin: 0;">
+    <h2 class="trap-guide-title">
       <span aria-hidden="true">💡</span>
       ¿Cómo detectar la "trampa del descuento" en el concesionario?
     </h2>
     <button id="btn-close-trap-guide" class="btn btn-ghost btn-icon" type="button" aria-label="Cerrar">&times;</button>
   </div>
 
-  <div class="modal-body" style="padding: 1.25rem 1.5rem;">
+  <div class="modal-body modal-body--trap-guide">
     <!-- Alerta dinámica con las ofertas afectadas -->
-    <div id="trap-guide-offers-alert" class="trap-detected-box" style="display: none;">
+    <div id="trap-guide-offers-alert" class="trap-detected-box">
       <div class="trap-detected-header">
         <span aria-hidden="true">⚠️</span>
         <strong>Sobrecoste detectado en tus ofertas:</strong>
@@ -26,7 +26,11 @@
         <div class="trap-tip-num">1</div>
         <div class="trap-tip-body">
           <h4>El descuento financiado no siempre es ahorro</h4>
-          <p>Los concesionarios suelen ofrecer rebajas llamativas de 2.000 € a 4.000 € si financias con ellos. Sin embargo, con un TIN habitual del 8% al 10%, los intereses bancarios superan con creces el descuento inicial, pagando miles de euros más que al contado.</p>
+          <p>
+            Los concesionarios suelen ofrecer rebajas llamativas de 2.000 € a 4.000 € si financias con ellos. Sin
+            embargo, con un TIN habitual del 8% al 10%, los intereses bancarios superan con creces el descuento inicial,
+            pagando miles de euros más que al contado.
+          </p>
         </div>
       </article>
 
@@ -34,7 +38,10 @@
         <div class="trap-tip-num">2</div>
         <div class="trap-tip-body">
           <h4>Ojo a los seguros y servicios vinculados obligatorios</h4>
-          <p>Muchas financieras exigen seguro de pagos protegidos, seguro de vida o paquetes de mantenimiento de 800 € a 1.500 € financiados dentro de la cuota mensual, lo que devenga aún más intereses cada mes.</p>
+          <p>
+            Muchas financieras exigen seguro de pagos protegidos, seguro de vida o paquetes de mantenimiento de 800 € a
+            1.500 € financiados dentro de la cuota mensual, lo que devenga aún más intereses cada mes.
+          </p>
         </div>
       </article>
 
@@ -42,13 +49,17 @@
         <div class="trap-tip-num">3</div>
         <div class="trap-tip-body">
           <h4>Compara siempre el coste total real (desembolso neto)</h4>
-          <p>No te dejes llevar por una cuota mensual reducida. Exige siempre la suma total: <em>Entrada + Todas las Cuotas + Cuota Final + Comisiones + Seguros</em> para saber el precio definitivo antes de firmar.</p>
+          <p>
+            No te dejes llevar por una cuota mensual reducida. Exige siempre la suma total:
+            <em>Entrada + Todas las Cuotas + Cuota Final + Comisiones + Seguros</em> para saber el precio definitivo
+            antes de firmar.
+          </p>
         </div>
       </article>
     </div>
   </div>
 
-  <div class="modal-footer" style="display: flex; justify-content: flex-end; padding: 0.9rem 1.5rem; border-top: 1px solid var(--border-subtle);">
+  <div class="modal-footer modal-footer--trap-guide">
     <button id="btn-understood-trap-guide" type="button" class="btn btn-primary">Entendido</button>
   </div>
 </dialog>

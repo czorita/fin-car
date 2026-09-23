@@ -1,0 +1,16 @@
+/* Parcial tmpl-linked-product.html: estilos antes inline en el HTML */
+
+.linked-product-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  background: var(--bg-surface);
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.checkbox-label--small {
+  font-size: 0.75rem;
+}

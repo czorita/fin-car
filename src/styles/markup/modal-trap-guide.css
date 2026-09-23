@@ -1,0 +1,29 @@
+/* Parcial modal-trap-guide.html: estilos antes inline en el HTML */
+
+#modal-trap-guide {
+  max-width: 660px;
+}
+
+.modal-header .trap-guide-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.12rem;
+  color: var(--accent-cyan);
+  margin: 0;
+}
+
+.modal-body--trap-guide {
+  padding: 1.25rem 1.5rem;
+}
+
+#trap-guide-offers-alert {
+  display: none;
+}
+
+.modal-footer--trap-guide {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.9rem 1.5rem;
+  border-top: 1px solid var(--border-subtle);
+}

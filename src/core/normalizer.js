@@ -5,20 +5,27 @@
  */
 
 import { OFFER_MODALITIES } from './types.js';
-import { calculateMonthlyPayment, calculateEffectiveApr, reverseEngineerInterestRate, generateAmortizationSchedule, calculateEarlyCancellationSettlement } from './finance.js';
+import {
+  calculateMonthlyPayment,
+  calculateEffectiveApr,
+  reverseEngineerInterestRate,
+  generateAmortizationSchedule,
+  calculateEarlyCancellationSettlement
+} from './finance.js';
 import { generateVerdict } from './verdicts.js';
 import { resolvePrices, resolveDownPayment, sumLinkedProducts } from './pricing.js';
 import { DEFAULTS } from './constants.js';
 
 /**
  * Normaliza una oferta y genera su análisis financiero detallado.
- * @param {import('./types.js').Offer} offer 
+ * @param {import('./types.js').Offer} offer
  * @returns {import('./types.js').NormalizedOffer}
  */
 export function normalizeOffer(offer) {
   const isCash = offer.modality === OFFER_MODALITIES.CASH;
   const isFlexible = offer.modality === OFFER_MODALITIES.FLEXIBLE_FINANCE;
-  const isEarlyCancellation = offer.modality === OFFER_MODALITIES.EARLY_CANCELLATION || (isFlexible && Boolean(offer.cancelEarly));
+  const isEarlyCancellation =
+    offer.modality === OFFER_MODALITIES.EARLY_CANCELLATION || (isFlexible && Boolean(offer.cancelEarly));
 
   // 1. Productos vinculados (indefinido = financiado, igual que el formulario)
   const {
@@ -34,12 +41,7 @@ export function normalizeOffer(offer) {
   const tradeInValue = Number(offer.tradeInValue) || 0;
 
   // Precios y descuentos (lógica compartida con createDefaultOffer; sin valores por defecto)
-  const {
-    offerPrice,
-    vehiclePrice,
-    cashPriceReference: cashPriceRef,
-    financeDiscount
-  } = resolvePrices(offer);
+  const { offerPrice, vehiclePrice, cashPriceReference: cashPriceRef, financeDiscount } = resolvePrices(offer);
 
   // Si es contado
   if (isCash) {
@@ -79,7 +81,7 @@ export function normalizeOffer(offer) {
       includedServices,
       includedServicesValue,
       adjustedTcoCost,
-      
+
       // Métricas de comparación
       costBreakdown: {
         vehicleNet: Math.max(0, offerPrice - tradeInValue),
@@ -91,7 +93,12 @@ export function normalizeOffer(offer) {
       advertisedDiscount: 0,
       netDifferenceVsCashRef,
       netEquatedDifferenceVsCashRef,
-      verdict: generateVerdict({ isCash: true, includedServicesValue, netDifferenceVsCashRef, netEquatedDifferenceVsCashRef }),
+      verdict: generateVerdict({
+        isCash: true,
+        includedServicesValue,
+        netDifferenceVsCashRef,
+        netEquatedDifferenceVsCashRef
+      }),
       amortizationSchedule: []
     };
   }
@@ -114,12 +121,13 @@ export function normalizeOffer(offer) {
   let months = Number(offer.months) || DEFAULTS.months;
   const contractMonths = Number(offer.contractMonths) || months;
   const cancelMonth = Number(offer.earlyCancellationMonth) || DEFAULTS.earlyCancellationMonth;
-  const penaltyRate = offer.earlyCancellationPenaltyRate !== undefined
-    ? Number(offer.earlyCancellationPenaltyRate)
-    : DEFAULTS.earlyCancellationPenaltyRate;
+  const penaltyRate =
+    offer.earlyCancellationPenaltyRate !== undefined
+      ? Number(offer.earlyCancellationPenaltyRate)
+      : DEFAULTS.earlyCancellationPenaltyRate;
   const manualMonthlyPayment = Number(offer.manualMonthlyPayment) > 0 ? Number(offer.manualMonthlyPayment) : null;
 
-  const originalBalloon = isFlexible ? (Number(offer.balloonPayment) || 0) : 0;
+  const originalBalloon = isFlexible ? Number(offer.balloonPayment) || 0 : 0;
   let balloon = originalBalloon;
   let monthlyPayment;
   let totalInterest;
@@ -170,7 +178,7 @@ export function normalizeOffer(offer) {
     totalOutOfPocketCost = Number((initialCashOut + totalInstallments + balloon).toFixed(2));
   } else {
     monthlyPayment = calculateMonthlyPayment(financedPrincipal, tin, months, balloon);
-    const totalPayments = (monthlyPayment * months) + balloon;
+    const totalPayments = monthlyPayment * months + balloon;
     totalInterest = Math.max(0, totalPayments - financedPrincipal);
     totalInstallments = Number((monthlyPayment * months).toFixed(2));
     totalOutOfPocketCost = Number((initialCashOut + totalInstallments + balloon).toFixed(2));
@@ -183,13 +191,7 @@ export function normalizeOffer(offer) {
   const adjustedTcoCost = Number(Math.max(0, totalOutOfPocketCost - includedServicesValue).toFixed(2));
 
   // TAE real efectiva (null si la TIR no tiene solución: no se inventa una aproximación)
-  const effectiveApr = calculateEffectiveApr(
-    netVehicleToFinance,
-    monthlyPayment,
-    months,
-    balloon,
-    productsUpfront
-  );
+  const effectiveApr = calculateEffectiveApr(netVehicleToFinance, monthlyPayment, months, balloon, productsUpfront);
 
   // Desglose de costes
   const costBreakdown = {
@@ -224,7 +226,14 @@ export function normalizeOffer(offer) {
 
   // Cuadro de amortización
   const amortizationSchedule = isEarlyCancellation
-    ? generateAmortizationSchedule(financedPrincipal, effectiveTin, contractMonths, originalBalloon, { cancelMonth, penaltyRate }, manualMonthlyPayment)
+    ? generateAmortizationSchedule(
+        financedPrincipal,
+        effectiveTin,
+        contractMonths,
+        originalBalloon,
+        { cancelMonth, penaltyRate },
+        manualMonthlyPayment
+      )
     : generateAmortizationSchedule(financedPrincipal, effectiveTin, months, balloon, null, manualMonthlyPayment);
 
   return {
@@ -283,8 +292,8 @@ export const OFFER_HIGHLIGHTS = {
 
 /**
  * Compara un array de ofertas normalizadas y marca los mejores indicadores.
- * @param {NormalizedOffer[]} normalizedOffers 
- * @returns {Array<NormalizedOffer & { bestIn: string[] }>}
+ * @param {import('./types.js').NormalizedOffer[]} normalizedOffers
+ * @returns {Array<import('./types.js').NormalizedOffer & { highlights: string[] }>}
  */
 export function rankOffers(normalizedOffers) {
   if (!normalizedOffers.length) return [];
@@ -306,7 +315,9 @@ export function rankOffers(normalizedOffers) {
 
   // Mínimo coste total financiero y mínimo coste equiparado TCO
   const minTotalCost = Math.min(...sorted.map(o => o.totalOutOfPocketCost));
-  const minTcoCost = Math.min(...sorted.map(o => o.adjustedTcoCost !== undefined ? o.adjustedTcoCost : o.totalOutOfPocketCost));
+  const minTcoCost = Math.min(
+    ...sorted.map(o => (o.adjustedTcoCost !== undefined ? o.adjustedTcoCost : o.totalOutOfPocketCost))
+  );
   const minInterest = Math.min(...sorted.map(o => o.totalInterest));
   const hasIncludedServices = sorted.some(o => (o.includedServicesValue || 0) > 0);
 
@@ -315,7 +326,11 @@ export function rankOffers(normalizedOffers) {
     if (offer.totalOutOfPocketCost === minTotalCost) {
       badges.push(OFFER_HIGHLIGHTS.LOWEST_TOTAL_COST);
     }
-    if (hasIncludedServices && (offer.adjustedTcoCost ?? offer.totalOutOfPocketCost) === minTcoCost && offer.totalOutOfPocketCost !== minTotalCost) {
+    if (
+      hasIncludedServices &&
+      (offer.adjustedTcoCost ?? offer.totalOutOfPocketCost) === minTcoCost &&
+      offer.totalOutOfPocketCost !== minTotalCost
+    ) {
       badges.push(OFFER_HIGHLIGHTS.BEST_TCO);
     }
     if (offer.totalInterest === minInterest && offer.totalInterest > 0) {

@@ -122,7 +122,7 @@ export function formatLocaleNumber(value, maxDecimals = 2) {
 export function formatMonthsDuration(months) {
   const m = Math.round(Number(months) || 0);
   if (m <= 0) return '0 meses';
-  
+
   const years = Math.floor(m / 12);
   const remainingMonths = m % 12;
 
@@ -138,7 +138,6 @@ export function formatMonthsDuration(months) {
   const monthStr = `${remainingMonths} ${remainingMonths === 1 ? 'mes' : 'meses'}`;
   return `${yearStr} y ${monthStr}`;
 }
-
 
 /**
  * Formatea una TAE en porcentaje. Si no es calculable (`null`), devuelve "N/D".

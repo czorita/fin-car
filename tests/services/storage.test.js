@@ -190,7 +190,10 @@ describe('Servicio de almacenamiento (storage.js)', () => {
 
       const result = await deleteOffer('a');
 
-      assert.deepEqual(result.map(o => o.id), ['b']);
+      assert.deepEqual(
+        result.map(o => o.id),
+        ['b']
+      );
       assert.deepEqual(getPendingDeletes(), []);
       assert.equal(globalThis.fetch.calls[0].method, 'DELETE');
       assert.equal(globalThis.fetch.calls[0].url, '/api/offers/a');
@@ -202,7 +205,10 @@ describe('Servicio de almacenamiento (storage.js)', () => {
 
       await quietly(() => assert.rejects(deleteOffer('a'), err => err.status === 500));
 
-      assert.deepEqual(getStoredOffers().map(o => o.id), ['b']);
+      assert.deepEqual(
+        getStoredOffers().map(o => o.id),
+        ['b']
+      );
       assert.deepEqual(getPendingDeletes(), ['a']);
     });
 
@@ -254,7 +260,10 @@ describe('Servicio de almacenamiento (storage.js)', () => {
       assert.ok(!('pendingSync' in globalThis.fetch.calls[1].body), 'El reintento no envía pendingSync');
 
       assert.deepEqual(result.map(o => o.id).sort(), ['local', 'remote']);
-      assert.ok(result.every(o => !o.pendingSync), 'Todo queda sincronizado');
+      assert.ok(
+        result.every(o => !o.pendingSync),
+        'Todo queda sincronizado'
+      );
       assert.deepEqual(getPendingDeletes(), []);
       assert.deepEqual(getStoredOffers(), result, 'La caché queda con el resultado fusionado');
     });
@@ -312,7 +321,10 @@ describe('Servicio de almacenamiento (storage.js)', () => {
 
       const result = await fetchUserOffers();
 
-      assert.deepEqual(result.map(o => o.id), ['remote']);
+      assert.deepEqual(
+        result.map(o => o.id),
+        ['remote']
+      );
     });
 
     test('no guarda pendingSync procedente del servidor', async () => {

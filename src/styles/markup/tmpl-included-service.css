@@ -1,0 +1,21 @@
+/* Parcial tmpl-included-service.html: estilos antes inline en el HTML */
+
+.included-service-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  background: rgba(16, 185, 129, 0.05);
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.list-row-input {
+  padding: 0.35rem 0.5rem;
+}
+
+.list-row-remove {
+  padding: 0.25rem 0.5rem;
+  color: var(--accent-rose);
+}
