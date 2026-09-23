@@ -533,3 +533,42 @@
   background: rgba(16, 185, 129, 0.03);
 }
 
+
+/* Estados vacíos y mensajes de las vistas (antes estilos inline en JS) */
+.empty-slot-message {
+  text-align: center;
+  padding: 2.5rem;
+  color: var(--text-muted);
+}
+
+.loading-message {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.vehicle-carousel-empty-icon {
+  font-size: 1.3rem;
+}
+
+.cross-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.cross-empty-title {
+  font-size: 1.15rem;
+  margin-bottom: 0.4rem;
+  color: var(--text-primary);
+}
+
+.cross-empty-text {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  max-width: 520px;
+  margin: 0 auto 1.25rem auto;
+}
+
+.btn-copy-example {
+  flex: 1.2;
+}

@@ -1,26 +1,18 @@
 /**
  * FinCar - Punto de Entrada Principal
- * Arquitectura limpia basada en controladores DOM nativos y motor de renderizado compartido.
+ * Presupuestos del usuario: persistencia (storage.js), store reactivo y modales de creación/edición.
  */
 
 import './styles/index.css';
 import './styles/components.css';
 import './styles/comparison.css';
 
-import { 
-  getStoredOffers, 
-  fetchUserOffers,
-  upsertOffer, 
-  deleteOffer 
-} from './services/storage.js';
-
+import { getStoredOffers, fetchUserOffers, upsertOffer, deleteOffer } from './services/storage.js';
 import { createDefaultOffer } from './core/types.js';
 import { getUniqueVehicles } from './core/multiVehicle.js';
-import { initThemeManager } from './ui/theme.js';
-import { initViewSwitcher } from './ui/viewSwitch.js';
-import { initMainTabsNav, MAIN_TABS } from './components/MainTabsNav.js';
 import { showToast } from './ui/toast.js';
-import { createAppRenderer } from './ui/renderEngine.js';
+import { createAppShell } from './ui/appShell.js';
+import { el } from './ui/dom.js';
 
 import { initHeader } from './components/Header.js';
 import { initOfferModal } from './components/OfferModal.js';
@@ -29,198 +21,107 @@ import { initReverseCalcModal } from './components/ReverseCalcModal.js';
 
 import confetti from 'canvas-confetti';
 
-// Estado de la aplicación
-let rawOffers = getStoredOffers();
-let selectedVehicle = null;
-let selectedCrossModality = 'cash';
+const SYNC_ERROR_MESSAGE = 'Guardado localmente. Error al sincronizar con el servidor.';
 
-// Contenedores del layout Pestaña 1 (Mismo Vehículo)
-const vehicleChipsList = document.getElementById('vehicle-chips-list');
-const offersDisplaySlot = document.getElementById('offers-display-slot');
-const offersCountLabel = document.getElementById('offers-count-label');
-const btnAddForVehicle = document.getElementById('btn-add-for-vehicle');
+function triggerConfetti() {
+  confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+}
 
-// Contenedores del layout Pestaña 2 (Coches Diferentes)
-const crossModalitySelector = document.getElementById('cross-modality-selector');
-const crossDisplaySlot = document.getElementById('cross-display-slot');
-const crossCountLabel = document.getElementById('cross-count-label');
-
-// Contenedores Compartidos
-const analyticsSection = document.getElementById('analytics-section');
-const analyticsHeading = document.getElementById('analytics-heading');
-const analyticsSubtext = document.getElementById('analytics-subtext');
-const costBreakdownCanvas = document.getElementById('cost-breakdown-canvas');
-const fabNewOffer = document.getElementById('fab-new-offer');
-const tmplEmptyState = document.getElementById('tmpl-empty-state');
-
-// Modales
 const amortizationModalCtrl = initAmortizationModal();
+// Asignado tras crear la shell (los callbacks de tarjetas se usan sólo tras el primer render)
+let offerModalCtrl;
 
-const offerModalCtrl = initOfferModal({
-  getKnownVehicles: () => getUniqueVehicles(rawOffers).map(v => v.name),
-  onSave: async (offerData) => {
-    const isNew = !offerData.id;
-    const fullOffer = createDefaultOffer(offerData);
-    try {
-      rawOffers = await upsertOffer(fullOffer);
-      selectedVehicle = fullOffer.vehicle;
-      renderApp();
-      showToast(isNew ? '¡Nueva oferta guardada correctamente!' : 'Oferta actualizada con éxito.', { type: 'success' });
-      if (isNew) {
-        triggerConfetti();
+const { store, dom, renderApp } = createAppShell({
+  initialOffers: getStoredOffers(),
+  createCallbacks: ({ store, inspectVehicle }) => ({
+    getCardHandlers: () => ({
+      onEdit: (targetOffer) => {
+        const { offers, selectedVehicle } = store.getState();
+        offerModalCtrl.open(offers.find(o => o.id === targetOffer.id), selectedVehicle);
+      },
+      onSchedule: (targetOffer) => amortizationModalCtrl.open(targetOffer),
+      onDelete: async (targetOffer) => {
+        if (!confirm(`¿Eliminar la oferta "${targetOffer.title}"?`)) return;
+        try {
+          store.setState({ offers: await deleteOffer(targetOffer.id) });
+          showToast(`Oferta "${targetOffer.title}" eliminada.`, { type: 'info' });
+        } catch {
+          // El borrado queda pendiente de sincronizar: reflejar la caché local en la UI
+          store.setState({ offers: getStoredOffers() });
+          showToast('Eliminada localmente. Error al sincronizar con el servidor.', { type: 'danger' });
+        }
       }
-    } catch {
-      // La oferta queda en la caché local (pendiente de sincronizar): reflejarla en la UI
-      rawOffers = getStoredOffers();
-      selectedVehicle = fullOffer.vehicle;
-      renderApp();
-      showToast('Guardado localmente. Error al sincronizar con el servidor.', { type: 'danger' });
+    }),
+    onInspectVehicle: inspectVehicle,
+    onAddOfferForVehicle: (vName) => offerModalCtrl.open(null, vName),
+    renderEmptyState: () => {
+      const tmpl = document.getElementById('tmpl-empty-state');
+      if (!tmpl) return null;
+      const clone = tmpl.content.cloneNode(true);
+      clone.querySelector('.empty-add-btn')?.addEventListener('click', openNewOffer);
+      return clone;
     }
+  })
+});
+
+/**
+ * Guarda una oferta y la selecciona; si falla la sincronización, la muestra desde la caché local.
+ * @param {import('./core/types.js').Offer} fullOffer
+ * @param {string} successMessage
+ * @param {boolean} celebrate
+ */
+async function saveOffer(fullOffer, successMessage, celebrate) {
+  try {
+    const offers = await upsertOffer(fullOffer);
+    store.setState({ offers, selectedVehicle: fullOffer.vehicle });
+    showToast(successMessage, { type: 'success' });
+    if (celebrate) triggerConfetti();
+  } catch {
+    // La oferta queda en la caché local (pendiente de sincronizar): reflejarla en la UI
+    store.setState({ offers: getStoredOffers(), selectedVehicle: fullOffer.vehicle });
+    showToast(SYNC_ERROR_MESSAGE, { type: 'danger' });
+  }
+}
+
+offerModalCtrl = initOfferModal({
+  getKnownVehicles: () => getUniqueVehicles(store.getState().offers).map(v => v.name),
+  onSave: (offerData) => {
+    const isNew = !offerData.id;
+    saveOffer(
+      createDefaultOffer(offerData),
+      isNew ? '¡Nueva oferta guardada correctamente!' : 'Oferta actualizada con éxito.',
+      isNew
+    );
   }
 });
 
 const reverseCalcModalCtrl = initReverseCalcModal({
-  onApplyAsOffer: async (computedOffer) => {
+  onApplyAsOffer: (computedOffer) => {
     const fullOffer = createDefaultOffer({
       ...computedOffer,
-      vehicle: selectedVehicle || 'Nuevo vehículo'
+      vehicle: store.getState().selectedVehicle || 'Nuevo vehículo'
     });
-    try {
-      rawOffers = await upsertOffer(fullOffer);
-      selectedVehicle = fullOffer.vehicle;
-      renderApp();
-      showToast('Presupuesto inverso añadido a tus ofertas.', { type: 'success' });
-      triggerConfetti();
-    } catch {
-      // La oferta queda en la caché local (pendiente de sincronizar): reflejarla en la UI
-      rawOffers = getStoredOffers();
-      selectedVehicle = fullOffer.vehicle;
-      renderApp();
-      showToast('Guardado localmente. Error al sincronizar con el servidor.', { type: 'danger' });
-    }
+    saveOffer(fullOffer, 'Presupuesto inverso añadido a tus ofertas.', true);
   }
 });
 
-let renderApp;
+function openNewOffer() {
+  offerModalCtrl.open(null, store.getState().selectedVehicle);
+}
 
-// Gestor de Tema Global
-const themeManager = initThemeManager({
-  onChange: () => renderApp?.()
-});
-
-// Gestor de Pestañas Principales (Mismo Vehículo vs Coches Diferentes)
-const mainTabsNav = initMainTabsNav({
-  onTabChange: () => renderApp?.()
-});
-
-// Gestor de Vistas Pestaña 1 (Tarjetas vs Tabla)
-const viewSwitcher = initViewSwitcher({
-  cardsBtnId: 'view-cards-btn',
-  tableBtnId: 'view-table-btn',
-  initialView: 'cards',
-  onViewChange: () => renderApp?.()
-});
-
-// Gestor de Vistas Pestaña 2 (Tarjetas vs Tabla)
-const crossViewSwitcher = initViewSwitcher({
-  cardsBtnId: 'cross-view-cards-btn',
-  tableBtnId: 'cross-view-table-btn',
-  initialView: 'cards',
-  onViewChange: () => renderApp?.()
-});
-
-// Motor de Renderizado Unificado
-const renderer = createAppRenderer({
-  getOffers: () => rawOffers,
-  getTheme: () => themeManager.getTheme(),
-  getActiveTab: () => mainTabsNav.getActiveTab(),
-  getView: () => viewSwitcher.getView(),
-  getCrossView: () => crossViewSwitcher.getView(),
-  getSelectedVehicle: () => selectedVehicle,
-  setSelectedVehicle: (v) => { selectedVehicle = v; },
-  getSelectedCrossModality: () => selectedCrossModality,
-  setSelectedCrossModality: (m) => { selectedCrossModality = m; },
-  // Pestaña 1
-  vehicleChipsList,
-  offersDisplaySlot,
-  offersCountLabel,
-  btnAddForVehicle,
-  // Pestaña 2
-  crossModalitySelector,
-  crossDisplaySlot,
-  crossCountLabel,
-  // Compartidos
-  analyticsSection,
-  analyticsHeading,
-  analyticsSubtext,
-  costBreakdownCanvas,
-  getCardHandlers: () => ({
-    onEdit: (targetOffer) => {
-      const raw = rawOffers.find(o => o.id === targetOffer.id);
-      offerModalCtrl.open(raw, selectedVehicle);
-    },
-    onSchedule: (targetOffer) => {
-      amortizationModalCtrl.open(targetOffer);
-    },
-    onDelete: async (targetOffer) => {
-      if (confirm(`¿Eliminar la oferta "${targetOffer.title}"?`)) {
-        try {
-          rawOffers = await deleteOffer(targetOffer.id);
-          renderApp();
-          showToast(`Oferta "${targetOffer.title}" eliminada.`, { type: 'info' });
-        } catch {
-          // El borrado queda pendiente de sincronizar: reflejar la caché local en la UI
-          rawOffers = getStoredOffers();
-          renderApp();
-          showToast('Eliminada localmente. Error al sincronizar con el servidor.', { type: 'danger' });
-        }
-      }
-    }
-  }),
-  onInspectVehicle: (vName) => {
-    selectedVehicle = vName;
-    mainTabsNav.setActiveTab(MAIN_TABS.SAME_VEHICLE);
-    renderApp();
-  },
-  onAddOfferForVehicle: (vName) => {
-    offerModalCtrl.open(null, vName);
-  },
-  renderEmptyState: () => {
-    if (!tmplEmptyState) return null;
-    const clone = tmplEmptyState.content.cloneNode(true);
-    const emptyBtn = clone.querySelector('.empty-add-btn');
-    emptyBtn?.addEventListener('click', () => offerModalCtrl.open(null, selectedVehicle));
-    return clone;
-  }
-});
-renderApp = renderer.renderApp;
-
-// Acciones del Header
 initHeader({
-  onNewOffer: () => offerModalCtrl.open(null, selectedVehicle),
+  onNewOffer: openNewOffer,
   onReverseCalc: () => reverseCalcModalCtrl.open()
 });
+document.getElementById('fab-new-offer')?.addEventListener('click', openNewOffer);
 
-fabNewOffer?.addEventListener('click', () => offerModalCtrl.open(null, selectedVehicle));
-
-function triggerConfetti() {
-  confetti({
-    particleCount: 50,
-    spread: 60,
-    origin: { y: 0.7 }
-  });
+// Carga de inicio: caché local inmediata y sincronización con el servidor
+if (store.getState().offers.length > 0) {
+  renderApp();
+} else if (dom.offersDisplaySlot) {
+  dom.offersDisplaySlot.replaceChildren(el('div', { className: 'loading-message', text: 'Cargando presupuestos...' }));
 }
 
-// Carga de inicio
-if (rawOffers.length > 0) {
-  renderApp();
-} else if (offersDisplaySlot) {
-  offersDisplaySlot.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando presupuestos...</div>';
-}
-
-fetchUserOffers().then(offers => {
-  rawOffers = offers;
-  renderApp();
-}).catch(() => {
-  renderApp();
-});
+fetchUserOffers()
+  .then(offers => store.setState({ offers }))
+  .catch(() => renderApp());

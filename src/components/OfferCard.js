@@ -5,6 +5,7 @@
 
 import { OFFER_MODALITIES, getOfferFinanceSubtitle } from '../core/types.js';
 import { formatAprPercent } from '../core/formatters.js';
+import { OFFER_HIGHLIGHTS } from '../core/normalizer.js';
 
 /**
  * Crea una fila de especificación en el desglose de la tarjeta.
@@ -85,7 +86,7 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
   if (offer.highlights && offer.highlights.length) {
     offer.highlights.forEach(hl => {
-      if (!hl.includes('Menor coste total')) {
+      if (hl !== OFFER_HIGHLIGHTS.LOWEST_TOTAL_COST) {
         badgesContainer.appendChild(createBadge(hl, 'badge-info'));
       }
     });

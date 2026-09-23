@@ -273,6 +273,15 @@ export function normalizeOffer(offer) {
 }
 
 /**
+ * Etiquetas de los indicadores destacados que asigna rankOffers.
+ */
+export const OFFER_HIGHLIGHTS = {
+  LOWEST_TOTAL_COST: '🏆 Menor coste total',
+  BEST_TCO: '💎 Mejor valor equiparado (TCO)',
+  LEAST_INTEREST: '📉 Menos intereses pagados'
+};
+
+/**
  * Compara un array de ofertas normalizadas y marca los mejores indicadores.
  * @param {NormalizedOffer[]} normalizedOffers 
  * @returns {Array<NormalizedOffer & { bestIn: string[] }>}
@@ -304,13 +313,13 @@ export function rankOffers(normalizedOffers) {
   return sorted.map(offer => {
     const badges = [];
     if (offer.totalOutOfPocketCost === minTotalCost) {
-      badges.push('🏆 Menor coste total');
+      badges.push(OFFER_HIGHLIGHTS.LOWEST_TOTAL_COST);
     }
     if (hasIncludedServices && (offer.adjustedTcoCost ?? offer.totalOutOfPocketCost) === minTcoCost && offer.totalOutOfPocketCost !== minTotalCost) {
-      badges.push('💎 Mejor valor equiparado (TCO)');
+      badges.push(OFFER_HIGHLIGHTS.BEST_TCO);
     }
     if (offer.totalInterest === minInterest && offer.totalInterest > 0) {
-      badges.push('📉 Menos intereses pagados');
+      badges.push(OFFER_HIGHLIGHTS.LEAST_INTEREST);
     }
 
     return {
