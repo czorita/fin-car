@@ -160,6 +160,14 @@
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
+.form-input:disabled, .form-input.input-derived:disabled {
+  background-color: var(--bg-surface-elevated, rgba(255, 255, 255, 0.04));
+  color: var(--text-secondary);
+  border-style: dashed;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
 .input-addon {
   position: absolute;
   right: 0.85rem;

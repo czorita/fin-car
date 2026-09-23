@@ -70,6 +70,8 @@ export function normalizeOffer(offer) {
       offerPrice,
       isCash: true,
       isEarlyCancellation: false,
+      isFlexible: false,
+      isFlexibleFinance: false,
       downPayment: 0,
       principalFinanced: 0,
       monthlyPayment: 0,
@@ -136,8 +138,17 @@ export function normalizeOffer(offer) {
   const initialCashOut = downPayment + productsUpfront;
 
   if (isEarlyCancellation) {
-    const earlyCalc = calculateEarlyCancellationSettlement(financedPrincipal, tin, contractMonths, cancelMonth, penaltyRate);
-    monthlyPayment = earlyCalc.monthlyPayment;
+    if (offer.manualMonthlyPayment && Number(offer.manualMonthlyPayment) > 0) {
+      monthlyPayment = Number(offer.manualMonthlyPayment);
+      if (effectiveTin <= 0) {
+        const rev = reverseEngineerInterestRate(financedPrincipal, monthlyPayment, contractMonths, 0);
+        effectiveTin = rev.tin;
+      }
+    }
+    const earlyCalc = calculateEarlyCancellationSettlement(financedPrincipal, effectiveTin, contractMonths, cancelMonth, penaltyRate);
+    if (!offer.manualMonthlyPayment || Number(offer.manualMonthlyPayment) <= 0) {
+      monthlyPayment = earlyCalc.monthlyPayment;
+    }
     totalInterest = earlyCalc.totalInterestPaid;
     settlementCapital = earlyCalc.settlementCapital;
     cancellationPenalty = earlyCalc.penaltyAmount;
@@ -222,6 +233,8 @@ export function normalizeOffer(offer) {
     cashPriceReference: vehiclePrice,
     isCash: false,
     isEarlyCancellation,
+    isFlexible,
+    isFlexibleFinance: isFlexible,
     principalFinanced: Number(financedPrincipal.toFixed(2)),
     monthlyPayment,
     totalMonths: months,
@@ -235,6 +248,7 @@ export function normalizeOffer(offer) {
     balloonPayment: balloon,
     effectiveApr: effectiveApr || Number((effectiveTin * 1.05).toFixed(2)), // Si TAE da 0 aproximar
     nominalTin: effectiveTin,
+    tin: effectiveTin,
     totalInterest,
     upfrontPayment: initialCashOut,
     totalFinancedPayments: totalInstallments,

@@ -158,8 +158,8 @@ export function createDefaultOffer(overrides = {}) {
       ? Number(overrides.contractMonths)
       : (overrides.months !== undefined ? Number(overrides.months) : (overrides.modality === OFFER_MODALITIES.EARLY_CANCELLATION ? DEFAULTS.contractMonths : DEFAULTS.months)),
     tin: overrides.tin !== undefined 
-      ? Number(overrides.tin) 
-      : DEFAULTS.tin,
+      ? (overrides.tin === null ? null : Number(overrides.tin)) 
+      : (overrides.manualMonthlyPayment ? null : DEFAULTS.tin),
     manualMonthlyPayment: overrides.manualMonthlyPayment !== undefined 
       ? (overrides.manualMonthlyPayment === null ? null : Number(overrides.manualMonthlyPayment)) 
       : null,

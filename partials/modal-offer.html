@@ -129,27 +129,40 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="loan-tin">
-            TIN anual (%)
-            <span class="helper-icon" title="Tipo de Interés Nominal fijado en el contrato">ⓘ</span>
-          </label>
+        <div class="form-group" id="group-loan-tin">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+            <label class="form-label" for="loan-tin" style="margin-bottom: 0;">
+              TIN anual (%)
+              <span class="helper-icon" title="Tipo de Interés Nominal fijado en el contrato">ⓘ</span>
+            </label>
+            <button type="button" id="btn-unlock-tin" class="btn-link-action" style="display: none; font-size: 0.72rem; color: var(--accent-cyan); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline;" title="Permite introducir el TIN en lugar de la cuota">Editar TIN</button>
+          </div>
           <div class="input-wrapper">
             <input type="text" inputmode="decimal" id="loan-tin" class="form-input has-addon" placeholder="8,5" />
             <span class="input-addon">%</span>
           </div>
+          <span class="form-helper" id="loan-tin-helper" style="font-size: 0.73rem; color: var(--text-muted); display: block; margin-top: 0.2rem; min-height: 1rem;"></span>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="manual-monthly">
-            O cuota ofertada (€)
-            <span class="helper-icon" title="Opcional: Si el comercial te fijó la cuota mensual exacta">ⓘ</span>
-          </label>
+        <div class="form-group" id="group-manual-monthly">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+            <label class="form-label" for="manual-monthly" style="margin-bottom: 0;">
+              O cuota ofertada (€)
+              <span class="helper-icon" title="Opcional: Si el comercial te fijó la cuota mensual exacta">ⓘ</span>
+            </label>
+            <button type="button" id="btn-unlock-monthly" class="btn-link-action" style="display: none; font-size: 0.72rem; color: var(--accent-cyan); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline;" title="Permite fijar la cuota mensual exacta">Editar cuota</button>
+          </div>
           <div class="input-wrapper">
             <input type="text" inputmode="decimal" id="manual-monthly" class="form-input has-addon" placeholder="Autocalcular (ej: 345,50)" />
             <span class="input-addon">€/mes</span>
           </div>
+          <span class="form-helper" id="manual-monthly-helper" style="font-size: 0.73rem; color: var(--text-muted); display: block; margin-top: 0.2rem; min-height: 1rem;"></span>
         </div>
+      </div>
+
+      <!-- Feedback dinámico de sincronización entre TIN y cuota -->
+      <div id="finance-calc-feedback" style="display: none; font-size: 0.78rem; border-radius: var(--radius-sm); padding: 0.45rem 0.75rem; margin-bottom: 0.75rem; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); color: var(--text-secondary);">
+        <span id="finance-calc-feedback-text"></span>
       </div>
 
       <!-- Cuota Final (Multiopción) -->

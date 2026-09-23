@@ -9,7 +9,7 @@ import { OFFER_MODALITIES, getOfferVehicle, getOfferDisplayTitle } from '../core
 import { parseLocaleNumber, formatLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
 import { generateId, ID_PREFIX_OFFER, ID_PREFIX_PRODUCT, ID_PREFIX_SERVICE } from '../core/constants.js';
 import { getVehicleImageUrl, findVehicleInCatalog } from '../core/vehicleCatalog.js';
-import { calculateEarlyCancellationSettlement } from '../core/finance.js';
+import { calculateEarlyCancellationSettlement, calculateMonthlyPayment, reverseEngineerInterestRate } from '../core/finance.js';
 
 /**
  * Inicializa el modal de formulario de oferta.
@@ -75,8 +75,15 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   const loanTinInput = document.getElementById('loan-tin');
   const manualMonthlyInput = document.getElementById('manual-monthly');
   const balloonPaymentInput = document.getElementById('balloon-payment');
+  const btnUnlockTin = document.getElementById('btn-unlock-tin');
+  const btnUnlockMonthly = document.getElementById('btn-unlock-monthly');
+  const loanTinHelper = document.getElementById('loan-tin-helper');
+  const manualMonthlyHelper = document.getElementById('manual-monthly-helper');
+  const financeCalcFeedback = document.getElementById('finance-calc-feedback');
+  const financeCalcFeedbackText = document.getElementById('finance-calc-feedback-text');
 
   let currentModality = OFFER_MODALITIES.STANDARD_FINANCE;
+  let activeFinancingMode = null; // 'tin' | 'monthly' | null
   let linkedProductsState = [];
   let includedServicesState = [];
 
@@ -114,22 +121,137 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     }
   }
 
-  function updateEarlyCancelLiveSummary() {
-    if (currentModality !== OFFER_MODALITIES.EARLY_CANCELLATION) return;
+  function getFinancedPrincipal() {
     const price = parseLocaleNumber(offerPriceInput?.value || 0);
-    const discount = parseLocaleNumber(financeDiscountInput?.value || 0);
+    const discount = currentModality === OFFER_MODALITIES.CASH ? 0 : parseLocaleNumber(financeDiscountInput?.value || 0);
     const downPayment = parseLocaleNumber(downPaymentInput?.value || 0);
     const tradeIn = parseLocaleNumber(tradeInValueInput?.value || 0);
     const productsFinanced = linkedProductsState
       .filter(p => p.financed !== false)
       .reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
     const netVehicle = Math.max(0, price - discount - downPayment - tradeIn);
-    const principal = netVehicle + productsFinanced;
+    return netVehicle + productsFinanced;
+  }
 
+  function syncFinancingInputs(forcedMode = null) {
+    if (forcedMode !== null) {
+      activeFinancingMode = forcedMode;
+    } else {
+      const tinVal = loanTinInput?.value.trim();
+      const monthlyVal = manualMonthlyInput?.value.trim();
+
+      if (activeFinancingMode === 'tin') {
+        if (!tinVal) activeFinancingMode = null;
+      } else if (activeFinancingMode === 'monthly') {
+        if (!monthlyVal) activeFinancingMode = null;
+      } else {
+        if (tinVal && !monthlyVal) {
+          activeFinancingMode = 'tin';
+        } else if (monthlyVal && !tinVal) {
+          activeFinancingMode = 'monthly';
+        } else {
+          activeFinancingMode = null;
+        }
+      }
+    }
+
+    const principal = getFinancedPrincipal();
+    const months = Math.max(1, Math.round(Number(loanMonthsInput?.value) || 60));
+    const balloon = currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE
+      ? parseLocaleNumber(balloonPaymentInput?.value || 0)
+      : 0;
+
+    if (activeFinancingMode === 'tin') {
+      loanTinInput.disabled = false;
+      loanTinInput.classList.remove('input-derived');
+      manualMonthlyInput.disabled = true;
+      manualMonthlyInput.classList.add('input-derived');
+
+      if (btnUnlockTin) btnUnlockTin.style.display = 'none';
+      if (btnUnlockMonthly) btnUnlockMonthly.style.display = 'inline-block';
+
+      if (loanTinHelper) {
+        loanTinHelper.textContent = 'Modo activo: Calculando cuota a partir de este TIN';
+      }
+
+      const tin = parseLocaleNumber(loanTinInput.value);
+      if (principal > 0 && months > 0 && tin >= 0 && loanTinInput.value.trim() !== '') {
+        const derivedCuota = calculateMonthlyPayment(principal, tin, months, balloon);
+        manualMonthlyInput.value = formatLocaleNumber(derivedCuota);
+        if (manualMonthlyHelper) {
+          manualMonthlyHelper.textContent = `Cuota estimada: ${derivedCuota.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €/mes`;
+        }
+        if (financeCalcFeedback && financeCalcFeedbackText) {
+          financeCalcFeedback.style.display = 'block';
+          financeCalcFeedbackText.textContent = `Calculando cuota (${derivedCuota.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €/mes) para ${principal.toLocaleString('es-ES')} € al ${formatLocaleNumber(tin)}% TIN.`;
+        }
+      } else {
+        manualMonthlyInput.value = '';
+        if (manualMonthlyHelper) manualMonthlyHelper.textContent = '';
+        if (financeCalcFeedback) financeCalcFeedback.style.display = 'none';
+      }
+    } else if (activeFinancingMode === 'monthly') {
+      manualMonthlyInput.disabled = false;
+      manualMonthlyInput.classList.remove('input-derived');
+      loanTinInput.disabled = true;
+      loanTinInput.classList.add('input-derived');
+
+      if (btnUnlockMonthly) btnUnlockMonthly.style.display = 'none';
+      if (btnUnlockTin) btnUnlockTin.style.display = 'inline-block';
+
+      if (manualMonthlyHelper) {
+        manualMonthlyHelper.textContent = 'Modo activo: Deduciendo TIN a partir de esta cuota';
+      }
+
+      const cuota = parseLocaleNumber(manualMonthlyInput.value);
+      if (principal > 0 && months > 0 && cuota > 0 && manualMonthlyInput.value.trim() !== '') {
+        const deduced = reverseEngineerInterestRate(principal, cuota, months, balloon);
+        loanTinInput.value = formatLocaleNumber(deduced.tin);
+        if (loanTinHelper) {
+          loanTinHelper.textContent = `TIN deducido: ${deduced.tin.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% (TAE ~ ${deduced.apr.toFixed(2)}%)`;
+        }
+        if (financeCalcFeedback && financeCalcFeedbackText) {
+          financeCalcFeedback.style.display = 'block';
+          financeCalcFeedbackText.textContent = `Interés deducido: TIN ${deduced.tin.toFixed(2)}% | TAE aprox. ${deduced.apr.toFixed(2)}% para cuota de ${cuota.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €/mes.`;
+        }
+      } else {
+        loanTinInput.value = '';
+        if (loanTinHelper) loanTinHelper.textContent = '';
+        if (financeCalcFeedback) financeCalcFeedback.style.display = 'none';
+      }
+    } else {
+      loanTinInput.disabled = false;
+      loanTinInput.classList.remove('input-derived');
+      manualMonthlyInput.disabled = false;
+      manualMonthlyInput.classList.remove('input-derived');
+
+      if (btnUnlockTin) btnUnlockTin.style.display = 'none';
+      if (btnUnlockMonthly) btnUnlockMonthly.style.display = 'none';
+
+      if (loanTinHelper) loanTinHelper.textContent = '';
+      if (manualMonthlyHelper) manualMonthlyHelper.textContent = '';
+      if (financeCalcFeedback) financeCalcFeedback.style.display = 'none';
+    }
+  }
+
+  function updateEarlyCancelLiveSummary() {
+    if (currentModality !== OFFER_MODALITIES.EARLY_CANCELLATION) return;
+    const principal = getFinancedPrincipal();
     const contractMonths = Math.max(1, Math.round(Number(loanMonthsInput?.value) || 84));
     const cancelMonth = Math.max(1, Math.round(Number(earlyCancelMonthInput?.value) || 24));
     const penaltyRate = parseLocaleNumber(earlyCancelPenaltyInput?.value || '1,0');
-    const tin = parseLocaleNumber(loanTinInput?.value || '8,5');
+
+    let tin = parseLocaleNumber(loanTinInput?.value || 0);
+    if (activeFinancingMode === 'monthly' && (!tin || tin <= 0)) {
+      const cuota = parseLocaleNumber(manualMonthlyInput?.value || 0);
+      if (principal > 0 && contractMonths > 0 && cuota > 0) {
+        const deduced = reverseEngineerInterestRate(principal, cuota, contractMonths, 0);
+        tin = deduced.tin;
+      }
+    }
+    if (tin <= 0 && (!loanTinInput?.value || parseLocaleNumber(loanTinInput.value) <= 0)) {
+      tin = 8.5;
+    }
 
     const res = calculateEarlyCancellationSettlement(principal, tin, contractMonths, cancelMonth, penaltyRate);
 
@@ -171,22 +293,73 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
           loanMonthsInput.value = '84';
           updateMonthsUI('84');
         }
-        updateEarlyCancelLiveSummary();
       }
     }
+    syncFinancingInputs();
+    updateEarlyCancelLiveSummary();
   }
 
   offerPriceInput?.addEventListener('input', () => {
     updateNetCalcPriceUI();
+    syncFinancingInputs();
     updateEarlyCancelLiveSummary();
   });
   financeDiscountInput?.addEventListener('input', () => {
     updateNetCalcPriceUI();
+    syncFinancingInputs();
     updateEarlyCancelLiveSummary();
   });
-  downPaymentInput?.addEventListener('input', updateEarlyCancelLiveSummary);
-  tradeInValueInput?.addEventListener('input', updateEarlyCancelLiveSummary);
-  loanTinInput?.addEventListener('input', updateEarlyCancelLiveSummary);
+  downPaymentInput?.addEventListener('input', () => {
+    syncFinancingInputs();
+    updateEarlyCancelLiveSummary();
+  });
+  tradeInValueInput?.addEventListener('input', () => {
+    syncFinancingInputs();
+    updateEarlyCancelLiveSummary();
+  });
+  balloonPaymentInput?.addEventListener('input', () => {
+    syncFinancingInputs();
+    updateEarlyCancelLiveSummary();
+  });
+
+  loanTinInput?.addEventListener('input', () => {
+    activeFinancingMode = loanTinInput.value.trim() ? 'tin' : null;
+    syncFinancingInputs(activeFinancingMode);
+    updateEarlyCancelLiveSummary();
+  });
+
+  manualMonthlyInput?.addEventListener('input', () => {
+    activeFinancingMode = manualMonthlyInput.value.trim() ? 'monthly' : null;
+    syncFinancingInputs(activeFinancingMode);
+    updateEarlyCancelLiveSummary();
+  });
+
+  btnUnlockTin?.addEventListener('click', () => {
+    manualMonthlyInput.value = '';
+    loanTinInput.value = '';
+    loanTinInput.disabled = false;
+    manualMonthlyInput.disabled = false;
+    loanTinInput.classList.remove('input-derived');
+    manualMonthlyInput.classList.remove('input-derived');
+    activeFinancingMode = null;
+    syncFinancingInputs(null);
+    loanTinInput.focus();
+    updateEarlyCancelLiveSummary();
+  });
+
+  btnUnlockMonthly?.addEventListener('click', () => {
+    loanTinInput.value = '';
+    manualMonthlyInput.value = '';
+    loanTinInput.disabled = false;
+    manualMonthlyInput.disabled = false;
+    loanTinInput.classList.remove('input-derived');
+    manualMonthlyInput.classList.remove('input-derived');
+    activeFinancingMode = null;
+    syncFinancingInputs(null);
+    manualMonthlyInput.focus();
+    updateEarlyCancelLiveSummary();
+  });
+
   earlyCancelMonthInput?.addEventListener('input', updateEarlyCancelLiveSummary);
   earlyCancelPenaltyInput?.addEventListener('input', updateEarlyCancelLiveSummary);
 
@@ -241,6 +414,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
 
   loanMonthsInput.addEventListener('input', () => {
     updateMonthsUI(loanMonthsInput.value);
+    syncFinancingInputs();
     updateEarlyCancelLiveSummary();
   });
 
@@ -249,6 +423,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     if (btn && btn.dataset.months) {
       loanMonthsInput.value = btn.dataset.months;
       updateMonthsUI(btn.dataset.months);
+      syncFinancingInputs();
       updateEarlyCancelLiveSummary();
     }
   });
@@ -293,6 +468,8 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         costInp.value = formatLocaleNumber(prod.cost || 0);
         costInp.addEventListener('change', (e) => {
           prod.cost = parseLocaleNumber(e.target.value);
+          syncFinancingInputs();
+          updateEarlyCancelLiveSummary();
         });
       }
 
@@ -300,6 +477,8 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         financedInp.checked = prod.financed !== false;
         financedInp.addEventListener('change', (e) => {
           prod.financed = e.target.checked;
+          syncFinancingInputs();
+          updateEarlyCancelLiveSummary();
         });
       }
 
@@ -307,6 +486,8 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         btnRemove.addEventListener('click', () => {
           linkedProductsState = linkedProductsState.filter(p => p.id !== prod.id);
           renderProductsList();
+          syncFinancingInputs();
+          updateEarlyCancelLiveSummary();
         });
       }
 
@@ -322,6 +503,8 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       financed: true
     });
     renderProductsList();
+    syncFinancingInputs();
+    updateEarlyCancelLiveSummary();
   });
 
   function updateIncludedServicesTotalBadge() {
@@ -423,6 +606,27 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     const isEarlyCancel = currentModality === OFFER_MODALITIES.EARLY_CANCELLATION;
     const cancelMonth = isEarlyCancel ? Math.max(1, Math.round(Number(earlyCancelMonthInput?.value) || 24)) : 0;
     const penaltyRate = isEarlyCancel ? parseLocaleNumber(earlyCancelPenaltyInput?.value || '1,0') : 0;
+    const balloonPayment = parseLocaleNumber(balloonPaymentInput.value);
+    const principal = getFinancedPrincipal();
+
+    let finalTin = parseLocaleNumber(loanTinInput.value);
+    let finalManualMonthly = manualMonthlyInput.value ? parseLocaleNumber(manualMonthlyInput.value) : null;
+
+    if (currentModality !== OFFER_MODALITIES.CASH) {
+      if (activeFinancingMode === 'monthly') {
+        const manualVal = parseLocaleNumber(manualMonthlyInput.value);
+        if (manualVal > 0) {
+          finalManualMonthly = manualVal;
+          const deduced = reverseEngineerInterestRate(principal, manualVal, months, balloonPayment);
+          finalTin = deduced.tin;
+        } else {
+          finalManualMonthly = null;
+        }
+      } else if (activeFinancingMode === 'tin') {
+        finalManualMonthly = null;
+        finalTin = parseLocaleNumber(loanTinInput.value);
+      }
+    }
 
     const offerData = {
       id: idInput.value || generateId(ID_PREFIX_OFFER),
@@ -443,9 +647,9 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       contractMonths: months,
       earlyCancellationMonth: cancelMonth,
       earlyCancellationPenaltyRate: penaltyRate,
-      tin: parseLocaleNumber(loanTinInput.value),
-      manualMonthlyPayment: manualMonthlyInput.value ? parseLocaleNumber(manualMonthlyInput.value) : null,
-      balloonPayment: parseLocaleNumber(balloonPaymentInput.value),
+      tin: finalTin,
+      manualMonthlyPayment: finalManualMonthly,
+      balloonPayment,
       linkedProducts: linkedProductsState.map(p => ({
         ...p,
         cost: parseLocaleNumber(p.cost)
@@ -502,9 +706,17 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         tradeInValueInput.value = formatLocaleNumber(offer.tradeInValue || '');
         loanMonthsInput.value = String(offer.contractMonths || offer.months || 60);
         updateMonthsUI(offer.contractMonths || offer.months || 60);
-        loanTinInput.value = offer.tin !== undefined ? formatLocaleNumber(offer.tin) : '8,5';
-        manualMonthlyInput.value = offer.manualMonthlyPayment ? formatLocaleNumber(offer.manualMonthlyPayment) : '';
         balloonPaymentInput.value = offer.balloonPayment ? formatLocaleNumber(offer.balloonPayment) : '';
+
+        if (offer.manualMonthlyPayment) {
+          manualMonthlyInput.value = formatLocaleNumber(offer.manualMonthlyPayment);
+          loanTinInput.value = '';
+          syncFinancingInputs('monthly');
+        } else {
+          loanTinInput.value = offer.tin !== undefined ? formatLocaleNumber(offer.tin) : '8,5';
+          manualMonthlyInput.value = '';
+          syncFinancingInputs('tin');
+        }
 
         // Campos de cancelación anticipada
         if (earlyCancelMonthInput) {
@@ -555,6 +767,8 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         if (tradeInValueInput) tradeInValueInput.value = '';
         if (manualMonthlyInput) manualMonthlyInput.value = '';
         if (balloonPaymentInput) balloonPaymentInput.value = '';
+        activeFinancingMode = null;
+        syncFinancingInputs(null);
         if (earlyCancelMonthInput) earlyCancelMonthInput.value = '24';
         if (earlyCancelPenaltyInput) earlyCancelPenaltyInput.value = '1,0';
         if (cancelMonthsPills) {

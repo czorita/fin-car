@@ -302,5 +302,83 @@ describe('Normalizador y Veredictos (normalizer.js & verdicts.js)', () => {
     assert.ok(norm.verdict.badge.includes('Ni cancelando compensa'));
     assert.ok(norm.netDifferenceVsCashRef > 0, 'Debe haber un sobrecoste neto frente al contado');
   });
+
+  test('Test 13: Normalización con cuota ofertada manual (sin TIN) en financiación estándar', () => {
+    // 20.000 € precio base, 2.000 € descuento, 3.000 € entrada -> 15.000 € a financiar en 60 meses
+    // Cuota fijada por comercial: 320 €/mes
+    const offer = createDefaultOffer({
+      modality: OFFER_MODALITIES.STANDARD_FINANCE,
+      vehiclePrice: 20000,
+      financeDiscount: 2000,
+      downPayment: 3000,
+      months: 60,
+      tin: null,
+      manualMonthlyPayment: 320
+    });
+
+    const norm = normalizeOffer(offer);
+
+    assert.equal(norm.monthlyPayment, 320, 'La cuota mensual debe ser exactamente la cuota ofertada');
+    assert.equal(norm.manualMonthlyPayment, 320);
+    assert.ok(norm.tin > 0, `El TIN debe deducirse y ser > 0, obtenido: ${norm.tin}`);
+    assert.ok(Math.abs(norm.tin - 10.07) < 0.2, `TIN esperado ~10.07%, obtenido: ${norm.tin}`);
+    assert.ok(norm.totalInterest > 3500 && norm.totalInterest < 4500, `Intereses esperados ~4200€, obtenido: ${norm.totalInterest}`);
+    assert.equal(norm.totalFinancedPayments, 320 * 60);
+    assert.equal(norm.totalOutOfPocketCost, 3000 + (320 * 60));
+  });
+
+  test('Test 14: Normalización con cuota ofertada manual en cancelación anticipada (EARLY_CANCELLATION)', () => {
+    // 25.000 € precio base, 3.000 € descuento, 4.000 € entrada -> 18.000 € financiados a 84 meses
+    // Cuota fijada por comercial: 285 €/mes
+    // Cancelación pactada en mes 24 con penalización del 1%
+    const offer = createDefaultOffer({
+      modality: OFFER_MODALITIES.EARLY_CANCELLATION,
+      vehiclePrice: 25000,
+      financeDiscount: 3000,
+      downPayment: 4000,
+      months: 84,
+      contractMonths: 84,
+      earlyCancellationMonth: 24,
+      earlyCancellationPenaltyRate: 1.0,
+      tin: null,
+      manualMonthlyPayment: 285
+    });
+
+    const norm = normalizeOffer(offer);
+
+    assert.equal(norm.isEarlyCancellation, true);
+    assert.equal(norm.monthlyPayment, 285, 'La cuota mensual regular debe ser 285 €');
+    assert.ok(norm.tin > 0, `El TIN deducido debe ser > 0, obtenido: ${norm.tin}`);
+    // TIN para 18000 a 84m con cuota 285 es ~8.49%
+    assert.ok(Math.abs(norm.tin - 8.49) < 0.1, `TIN esperado ~8.49%, obtenido: ${norm.tin}`);
+    assert.ok(norm.settlementCapital > 13000 && norm.settlementCapital < 15000, `Capital pendiente en mes 24 esperado ~13.9k, obtenido: ${norm.settlementCapital}`);
+    assert.ok(norm.cancellationPenalty > 130 && norm.cancellationPenalty < 155, `Penalización 1% esperada ~140€, obtenida: ${norm.cancellationPenalty}`);
+    assert.ok(norm.totalInterest > 2000, `Intereses pagados en 24 meses deben ser > 2000€ (no 0€), obtenido: ${norm.totalInterest}`);
+    assert.equal(norm.totalMonths, 24);
+  });
+
+  test('Test 15: Normalización con cuota ofertada manual y cuota final (FLEXIBLE_FINANCE)', () => {
+    // 22.000 € financiados en 48 meses con cuota 250 € y balón residual de 12.000 €
+    const offer = createDefaultOffer({
+      modality: OFFER_MODALITIES.FLEXIBLE_FINANCE,
+      vehiclePrice: 24000,
+      financeDiscount: 2000,
+      downPayment: 0,
+      months: 48,
+      balloonPayment: 12000,
+      tin: null,
+      manualMonthlyPayment: 250
+    });
+
+    const norm = normalizeOffer(offer);
+
+    assert.equal(norm.isFlexibleFinance, true);
+    assert.equal(norm.monthlyPayment, 250);
+    assert.ok(norm.tin > 0, `El TIN deducido con balloon debe ser > 0, obtenido: ${norm.tin}`);
+    assert.ok(Math.abs(norm.tin - 2.91) < 0.1, `TIN esperado ~2.91%, obtenido: ${norm.tin}`);
+    assert.equal(norm.balloonPayment, 12000);
+    assert.ok(norm.totalInterest > 0, `Los intereses totales deben ser > 0, obtenido: ${norm.totalInterest}`);
+  });
 });
+
 
