@@ -18,6 +18,9 @@
   .mobile-fab {
     display: block;
   }
+  .btn-link-label {
+    display: none;
+  }
   .segmented-control:not(.view-switcher) {
     grid-template-columns: 1fr;
   }

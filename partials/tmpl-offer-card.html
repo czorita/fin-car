@@ -2,37 +2,53 @@
 <template id="tmpl-offer-card">
   <article class="offer-card">
     <header class="offer-header">
-      <div class="offer-badges"></div>
-      <h2 class="offer-title"></h2>
-      <div class="offer-dealer">
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
-        >
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-        <span class="dealer-text"></span>
+      <div class="offer-header-main">
+        <h2 class="offer-title"></h2>
+        <div class="offer-dealer">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <span class="dealer-text"></span>
+        </div>
       </div>
+      <div class="offer-badges"></div>
     </header>
 
-    <div class="offer-cost-hero">
-      <div class="cost-hero-label">Coste total real</div>
-      <div class="cost-hero-amount">0 €</div>
-      <div class="cost-hero-sub"></div>
+    <!-- Las tres cifras con las que se decide: coste total, cuota y diferencia frente al contado -->
+    <div class="offer-kpis">
+      <div class="offer-kpi offer-kpi--total">
+        <span class="offer-kpi-label">Coste total real</span>
+        <span class="offer-kpi-value cost-hero-amount">0 €</span>
+      </div>
+      <div class="offer-kpi">
+        <span class="offer-kpi-label kpi-monthly-label">Cuota/mes</span>
+        <span class="offer-kpi-value kpi-monthly-value">—</span>
+      </div>
+      <div class="offer-kpi">
+        <span class="offer-kpi-label">vs. contado</span>
+        <span class="offer-kpi-value kpi-vs-cash-value">—</span>
+      </div>
     </div>
+    <p class="cost-hero-sub"></p>
 
     <div class="card-verdict-alert">
       <strong class="verdict-badge-text"></strong>: <span class="verdict-msg-text"></span>
       <button type="button" class="verdict-trap-link" aria-haspopup="dialog">💡 ¿Cómo detectar esta trampa?</button>
     </div>
 
-    <div class="offer-specs-list"></div>
+    <details class="offer-breakdown">
+      <summary class="offer-breakdown-toggle">Ver desglose</summary>
+      <div class="offer-specs-list"></div>
+    </details>
 
     <div class="offer-notes-box">
       <span class="notes-text"></span>
@@ -69,7 +85,7 @@
           <line x1="8" y1="2" x2="8" y2="6" />
           <line x1="3" y1="10" x2="21" y2="10" />
         </svg>
-        Amortización
+        <span class="btn-schedule-text">Amortización</span>
       </button>
       <button class="btn btn-danger-ghost btn-sm btn-delete" title="Eliminar oferta" type="button">
         <svg

@@ -14,11 +14,11 @@
 .cross-card-media {
   position: relative;
   width: calc(100% + 2.5rem);
-  margin: -1.25rem -1.25rem 1.15rem -1.25rem;
-  height: 165px;
+  margin: -1.1rem -1.25rem 0.85rem -1.25rem;
+  height: 110px;
   overflow: hidden;
-  border-top-left-radius: calc(var(--radius-xl) - 1px);
-  border-top-right-radius: calc(var(--radius-xl) - 1px);
+  border-top-left-radius: calc(var(--radius-lg) - 1px);
+  border-top-right-radius: calc(var(--radius-lg) - 1px);
   background: var(--bg-surface-elevated);
 }
 
@@ -32,7 +32,7 @@
 
 .cross-card-img.is-fallback {
   object-fit: contain;
-  padding: 1.5rem;
+  padding: 1rem;
   opacity: 0.55;
 }
 

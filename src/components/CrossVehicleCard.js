@@ -6,7 +6,22 @@
 import { getOfferVehicle } from '../core/types.js';
 import { formatAprPercent } from '../core/formatters.js';
 import { getVehicleImageUrl, FALLBACK_CAR_SVG } from '../core/vehicleCatalog.js';
-import { createIcon } from '../ui/dom.js';
+import { createIcon, el } from '../ui/dom.js';
+
+/**
+ * Crea una de las cifras clave de la tarjeta.
+ * @param {string} label
+ * @param {string} value
+ * @param {string} [extraClass]
+ * @param {string} [valueClass]
+ * @returns {HTMLElement}
+ */
+function createKpi(label, value, extraClass = '', valueClass = '') {
+  return el('div', { className: `offer-kpi ${extraClass}`.trim() }, [
+    el('span', { className: 'offer-kpi-label', text: label }),
+    el('span', { className: `offer-kpi-value ${valueClass}`.trim(), text: value })
+  ]);
+}
 
 /**
  * Crea una fila de especificación para la tarjeta de coche.
@@ -100,40 +115,50 @@ export function createCrossVehicleCardElement(
   dealer.className = 'offer-dealer';
   dealer.textContent = offer.dealer || 'Concesionario sin especificar';
 
+  const headerMain = document.createElement('div');
+  headerMain.className = 'offer-header-main';
+  headerMain.appendChild(title);
+  headerMain.appendChild(dealer);
+  header.appendChild(headerMain);
   header.appendChild(badges);
-  header.appendChild(title);
-  header.appendChild(dealer);
   card.appendChild(header);
 
-  // Hero Cost
-  const hero = document.createElement('div');
-  hero.className = 'offer-cost-hero';
-
-  const heroLabel = document.createElement('div');
-  heroLabel.className = 'cost-hero-label';
-  heroLabel.textContent = 'Coste total real';
-
-  const heroAmount = document.createElement('div');
-  heroAmount.className = 'cost-hero-amount';
-  heroAmount.textContent = `${offer.totalOutOfPocketCost.toLocaleString('es-ES')} €`;
-
-  hero.appendChild(heroLabel);
-  hero.appendChild(heroAmount);
-
-  if (!offer.isCash) {
-    const heroSub = document.createElement('div');
-    heroSub.className = 'cost-hero-sub';
-    if (offer.isEarlyCancellation && offer.isFlexible) {
-      heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} € (cuota final cancelada)`;
-    } else if (offer.isEarlyCancellation) {
-      heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} €`;
-    } else {
-      heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`;
-    }
-    hero.appendChild(heroSub);
+  // Cifras clave: coste total, cuota y diferencia con el coche más barato de la comparativa
+  const cheapest = allRankedOffers.reduce(
+    (min, o) => (!min || o.totalOutOfPocketCost < min.totalOutOfPocketCost ? o : min),
+    null
+  );
+  const diffVsBest = cheapest ? Number((offer.totalOutOfPocketCost - cheapest.totalOutOfPocketCost).toFixed(2)) : 0;
+  let vsBestText = '—';
+  let vsBestClass = '';
+  if (cheapest && cheapest.id === offer.id) {
+    vsBestText = '🏆 Mejor';
+    vsBestClass = 'highlight-save';
+  } else if (cheapest) {
+    vsBestText = `+${diffVsBest.toLocaleString('es-ES')} €`;
+    vsBestClass = diffVsBest > 0 ? 'highlight-trap' : '';
   }
 
-  card.appendChild(hero);
+  card.appendChild(
+    el('div', { className: 'offer-kpis' }, [
+      createKpi('Coste total real', `${offer.totalOutOfPocketCost.toLocaleString('es-ES')} €`, 'offer-kpi--total'),
+      offer.isCash
+        ? createKpi('Pago', 'Único')
+        : createKpi('Cuota/mes', `${offer.monthlyPayment.toLocaleString('es-ES')} €`),
+      createKpi('vs. el mejor', vsBestText, '', vsBestClass)
+    ])
+  );
+
+  if (!offer.isCash) {
+    const upfront = `Entrada ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas`;
+    let planText = upfront;
+    if (offer.isEarlyCancellation) {
+      planText = `${upfront} + finiquito en el mes ${offer.earlyCancellationMonth} de ${offer.finalSettlementPayment.toLocaleString('es-ES')} €`;
+    } else if (offer.balloonPayment > 0) {
+      planText = `${upfront} + cuota final de ${offer.balloonPayment.toLocaleString('es-ES')} €`;
+    }
+    card.appendChild(el('p', { className: 'cost-hero-sub', text: planText }));
+  }
 
   // Specs
   const specs = document.createElement('div');
@@ -228,7 +253,11 @@ export function createCrossVehicleCardElement(
     });
   }
 
-  card.appendChild(specs);
+  const breakdown = el('details', { className: 'offer-breakdown' }, [
+    el('summary', { className: 'offer-breakdown-toggle', text: 'Ver desglose' }),
+    specs
+  ]);
+  card.appendChild(breakdown);
 
   // Actions
   const actions = document.createElement('div');
