@@ -1,8 +1,8 @@
 /**
  * Motor de Renderizado Unificado (renderEngine).
  * Orquesta el ciclo de renderizado de ambas pestañas a partir del estado del store:
- * - Pestaña 1: Mismo Vehículo (carrusel, tarjetas/tabla y desglose).
- * - Pestaña 2: Coches Diferentes (modalidad cruzada, tarjetas/matriz y comparativa).
+ * - Un coche: fila de chips de coches, mejor opción, tarjetas/tabla y desglose.
+ * - Todos los coches: modalidad cruzada, tarjetas/matriz y comparativa.
  * Cada vista vive en src/ui/views/.
  */
 
@@ -31,9 +31,19 @@ import { renderAnalyticsView } from './views/analyticsView.js';
  * @param {() => string} config.getActiveTab
  * @param {() => 'cards'|'table'} config.getView
  * @param {() => 'cards'|'table'} config.getCrossView
+ * @param {(tab: string) => void} [config.setActiveTab] Cambia entre un coche y la comparativa entre coches
  * @param {object} [config.callbacks] Acciones de tarjetas y estados vacíos
  */
-export function createAppRenderer({ store, dom, getTheme, getActiveTab, getView, getCrossView, callbacks = {} }) {
+export function createAppRenderer({
+  store,
+  dom,
+  getTheme,
+  getActiveTab,
+  getView,
+  getCrossView,
+  setActiveTab,
+  callbacks = {}
+}) {
   const trapGuide = initTrapGuideModal();
 
   /**
@@ -61,15 +71,25 @@ export function createAppRenderer({ store, dom, getTheme, getActiveTab, getView,
     const uniqueVehicles = getUniqueVehicles(offers);
     const activeVehicle = resolveActiveVehicle(uniqueVehicles);
 
-    renderVehicleCarousel(dom.vehicleChipsList, uniqueVehicles, activeVehicle, name => {
-      store.setState({ selectedVehicle: name });
+    const activeTab = getActiveTab() || MAIN_TABS.SAME_VEHICLE;
+    const isAllActive = activeTab === MAIN_TABS.CROSS_VEHICLE;
+
+    renderVehicleCarousel(dom.vehicleChipsList, uniqueVehicles, activeVehicle, {
+      isAllActive,
+      onSelect: name => {
+        store.setState({ selectedVehicle: name }, { silent: isAllActive });
+        if (isAllActive) setActiveTab?.(MAIN_TABS.SAME_VEHICLE);
+      },
+      onSelectAll: setActiveTab ? () => setActiveTab(MAIN_TABS.CROSS_VEHICLE) : undefined
     });
+
+    // El selector de modalidad solo aplica a la comparativa entre coches
+    if (dom.crossModalityField) dom.crossModalityField.hidden = !isAllActive;
 
     const rankedVehicleOffers = renderSameVehicleView({
       dom: {
         displaySlot: dom.offersDisplaySlot,
-        countLabel: dom.offersCountLabel,
-        btnAddForVehicle: dom.btnAddForVehicle
+        bestOfferBanner: dom.bestOfferBanner
       },
       normalizedList,
       activeVehicle,
@@ -82,8 +102,7 @@ export function createAppRenderer({ store, dom, getTheme, getActiveTab, getView,
     const rankedCrossOffers = renderCrossVehicleView({
       dom: {
         modalitySelector: dom.crossModalitySelector,
-        displaySlot: dom.crossDisplaySlot,
-        countLabel: dom.crossCountLabel
+        displaySlot: dom.crossDisplaySlot
       },
       normalizedList,
       modality,
@@ -91,7 +110,6 @@ export function createAppRenderer({ store, dom, getTheme, getActiveTab, getView,
       callbacks
     });
 
-    const activeTab = getActiveTab() || MAIN_TABS.SAME_VEHICLE;
     renderAnalyticsView({
       dom: {
         section: dom.analyticsSection,
@@ -109,12 +127,9 @@ export function createAppRenderer({ store, dom, getTheme, getActiveTab, getView,
     return { uniqueVehicles, rankedVehicleOffers, rankedCrossOffers };
   }
 
-  // Botonera de modalidad cruzada
-  dom.crossModalitySelector?.addEventListener('click', e => {
-    const btn = e.target.closest('.segmented-btn');
-    if (btn?.dataset.modality) {
-      store.setState({ selectedCrossModality: btn.dataset.modality });
-    }
+  // Selector de modalidad de la comparativa entre coches
+  dom.crossModalitySelector?.addEventListener('change', e => {
+    store.setState({ selectedCrossModality: /** @type {HTMLSelectElement} */ (e.target).value });
   });
 
   return { renderApp };

@@ -7,40 +7,6 @@
   gap: 0.45rem;
 }
 
-.toolbar-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-#offers-count-label {
-  font-size: 0.92rem;
-  color: var(--text-secondary);
-}
-
-.toolbar-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.view-switcher {
-  width: 220px;
-}
-
-.cross-view-switcher {
-  width: 200px;
-}
-
-#cross-count-label {
-  font-size: 0.92rem;
-  color: var(--text-secondary);
-  margin-bottom: 1.25rem;
-}
-
 #fab-new-offer {
   width: 52px;
   height: 52px;

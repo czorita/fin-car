@@ -48,9 +48,9 @@ export function renderCrossVehicleView({ dom, normalizedList, modality, view, ca
   const { modalitySelector, displaySlot, countLabel } = dom;
   if (!displaySlot) return [];
 
-  modalitySelector?.querySelectorAll('.segmented-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.modality === modality);
-  });
+  if (modalitySelector?.tagName === 'SELECT') {
+    /** @type {HTMLSelectElement} */ (modalitySelector).value = modality;
+  }
 
   if (normalizedList.length === 0) {
     const emptyEl = callbacks.renderEmptyState?.();

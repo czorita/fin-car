@@ -1,124 +1,124 @@
 /**
- * Vista del carrusel fotográfico de vehículos (Pestaña 1: Mismo Vehículo).
+ * Fila compacta de coches: un chip por vehículo (miniatura, nombre y nº de ofertas)
+ * más el chip "Todos los coches", que abre la comparativa entre modelos.
  */
 
 import { getVehicleImageUrl } from '../../core/vehicleCatalog.js';
 import { el, createIcon } from '../dom.js';
 
-/** Desplazamiento horizontal (px) de los botones anterior/siguiente */
-const CAROUSEL_SCROLL_STEP = 240;
-
 /**
- * Genera el elemento de respaldo visual cuando un vehículo no tiene imagen o falla la red.
+ * Crea la miniatura del chip (foto del catálogo o icono de respaldo).
+ * @param {string} name
  * @returns {HTMLElement}
  */
-function createVehicleCardFallback() {
-  return el('div', { className: 'vehicle-card-fallback' }, [createIcon('car')]);
+function createChipThumb(name) {
+  const thumb = el('span', { className: 'vehicle-chip-thumb', attrs: { 'aria-hidden': 'true' } });
+  const imgUrl = getVehicleImageUrl(name);
+  if (imgUrl) {
+    const img = el('img', { attrs: { src: imgUrl, alt: '', loading: 'lazy' } });
+    img.onerror = () => img.replaceWith(createIcon('car'));
+    thumb.appendChild(img);
+  } else {
+    thumb.appendChild(createIcon('car'));
+  }
+  return thumb;
 }
 
 /**
- * Enlaza una sola vez los botones de desplazamiento del carrusel.
- * @param {HTMLElement} track
- */
-function bindCarouselNav(track) {
-  const buttons = [
-    [document.getElementById('btn-vehicle-carousel-prev'), -CAROUSEL_SCROLL_STEP],
-    [document.getElementById('btn-vehicle-carousel-next'), CAROUSEL_SCROLL_STEP]
-  ];
-  buttons.forEach(([btn, step]) => {
-    if (btn && !btn.dataset.bound) {
-      btn.dataset.bound = 'true';
-      btn.addEventListener('click', () => track.scrollBy({ left: step, behavior: 'smooth' }));
-    }
-  });
-}
-
-/**
- * Crea la tarjeta de un vehículo del carrusel.
- * @param {{ name: string, count: number }} vehicle
- * @param {boolean} isActive
- * @param {(name: string) => void} onSelect
+ * Crea un chip seleccionable.
+ * @param {object} options
+ * @param {string} options.label
+ * @param {number} options.count
+ * @param {boolean} options.isActive
+ * @param {HTMLElement} options.thumb
+ * @param {string} options.title
+ * @param {() => void} options.onClick
+ * @param {string} [options.extraClass]
  * @returns {HTMLButtonElement}
  */
-function createVehicleCard(vehicle, isActive, onSelect) {
-  const offersLabel = `${vehicle.count} ${vehicle.count === 1 ? 'oferta' : 'ofertas'}`;
-
-  const media = el('div', { className: 'vehicle-card-media' });
-  const imgUrl = getVehicleImageUrl(vehicle.name);
-  if (imgUrl) {
-    const img = el('img', {
-      className: 'vehicle-card-img',
-      attrs: { src: imgUrl, alt: vehicle.name, loading: 'lazy' }
-    });
-    img.onerror = () => img.replaceWith(createVehicleCardFallback());
-    media.appendChild(img);
-  } else {
-    media.appendChild(createVehicleCardFallback());
-  }
-
-  if (isActive) {
-    media.appendChild(el('span', { className: 'vehicle-card-active-pill' }, [createIcon('check'), ' Activo']));
-  }
-
-  const info = el('div', { className: 'vehicle-card-info' }, [
-    el('h4', { className: 'vehicle-card-name', text: vehicle.name }),
-    el('div', { className: 'vehicle-card-meta' }, [el('span', { className: 'vehicle-card-count', text: offersLabel })])
-  ]);
-
-  const card = el(
+function createChip({ label, count, isActive, thumb, title, onClick, extraClass = '' }) {
+  const chip = el(
     'button',
     {
-      className: `vehicle-carousel-card ${isActive ? 'active' : ''}`,
-      attrs: {
-        type: 'button',
-        'aria-pressed': isActive ? 'true' : 'false',
-        title: `Seleccionar ${vehicle.name} (${offersLabel})`
-      }
+      className: `vehicle-chip ${extraClass} ${isActive ? 'active' : ''}`.replace(/\s+/g, ' ').trim(),
+      attrs: { type: 'button', 'aria-pressed': isActive ? 'true' : 'false', title }
     },
-    [media, info]
+    [
+      thumb,
+      el('span', { className: 'vehicle-chip-name', text: label }),
+      el('span', { className: 'vehicle-chip-count', text: String(count) })
+    ]
   );
-
-  card.addEventListener('click', () => onSelect(vehicle.name));
-  return /** @type {HTMLButtonElement} */ (card);
+  chip.addEventListener('click', onClick);
+  return /** @type {HTMLButtonElement} */ (chip);
 }
 
 /**
- * Renderiza el selector de vehículos activos como carrusel fotográfico.
- * @param {HTMLElement|null} track Contenedor del carrusel
+ * Renderiza la fila de chips de coches.
+ * @param {HTMLElement|null} track Contenedor de los chips
  * @param {Array<{ name: string, count: number }>} uniqueVehicles
  * @param {string|null} currentVehicle
- * @param {(name: string) => void} onSelect
+ * @param {object} options
+ * @param {boolean} [options.isAllActive=false] La comparativa entre coches está abierta
+ * @param {(name: string) => void} options.onSelect
+ * @param {() => void} [options.onSelectAll]
  */
-export function renderVehicleCarousel(track, uniqueVehicles, currentVehicle, onSelect) {
+export function renderVehicleCarousel(
+  track,
+  uniqueVehicles,
+  currentVehicle,
+  { isAllActive = false, onSelect, onSelectAll }
+) {
   if (!track) return;
   track.replaceChildren();
 
   if (uniqueVehicles.length === 0) {
     track.appendChild(
-      el('div', { className: 'vehicle-carousel-empty' }, [
-        el('span', { className: 'vehicle-carousel-empty-icon', text: '🚗' }),
-        el('span', { text: 'Sin vehículos registrados todavía' })
-      ])
+      el('span', { className: 'vehicle-chips-empty', text: 'Aún no hay coches: añade tu primera oferta' })
     );
     return;
   }
 
-  bindCarouselNav(track);
-
   const current = (currentVehicle || '').toLowerCase();
-  let activeCardEl = null;
+  let activeChip = null;
 
   uniqueVehicles.forEach(vehicle => {
-    const isActive = vehicle.name.toLowerCase() === current;
-    const card = createVehicleCard(vehicle, isActive, onSelect);
-    if (isActive) activeCardEl = card;
-    track.appendChild(card);
+    const isActive = !isAllActive && vehicle.name.toLowerCase() === current;
+    const offersLabel = `${vehicle.count} ${vehicle.count === 1 ? 'oferta' : 'ofertas'}`;
+    const chip = createChip({
+      label: vehicle.name,
+      count: vehicle.count,
+      isActive,
+      thumb: createChipThumb(vehicle.name),
+      title: `Ver las ${offersLabel} del ${vehicle.name}`,
+      onClick: () => onSelect(vehicle.name)
+    });
+    if (isActive) activeChip = chip;
+    track.appendChild(chip);
   });
 
-  // Auto-desplazamiento suave para mantener visible el coche activo
-  if (activeCardEl) {
-    setTimeout(() => {
-      activeCardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }, 40);
+  // Comparar entre modelos solo tiene sentido con más de un coche
+  if (uniqueVehicles.length > 1 && onSelectAll) {
+    const allChip = createChip({
+      label: 'Todos los coches',
+      count: uniqueVehicles.length,
+      isActive: isAllActive,
+      thumb: el('span', {
+        className: 'vehicle-chip-thumb vehicle-chip-thumb--all',
+        text: '⇄',
+        attrs: { 'aria-hidden': 'true' }
+      }),
+      title: 'Comparar los coches entre sí en la misma modalidad de pago',
+      onClick: onSelectAll,
+      extraClass: 'vehicle-chip--all'
+    });
+    if (isAllActive) activeChip = allChip;
+    track.appendChild(allChip);
+  }
+
+  // Mantener visible el chip activo cuando la fila tiene scroll horizontal
+  if (activeChip && typeof activeChip.scrollIntoView === 'function') {
+    const chipToShow = activeChip;
+    setTimeout(() => chipToShow.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' }), 40);
   }
 }

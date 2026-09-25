@@ -6,27 +6,42 @@ import { rankOffers, OFFER_HIGHLIGHTS } from '../../core/normalizer.js';
 import { filterOffersByVehicle } from '../../core/multiVehicle.js';
 import { createOfferCardElement } from '../../components/OfferCard.js';
 import { createComparisonTableElement } from '../../components/ComparisonTable.js';
-import { el, setVisible } from '../dom.js';
+import { getOfferFinanceSubtitle } from '../../core/types.js';
+import { el } from '../dom.js';
 
 /**
- * Actualiza el contador "Mostrando N ofertas para X (de M en total)".
- * @param {HTMLElement|null} label
- * @param {number} shown
+ * Franja con la conclusión principal: cuál es la mejor opción del coche y cuánto ahorra frente a la siguiente.
+ * @param {HTMLElement|null|undefined} banner
+ * @param {Array<import('../../core/types.js').NormalizedOffer>} rankedOffers Ofertas ordenadas (la primera es la mejor)
+ * @param {import('../../core/types.js').NormalizedOffer|undefined} bestOffer
  * @param {string|null} vehicle
- * @param {number} total
  */
-function renderCountLabel(label, shown, vehicle, total) {
-  if (!label) return;
-  if (total === 0) {
-    label.replaceChildren('Mostrando ', el('strong', { text: '0' }), ' ofertas');
+function renderBestOfferBanner(banner, rankedOffers, bestOffer, vehicle) {
+  if (!banner) return;
+  if (!bestOffer || rankedOffers.length < 2) {
+    banner.hidden = true;
+    banner.replaceChildren();
     return;
   }
-  label.replaceChildren(
-    'Mostrando ',
-    el('strong', { text: String(shown) }),
-    ' ofertas para ',
-    el('strong', { text: vehicle || 'este vehículo' }),
-    ` (de ${total} en total)`
+
+  const runnerUp = rankedOffers
+    .filter(o => o.id !== bestOffer.id)
+    .reduce((min, o) => (o.totalOutOfPocketCost < min.totalOutOfPocketCost ? o : min));
+  const saving = Math.max(0, Math.round(runnerUp.totalOutOfPocketCost - bestOffer.totalOutOfPocketCost));
+  const dealer = bestOffer.dealer ? ` en ${bestOffer.dealer}` : '';
+
+  banner.hidden = false;
+  banner.replaceChildren(
+    el('span', { className: 'best-offer-icon', text: '🏆', attrs: { 'aria-hidden': 'true' } }),
+    el('span', {}, [
+      `Mejor opción para el ${vehicle || 'coche'}: `,
+      el('strong', { text: `${getOfferFinanceSubtitle(bestOffer)}${dealer}` }),
+      saving > 0 ? ' — pagas ' : '',
+      saving > 0
+        ? el('strong', { className: 'highlight-save', text: `${saving.toLocaleString('es-ES')} € menos` })
+        : '',
+      saving > 0 ? ' que con la siguiente.' : ''
+    ])
   );
 }
 
@@ -35,40 +50,32 @@ function renderCountLabel(label, shown, vehicle, total) {
  * @param {object} params
  * @param {object} params.dom Elementos de la pestaña
  * @param {HTMLElement|null} params.dom.displaySlot
- * @param {HTMLElement|null} params.dom.countLabel
- * @param {HTMLElement|null} params.dom.btnAddForVehicle
+ * @param {HTMLElement|null} [params.dom.bestOfferBanner]
  * @param {Array<import('../../core/types.js').NormalizedOffer>} params.normalizedList
  * @param {string|null} params.activeVehicle
  * @param {'cards'|'table'} params.view
  * @param {object} params.callbacks
  * @param {(offer: object) => object} [params.callbacks.getCardHandlers]
  * @param {(card: HTMLElement, offer: object) => void} [params.callbacks.onCardCreated]
- * @param {(vehicle: string) => void} [params.callbacks.onAddOfferForVehicle]
  * @param {() => Node|null} [params.callbacks.renderEmptyState]
  * @param {{ update: (offers: Array<object>) => void }} [params.trapGuide]
  * @returns {Array<import('../../core/types.js').NormalizedOffer>} Ofertas del vehículo ordenadas
  */
 export function renderSameVehicleView({ dom, normalizedList, activeVehicle, view, callbacks = {}, trapGuide }) {
-  const { displaySlot, countLabel, btnAddForVehicle } = dom;
+  const { displaySlot, bestOfferBanner } = dom;
   if (!displaySlot) return [];
 
   if (normalizedList.length === 0) {
     const emptyEl = callbacks.renderEmptyState?.();
     displaySlot.replaceChildren(...(emptyEl ? [emptyEl] : []));
-    renderCountLabel(countLabel, 0, null, 0);
-    setVisible(btnAddForVehicle, false);
+    renderBestOfferBanner(bestOfferBanner, [], undefined, null);
     return [];
-  }
-
-  if (btnAddForVehicle) {
-    setVisible(btnAddForVehicle, true, 'inline-flex');
-    btnAddForVehicle.onclick = () => callbacks.onAddOfferForVehicle?.(activeVehicle);
   }
 
   const rankedVehicleOffers = rankOffers(filterOffersByVehicle(normalizedList, activeVehicle));
   const bestOffer = rankedVehicleOffers.find(o => o.highlights?.includes(OFFER_HIGHLIGHTS.LOWEST_TOTAL_COST));
 
-  renderCountLabel(countLabel, rankedVehicleOffers.length, activeVehicle, normalizedList.length);
+  renderBestOfferBanner(bestOfferBanner, rankedVehicleOffers, bestOffer, activeVehicle);
 
   // Actualizar modal de trampa (el enlace está en cada tarjeta)
   trapGuide?.update(rankedVehicleOffers);

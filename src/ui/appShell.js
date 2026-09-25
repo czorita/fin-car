@@ -20,12 +20,11 @@ function queryLayout() {
     // Pestaña 1 (Mismo Vehículo)
     vehicleChipsList: byId('vehicle-chips-list'),
     offersDisplaySlot: byId('offers-display-slot'),
-    offersCountLabel: byId('offers-count-label'),
-    btnAddForVehicle: byId('btn-add-for-vehicle'),
+    bestOfferBanner: byId('best-offer-banner'),
     // Pestaña 2 (Coches Diferentes)
-    crossModalitySelector: byId('cross-modality-selector'),
+    crossModalitySelector: byId('cross-modality-select'),
+    crossModalityField: byId('cross-modality-field'),
     crossDisplaySlot: byId('cross-display-slot'),
-    crossCountLabel: byId('cross-count-label'),
     // Compartidos
     analyticsSection: byId('analytics-section'),
     analyticsHeading: byId('analytics-heading'),
@@ -59,22 +58,17 @@ export function createAppShell({ initialOffers = [], createCallbacks }) {
   const rerender = () => renderApp();
 
   const themeManager = initThemeManager({ onChange: rerender });
-  const mainTabsNav = initMainTabsNav({ onTabChange: rerender });
+  // Siempre se arranca mostrando un coche: la comparativa se abre desde el chip "Todos los coches"
+  const mainTabsNav = initMainTabsNav({ initialTab: MAIN_TABS.SAME_VEHICLE, onTabChange: rerender });
   const viewSwitcher = initViewSwitcher({
     cardsBtnId: 'view-cards-btn',
     tableBtnId: 'view-table-btn',
     initialView: 'cards',
     onViewChange: rerender
   });
-  const crossViewSwitcher = initViewSwitcher({
-    cardsBtnId: 'cross-view-cards-btn',
-    tableBtnId: 'cross-view-table-btn',
-    initialView: 'cards',
-    onViewChange: rerender
-  });
 
   /**
-   * Cambia a la Pestaña 1 mostrando el vehículo indicado.
+   * Muestra las ofertas del vehículo indicado (sale de la comparativa entre coches).
    * @param {string} name
    */
   function inspectVehicle(name) {
@@ -89,7 +83,8 @@ export function createAppShell({ initialOffers = [], createCallbacks }) {
     getTheme: () => themeManager.getTheme(),
     getActiveTab: () => mainTabsNav.getActiveTab(),
     getView: () => viewSwitcher.getView(),
-    getCrossView: () => crossViewSwitcher.getView(),
+    getCrossView: () => viewSwitcher.getView(),
+    setActiveTab: tab => mainTabsNav.setActiveTab(tab),
     callbacks: createCallbacks({ store, inspectVehicle })
   });
   renderApp = renderer.renderApp;

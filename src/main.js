@@ -56,7 +56,6 @@ const { store, dom, renderApp } = createAppShell({
       }
     }),
     onInspectVehicle: inspectVehicle,
-    onAddOfferForVehicle: vName => offerModalCtrl.open(null, vName),
     renderEmptyState: () => {
       const tmpl = document.getElementById('tmpl-empty-state');
       if (!tmpl) return null;

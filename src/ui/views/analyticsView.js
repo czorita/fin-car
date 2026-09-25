@@ -34,14 +34,14 @@ export function renderAnalyticsView({ dom, activeTab, offers, activeVehicle, mod
 
   if (heading) {
     heading.textContent = isSameVehicle
-      ? `Desglose financiero — ${activeVehicle || 'Vehículo'}`
-      : `Comparativa de desembolso entre vehículos (${MODALITY_LABELS[modality] || modality})`;
+      ? `Ver desglose visual del coste — ${activeVehicle || 'Vehículo'}`
+      : `Ver desglose visual del coste — todos los coches (${MODALITY_LABELS[modality] || modality})`;
   }
 
   if (subtext) {
     subtext.textContent = isSameVehicle
-      ? `Compara qué parte del importe final de cada oferta de ${activeVehicle} corresponde al precio neto y cuánto se pierde en intereses bancarios o comisiones.`
-      : 'Comparación visual directa del coste total real y su composición para cada modelo evaluado bajo las mismas condiciones.';
+      ? 'Qué parte del coste final es el coche y cuánto se va en intereses, comisiones y seguros.'
+      : 'Coste total real y su composición para cada coche en la misma modalidad de pago.';
   }
 
   if (canvas) {
