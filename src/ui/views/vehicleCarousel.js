@@ -72,12 +72,10 @@ export function renderVehicleCarousel(
   if (!track) return;
   track.replaceChildren();
 
-  if (uniqueVehicles.length === 0) {
-    track.appendChild(
-      el('span', { className: 'vehicle-chips-empty', text: 'Aún no hay coches: añade tu primera oferta' })
-    );
-    return;
-  }
+  // Sin coches la franja no aporta nada: el estado vacío ya invita a crear la primera oferta
+  const bar = track.closest('.vehicle-bar');
+  if (bar) /** @type {HTMLElement} */ (bar).hidden = uniqueVehicles.length === 0;
+  if (uniqueVehicles.length === 0) return;
 
   const current = (currentVehicle || '').toLowerCase();
   let activeChip = null;

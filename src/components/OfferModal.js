@@ -1,18 +1,31 @@
 /**
- * Controlador del Modal de Oferta (Creación y Edición).
- * Orquesta los paneles del formulario declarado en partials/modal-offer.html:
- * - Pares enlazados entrada ↔ capital financiado y TIN ↔ cuota (offerModal/derivedPair.js).
- * - Cancelación anticipada (offerModal/earlyCancellationPanel.js).
- * - Productos vinculados y servicios incluidos (offerModal/editableList.js).
- * - Serialización pura del formulario (offerModal/formSerializer.js).
+ * Controlador del Modal de Oferta (Creación y Edición) como asistente en 3 pasos:
+ * 1. Coche · 2. Pago · 3. Letra pequeña (opcional), con un resumen en vivo del coste real.
+ *
+ * Los datos se introducen tal cual los da el concesionario y el resto se calcula:
+ * - Escenario "Entrada + cuotas" o "Importe a financiar + cuotas" (par entrada ↔ capital financiado).
+ * - Cuota mensual o TIN (par TIN ↔ cuota), con o sin cuota final.
+ * La modalidad guardada se deduce (deriveModality): contado, lineal, flexible (hay cuota final)
+ * o cancelación anticipada (interruptor "Pienso cancelar antes de tiempo").
+ *
+ * Reutiliza sin cambios el motor de cálculo del formulario:
+ * - Pares enlazados (offerModal/derivedPair.js), cancelación anticipada (offerModal/earlyCancellationPanel.js),
+ *   listas editables (offerModal/editableList.js) y serialización pura (offerModal/formSerializer.js).
  * Admite comas decimales en todos los campos numéricos mediante parseLocaleNumber.
  */
 
-import { OFFER_MODALITIES } from '../core/types.js';
-import { parseLocaleNumber, parseLocaleRate, formatLocaleNumber, formatMonthsDuration } from '../core/formatters.js';
+import { OFFER_MODALITIES, createDefaultOffer } from '../core/types.js';
+import {
+  parseLocaleNumber,
+  parseLocaleRate,
+  formatLocaleNumber,
+  formatMonthsDuration,
+  formatAprPercent
+} from '../core/formatters.js';
 import { generateId, ID_PREFIX_PRODUCT, ID_PREFIX_SERVICE, DEFAULTS } from '../core/constants.js';
 import { getVehicleImageUrl } from '../core/vehicleCatalog.js';
 import { calculateMonthlyPayment, reverseEngineerInterestRate } from '../core/finance.js';
+import { normalizeOffer } from '../core/normalizer.js';
 import { setVisible, el } from '../ui/dom.js';
 import { createDerivedPair } from './offerModal/derivedPair.js';
 import { createEarlyCancellationPanel } from './offerModal/earlyCancellationPanel.js';
@@ -20,20 +33,25 @@ import { createEditableList } from './offerModal/editableList.js';
 import {
   computeFinancedPrincipal,
   computeNetBeforeDownPayment,
+  deriveModality,
   formValuesToOffer,
+  modalityToPaymentChoice,
   offerToFormValues,
   parseMonths
 } from './offerModal/formSerializer.js';
 
-/** Plazos que se proponen al cambiar de modalidad si el campo está vacío o con el plazo por defecto */
+/** Plazo que se propone al activar la cancelación anticipada si el campo está vacío */
 const EARLY_CANCELLATION_DEFAULT_MONTHS = '84';
-const FLEXIBLE_DEFAULT_MONTHS = '48';
 
 /** Producto vinculado y servicio incluido que se añaden por defecto */
 const NEW_LINKED_PRODUCT = { name: 'Seguro de protección de pagos', cost: 350, financed: true };
 const NEW_CUSTOM_SERVICE = { name: 'Mantenimiento / Seguro oficial', marketValue: 500 };
 
 const TWO_DECIMALS = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+const TOTAL_STEPS = 3;
+
+/** @param {number} value */
+const euros = value => `${Number(value || 0).toLocaleString('es-ES')} €`;
 
 /**
  * Localiza los elementos del formulario de oferta.
@@ -47,9 +65,53 @@ function queryElements() {
     modalTitle: byId('modal-offer-title'),
     btnClose: byId('btn-close-offer-modal'),
     btnCancel: byId('btn-cancel-offer'),
-    modalitySelector: byId('modality-selector'),
+    // Asistente
+    wizardProgress: byId('wizard-progress'),
+    btnPrev: byId('btn-wizard-prev'),
+    btnNext: byId('btn-wizard-next'),
+    // Paso 1
+    idInput: byId('offer-id'),
+    vehicleInput: byId('offer-vehicle'),
+    vehiclesDatalist: byId('vehicles-datalist'),
+    vehicleAutoPreview: byId('vehicle-auto-preview'),
+    imageThumb: byId('vehicle-image-thumb'),
+    imagePlaceholder: byId('vehicle-image-placeholder'),
+    dealerInput: byId('offer-dealer'),
+    notesInput: byId('offer-notes'),
+    notesDisclosure: byId('notes-disclosure'),
+    // Paso 2
+    paymentType: byId('payment-type'),
+    offerPriceLabel: byId('offer-price-label'),
+    offerPriceHelp: byId('offer-price-help'),
+    groupFinanceDiscount: byId('group-finance-discount'),
+    offerPriceInput: byId('offer-price'),
+    financeDiscountInput: byId('finance-discount'),
+    cashRefSummaryText: byId('cash-ref-summary-text'),
+    tradeInDisclosure: byId('trade-in-disclosure'),
+    tradeInValueInput: byId('trade-in-value'),
     financeFieldsContainer: byId('finance-fields-container'),
-    flexibleBalloonContainer: byId('flexible-balloon-container'),
+    financingScenario: byId('financing-scenario'),
+    groupDownPayment: byId('group-down-payment'),
+    groupFinancedAmount: byId('group-financed-amount'),
+    downPaymentInput: byId('down-payment'),
+    financedAmountInput: byId('financed-amount'),
+    downPaymentHelper: byId('down-payment-helper'),
+    financedAmountHelper: byId('financed-amount-helper'),
+    loanMonthsInput: byId('loan-months'),
+    loanMonthsBadge: byId('loan-months-badge'),
+    loanMonthsPills: byId('loan-months-pills'),
+    groupManualMonthly: byId('group-manual-monthly'),
+    groupLoanTin: byId('group-loan-tin'),
+    loanTinInput: byId('loan-tin'),
+    manualMonthlyInput: byId('manual-monthly'),
+    loanTinHelper: byId('loan-tin-helper'),
+    manualMonthlyHelper: byId('manual-monthly-helper'),
+    toggleRateModeBtn: byId('toggle-rate-mode'),
+    balloonPaymentInput: byId('balloon-payment'),
+    financeCalcFeedback: byId('finance-calc-feedback'),
+    financeCalcFeedbackText: byId('finance-calc-feedback-text'),
+    scenarioDerivedText: byId('scenario-derived-text'),
+    cancelEarlyToggle: byId('cancel-early-toggle'),
     earlyCancellationContainer: byId('early-cancellation-container'),
     earlyCancelMonthInput: byId('early-cancel-month'),
     cancelMonthsPills: byId('cancel-months-pills'),
@@ -61,52 +123,26 @@ function queryElements() {
     cancelSummaryPenalty: byId('cancel-summary-penalty'),
     cancelSummarySettlement: byId('cancel-summary-settlement'),
     cancelSummarySaved: byId('cancel-summary-saved'),
+    // Paso 3
+    linkedProductsSection: byId('linked-products-section'),
     productsListContainer: byId('linked-products-list'),
-    groupDownPayment: byId('group-down-payment'),
     btnAddProduct: byId('btn-add-product'),
     tmplProduct: byId('tmpl-linked-product'),
     includedServicesContainer: byId('included-services-list'),
     includedServicesTotalBadge: byId('included-services-total-badge'),
     btnAddCustomService: byId('btn-add-custom-service'),
     tmplIncludedService: byId('tmpl-included-service'),
-    idInput: byId('offer-id'),
-    vehicleInput: byId('offer-vehicle'),
-    vehiclesDatalist: byId('vehicles-datalist'),
-    vehicleAutoPreview: byId('vehicle-auto-preview'),
-    imageThumb: byId('vehicle-image-thumb'),
-    imagePlaceholder: byId('vehicle-image-placeholder'),
-    dealerInput: byId('offer-dealer'),
-    notesInput: byId('offer-notes'),
-    priceFieldsContainer: byId('price-fields-container'),
-    groupFinanceDiscount: byId('group-finance-discount'),
-    offerPriceInput: byId('offer-price'),
-    financeDiscountInput: byId('finance-discount'),
-    netCalcPriceIndicator: byId('net-calc-price-indicator'),
-    netCalcPriceLabel: byId('net-calc-price-label'),
-    netCalcPriceVal: byId('net-calc-price-val'),
-    cashRefSummaryBox: byId('cash-ref-summary-box'),
-    cashRefSummaryText: byId('cash-ref-summary-text'),
-    downPaymentFieldsContainer: byId('down-payment-fields-container'),
-    downPaymentInput: byId('down-payment'),
-    financedAmountInput: byId('financed-amount'),
-    btnUnlockDown: byId('btn-unlock-down'),
-    btnUnlockFinanced: byId('btn-unlock-financed'),
-    downPaymentHelper: byId('down-payment-helper'),
-    financedAmountHelper: byId('financed-amount-helper'),
-    tradeInValueInput: byId('trade-in-value'),
-    loanMonthsInput: byId('loan-months'),
-    loanMonthsBadge: byId('loan-months-badge'),
-    loanMonthsPills: byId('loan-months-pills'),
-    loanTinInput: byId('loan-tin'),
-    manualMonthlyInput: byId('manual-monthly'),
-    balloonPaymentInput: byId('balloon-payment'),
-    flexibleCancelEarly: byId('flexible-cancel-early'),
-    btnUnlockTin: byId('btn-unlock-tin'),
-    btnUnlockMonthly: byId('btn-unlock-monthly'),
-    loanTinHelper: byId('loan-tin-helper'),
-    manualMonthlyHelper: byId('manual-monthly-helper'),
-    financeCalcFeedback: byId('finance-calc-feedback'),
-    financeCalcFeedbackText: byId('finance-calc-feedback-text')
+    // Resumen en vivo
+    liveSummaryEmpty: byId('live-summary-empty'),
+    liveSummaryList: byId('live-summary-list'),
+    liveTotal: byId('live-total'),
+    liveMonthly: byId('live-monthly'),
+    liveDown: byId('live-down'),
+    liveFinanced: byId('live-financed'),
+    liveRates: byId('live-rates'),
+    liveInterest: byId('live-interest'),
+    liveVsCash: byId('live-vs-cash'),
+    liveVerdict: byId('live-verdict')
   };
 }
 
@@ -115,13 +151,23 @@ function queryElements() {
  * @param {object} options
  * @param {Function} options.onSave
  * @param {() => Array<string>} [options.getKnownVehicles]
- * @returns {{ open: (offer?: any, defaultVehicle?: string) => void, close: () => void }}
+ * @returns {{
+ *   open: (offer?: any, defaultVehicle?: string|null, openOptions?: { rateMode?: 'tin'|'monthly', step?: number }) => void,
+ *   close: () => void
+ * }}
  */
 export function initOfferModal({ onSave, getKnownVehicles }) {
   const els = queryElements();
   const { dialog, form } = els;
 
+  /** @type {'cash'|'finance'} */
+  let payType = 'finance';
+  /** Campo del par entrada ↔ capital financiado que introduce el usuario */
+  let scenario = 'down';
+  /** Campo del par TIN ↔ cuota que introduce el usuario */
+  let rateMode = 'monthly';
   let currentModality = OFFER_MODALITIES.STANDARD_FINANCE;
+  let currentStep = 1;
 
   // ---------------------------------------------------------------------------
   // Lectura de valores del formulario
@@ -143,12 +189,13 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
       tin: els.loanTinInput.value,
       manualMonthly: els.manualMonthlyInput.value,
       balloonPayment: els.balloonPaymentInput.value,
-      cancelEarly: Boolean(els.flexibleCancelEarly?.checked),
+      cancelEarly: isCancelEarly(),
       earlyCancelMonth: els.earlyCancelMonthInput?.value || '',
       earlyCancelPenalty: els.earlyCancelPenaltyInput?.value || ''
     };
   }
 
+  const isCancelEarly = () => payType === 'finance' && Boolean(els.cancelEarlyToggle?.checked);
   const getLinkedProducts = () => productsList.getItems();
   const getFinancedPrincipal = () =>
     computeFinancedPrincipal({ ...readFormValues(), linkedProducts: getLinkedProducts() });
@@ -157,48 +204,48 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE ? parseLocaleNumber(els.balloonPaymentInput?.value || 0) : 0;
 
   // ---------------------------------------------------------------------------
-  // Paneles
+  // Paneles de cálculo (motor sin cambios)
   // ---------------------------------------------------------------------------
 
   const downPaymentPair = createDerivedPair({
     first: {
       mode: 'down',
       input: els.downPaymentInput,
-      unlockBtn: els.btnUnlockDown,
+      unlockBtn: null,
       helper: els.downPaymentHelper,
-      activeHelperText: 'Modo activo: Calculando capital financiado',
+      activeHelperText: '',
       derive: () => {
         const price = parseLocaleNumber(els.offerPriceInput?.value || 0);
         if (!(price > 0 && els.downPaymentInput.value.trim() !== '')) return null;
         const netBeforeDown = computeNetBeforeDownPayment({ ...readFormValues(), linkedProducts: getLinkedProducts() });
         const fin = Math.max(0, netBeforeDown - parseLocaleNumber(els.downPaymentInput.value));
-        return { value: formatLocaleNumber(fin), helperText: `Capital a financiar: ${fin.toLocaleString('es-ES')} €` };
+        return { value: formatLocaleNumber(fin), helperText: '' };
       }
     },
     second: {
       mode: 'financed',
       input: els.financedAmountInput,
-      unlockBtn: els.btnUnlockFinanced,
+      unlockBtn: null,
       helper: els.financedAmountHelper,
-      activeHelperText: 'Modo activo: Calculando entrada requerida',
+      activeHelperText: '',
       derive: () => {
         const price = parseLocaleNumber(els.offerPriceInput?.value || 0);
         if (!(price > 0 && els.financedAmountInput.value.trim() !== '')) return null;
         const netBeforeDown = computeNetBeforeDownPayment({ ...readFormValues(), linkedProducts: getLinkedProducts() });
         const down = Math.max(0, netBeforeDown - parseLocaleNumber(els.financedAmountInput.value));
-        return { value: formatLocaleNumber(down), helperText: `Entrada calculada: ${down.toLocaleString('es-ES')} €` };
+        return { value: formatLocaleNumber(down), helperText: '' };
       }
     },
-    onChange: () => recalculate({ skipDownPayment: true })
+    onChange: () => recalculate()
   });
 
   const financingPair = createDerivedPair({
     first: {
       mode: 'tin',
       input: els.loanTinInput,
-      unlockBtn: els.btnUnlockTin,
+      unlockBtn: null,
       helper: els.loanTinHelper,
-      activeHelperText: 'Modo activo: Calculando cuota a partir de este TIN',
+      activeHelperText: '',
       derive: () => {
         const principal = getFinancedPrincipal();
         const months = getMonths();
@@ -208,17 +255,17 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         const cuotaText = cuota.toLocaleString('es-ES', TWO_DECIMALS);
         return {
           value: formatLocaleNumber(cuota),
-          helperText: `Cuota estimada: ${cuotaText} €/mes`,
-          feedback: `Calculando cuota (${cuotaText} €/mes) para ${principal.toLocaleString('es-ES')} € al ${formatLocaleNumber(tin)}% TIN.`
+          helperText: '',
+          feedback: `Cuota calculada: ${cuotaText} €/mes al ${formatLocaleNumber(tin)} % TIN.`
         };
       }
     },
     second: {
       mode: 'monthly',
       input: els.manualMonthlyInput,
-      unlockBtn: els.btnUnlockMonthly,
+      unlockBtn: null,
       helper: els.manualMonthlyHelper,
-      activeHelperText: 'Modo activo: Deduciendo TIN a partir de esta cuota',
+      activeHelperText: '',
       derive: () => {
         const principal = getFinancedPrincipal();
         const months = getMonths();
@@ -227,19 +274,18 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
         const deduced = reverseEngineerInterestRate(principal, cuota, months, getBalloon());
         return {
           value: formatLocaleNumber(deduced.tin),
-          helperText: `TIN deducido: ${deduced.tin.toLocaleString('es-ES', TWO_DECIMALS)}% (TAE ~ ${deduced.apr.toFixed(2)}%)`,
-          feedback: `Interés deducido: TIN ${deduced.tin.toFixed(2)}% | TAE aprox. ${deduced.apr.toFixed(2)}% para cuota de ${cuota.toLocaleString('es-ES', TWO_DECIMALS)} €/mes.`
+          helperText: '',
+          feedback: `Interés deducido de la cuota: TIN ${deduced.tin.toLocaleString('es-ES', TWO_DECIMALS)} % · TAE ≈ ${deduced.apr.toLocaleString('es-ES', TWO_DECIMALS)} %.`
         };
       }
     },
-    onChange: () => recalculate({ skipFinancing: true })
+    onChange: () => recalculate()
   });
 
   const earlyCancellationPanel = createEarlyCancellationPanel(els, {
     getMode: () => ({
       isEarlyCancel: currentModality === OFFER_MODALITIES.EARLY_CANCELLATION,
-      isFlexibleEarly:
-        currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE && Boolean(els.flexibleCancelEarly?.checked)
+      isFlexibleEarly: currentModality === OFFER_MODALITIES.FLEXIBLE_FINANCE && isCancelEarly()
     }),
     getPrincipal: getFinancedPrincipal,
     getFinancingMode: () => financingPair.getMode(),
@@ -251,7 +297,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     template: els.tmplProduct,
     rowSelector: '.linked-product-row',
     removeSelector: '.btn-remove-prod, .btn-remove-product',
-    emptyText: 'No hay productos vinculados obligatorios.',
+    emptyText: 'Nada obligatorio.',
     fields: [
       { selector: '.prod-name, .product-name', prop: 'name', kind: 'text' },
       { selector: '.prod-cost, .product-cost', prop: 'cost', kind: 'number' },
@@ -265,12 +311,15 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     template: els.tmplIncludedService,
     rowSelector: '.included-service-row',
     removeSelector: '.btn-remove-service',
-    emptyText: 'Sin servicios bonificados añadidos (ej. mantenimiento, seguro o garantía).',
+    emptyText: 'Nada incluido de regalo.',
     fields: [
       { selector: '.service-name', prop: 'name', kind: 'text' },
       { selector: '.service-value', prop: 'marketValue', kind: 'number' }
     ],
-    onChange: updateIncludedServicesTotalBadge
+    onChange: () => {
+      updateIncludedServicesTotalBadge();
+      updateLiveSummary();
+    }
   });
 
   // ---------------------------------------------------------------------------
@@ -285,24 +334,39 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     if (totalVal > 0) badge.textContent = `🎁 ${totalVal.toLocaleString('es-ES')} € en servicios`;
   }
 
-  function updateNetCalcPriceUI() {
-    const isCash = currentModality === OFFER_MODALITIES.CASH;
+  /**
+   * Marca la opción activa de un grupo de botones.
+   * @param {HTMLElement|null} group
+   * @param {string} attr Atributo data-* que identifica cada opción
+   * @param {string} value
+   */
+  function markActive(group, attr, value) {
+    group?.querySelectorAll(`[data-${attr}]`).forEach(btn => {
+      const isActive = btn.getAttribute(`data-${attr}`) === value;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+  }
+
+  function updatePriceUI() {
+    const isCash = payType === 'cash';
+    if (els.offerPriceLabel) {
+      els.offerPriceLabel.textContent = isCash ? 'Precio al contado *' : 'Precio final financiado *';
+    }
+    if (els.offerPriceHelp) {
+      els.offerPriceHelp.textContent = isCash
+        ? 'Lo que pagas por el coche.'
+        : 'El que te da el concesionario, con el descuento por financiar ya aplicado.';
+    }
     setVisible(els.groupFinanceDiscount, !isCash);
-    setVisible(els.netCalcPriceIndicator, !isCash, 'flex');
-    els.priceFieldsContainer?.classList.toggle('price-fields--single', isCash);
-    if (isCash) return;
+    if (isCash || !els.cashRefSummaryText) return;
 
     const price = parseLocaleNumber(els.offerPriceInput?.value || 0);
     const discount = parseLocaleNumber(els.financeDiscountInput?.value || 0);
-
-    if (els.netCalcPriceVal) els.netCalcPriceVal.textContent = `${price.toLocaleString('es-ES')} €`;
-    if (els.netCalcPriceLabel) els.netCalcPriceLabel.textContent = 'Precio final financiado:';
-    if (els.cashRefSummaryBox && els.cashRefSummaryText) {
-      setVisible(els.cashRefSummaryBox, discount > 0);
-      if (discount > 0) {
-        els.cashRefSummaryText.textContent = `Equivalente al contado: ${(price + discount).toLocaleString('es-ES')} € (+${discount.toLocaleString('es-ES')} € descuento prometido)`;
-      }
-    }
+    els.cashRefSummaryText.textContent =
+      discount > 0 && price > 0
+        ? `Equivalente al contado: ${euros(price + discount)} (+${euros(discount)} de descuento por financiar)`
+        : 'Sirve para calcular el precio equivalente al contado.';
   }
 
   /**
@@ -316,86 +380,182 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     });
   }
 
-  /**
-   * Muestra el resultado del par TIN/cuota en la caja de feedback.
-   * @param {{ feedback?: string }|null} result
-   */
-  function updateFinanceFeedback(result) {
-    setVisible(els.financeCalcFeedback, Boolean(result));
-    if (result && els.financeCalcFeedbackText) els.financeCalcFeedbackText.textContent = result.feedback;
+  /** Muestra solo el campo que introduce el usuario en cada par; el otro se calcula. */
+  function updateScenarioUI() {
+    markActive(els.financingScenario, 'scenario', scenario);
+    setVisible(els.groupDownPayment, scenario === 'down');
+    setVisible(els.groupFinancedAmount, scenario === 'financed');
+
+    setVisible(els.groupManualMonthly, rateMode === 'monthly');
+    setVisible(els.groupLoanTin, rateMode === 'tin');
+    if (els.toggleRateModeBtn) {
+      els.toggleRateModeBtn.textContent =
+        rateMode === 'monthly' ? '¿Te han dado el TIN en vez de la cuota?' : '¿Te han dado la cuota en vez del TIN?';
+    }
   }
 
   /**
-   * Recalcula todos los campos derivados y resúmenes.
-   * @param {object} [options]
-   * @param {boolean} [options.skipDownPayment] El usuario acaba de editar el par entrada/financiado
-   * @param {boolean} [options.skipFinancing] El usuario acaba de editar el par TIN/cuota
+   * Texto con lo que se ha calculado a partir de lo introducido.
+   * @param {{ feedback?: string }|null} financingResult
    */
-  function recalculate({ skipDownPayment = false, skipFinancing = false } = {}) {
-    updateNetCalcPriceUI();
-    if (!skipDownPayment) downPaymentPair.sync();
-    const financingResult = skipFinancing ? financingPair.sync(financingPair.getMode()) : financingPair.sync();
-    updateFinanceFeedback(financingResult);
-    earlyCancellationPanel.update();
+  function updateDerivedFeedback(financingResult) {
+    const derivedValue = scenario === 'down' ? els.financedAmountInput?.value : els.downPaymentInput?.value;
+    const derivedText = derivedValue
+      ? scenario === 'down'
+        ? `→ Financias ${euros(parseLocaleNumber(derivedValue))}.`
+        : `→ Entrada ${euros(parseLocaleNumber(derivedValue))}.`
+      : '';
+    if (els.scenarioDerivedText) els.scenarioDerivedText.textContent = derivedText;
+    if (els.financeCalcFeedbackText) els.financeCalcFeedbackText.textContent = financingResult?.feedback || '';
+    setVisible(els.financeCalcFeedback, Boolean(derivedText || financingResult?.feedback), 'flex');
   }
 
-  function updateModalityUI(modality) {
-    currentModality = modality;
-    const isCash = modality === OFFER_MODALITIES.CASH;
-    els.modalitySelector.querySelectorAll('.segmented-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.val === modality);
-    });
-
+  function updatePaymentUI() {
+    const isCash = payType === 'cash';
+    markActive(els.paymentType, 'pay', payType);
     setVisible(els.financeFieldsContainer, !isCash);
-    setVisible(els.downPaymentFieldsContainer, !isCash, 'grid');
-    setVisible(els.groupDownPayment, !isCash);
+    setVisible(els.linkedProductsSection, !isCash);
     // Un campo oculto no puede ser obligatorio: bloquearía el envío del formulario en contado
     els.loanMonthsInput.required = !isCash;
+    setVisible(els.earlyCancellationContainer, isCancelEarly());
+    updateScenarioUI();
+  }
 
-    if (isCash) {
-      els.downPaymentInput.value = '0';
-      if (els.financedAmountInput) els.financedAmountInput.value = '0';
+  /**
+   * Recalcula la modalidad, los campos derivados y los resúmenes.
+   */
+  function recalculate() {
+    currentModality = deriveModality({
+      payType,
+      balloonPayment: els.balloonPaymentInput.value,
+      cancelEarly: isCancelEarly()
+    });
+    updatePriceUI();
+    if (payType === 'cash') {
+      updateDerivedFeedback(null);
     } else {
-      if ((els.downPaymentInput.value === '0' || !els.downPaymentInput.value) && !els.financedAmountInput?.value) {
-        els.downPaymentInput.value = String(DEFAULTS.downPayment);
-      }
+      downPaymentPair.sync(scenario);
+      updateDerivedFeedback(financingPair.sync(rateMode));
+      earlyCancellationPanel.update();
+    }
+    updateLiveSummary();
+  }
 
-      setVisible(els.flexibleBalloonContainer, modality === OFFER_MODALITIES.FLEXIBLE_FINANCE);
-      const showEarlyContainer =
-        modality === OFFER_MODALITIES.EARLY_CANCELLATION ||
-        (modality === OFFER_MODALITIES.FLEXIBLE_FINANCE && Boolean(els.flexibleCancelEarly?.checked));
-      setVisible(els.earlyCancellationContainer, showEarlyContainer);
-
-      const monthsValue = els.loanMonthsInput.value;
-      if (
-        modality === OFFER_MODALITIES.EARLY_CANCELLATION &&
-        (!monthsValue || monthsValue === String(DEFAULTS.months))
-      ) {
-        els.loanMonthsInput.value = EARLY_CANCELLATION_DEFAULT_MONTHS;
-        updateMonthsUI(EARLY_CANCELLATION_DEFAULT_MONTHS);
-      } else if (
-        modality === OFFER_MODALITIES.FLEXIBLE_FINANCE &&
-        (!monthsValue || monthsValue === EARLY_CANCELLATION_DEFAULT_MONTHS)
-      ) {
-        els.loanMonthsInput.value = FLEXIBLE_DEFAULT_MONTHS;
-        updateMonthsUI(FLEXIBLE_DEFAULT_MONTHS);
+  /**
+   * Resumen en vivo: normaliza la oferta tal y como se guardaría.
+   */
+  function updateLiveSummary() {
+    const price = parseLocaleNumber(els.offerPriceInput?.value || 0);
+    let offer = null;
+    if (price > 0) {
+      try {
+        offer = normalizeOffer(createDefaultOffer(buildOffer()));
+      } catch {
+        offer = null;
       }
     }
+
+    setVisible(els.liveSummaryEmpty, !offer);
+    if (els.liveSummaryList) els.liveSummaryList.hidden = !offer;
+    if (!offer) {
+      if (els.liveVerdict) els.liveVerdict.hidden = true;
+      return;
+    }
+
+    const isCash = payType === 'cash';
+    els.liveSummaryList.querySelectorAll('[data-finance-only]').forEach(row => {
+      /** @type {HTMLElement} */ (row).hidden = isCash;
+    });
+    const setText = (node, text) => {
+      if (node) node.textContent = text;
+    };
+    setText(els.liveTotal, euros(offer.totalOutOfPocketCost));
+    if (!isCash) {
+      setText(els.liveMonthly, offer.monthlyPayment > 0 ? euros(offer.monthlyPayment) : '—');
+      setText(els.liveDown, euros(offer.downPayment));
+      setText(els.liveFinanced, euros(offer.principalFinanced));
+      setText(els.liveRates, `${formatLocaleNumber(offer.nominalTin)} % / ${formatAprPercent(offer.effectiveApr)}`);
+      setText(els.liveInterest, euros(offer.totalInterest));
+      const diff = offer.netDifferenceVsCashRef;
+      setText(els.liveVsCash, `${diff > 0 ? '+' : ''}${euros(diff)}`);
+      els.liveVsCash?.classList.toggle('highlight-trap', diff > 0);
+      els.liveVsCash?.classList.toggle('highlight-save', diff < 0);
+    }
+
+    const verdict = offer.verdict;
+    if (els.liveVerdict) {
+      els.liveVerdict.hidden = !verdict || isCash;
+      if (verdict && !isCash) {
+        els.liveVerdict.className = `live-summary-verdict ${verdict.status || ''}`.trim();
+        els.liveVerdict.replaceChildren(el('strong', { text: verdict.badge }), ` ${verdict.message || ''}`);
+      }
+    }
+  }
+
+  /** @returns {Partial<import('../core/types.js').Offer>} */
+  function buildOffer() {
+    return formValuesToOffer(readFormValues(), {
+      modality: currentModality,
+      financingMode: financingPair.getMode(),
+      linkedProducts: productsList.getItems(),
+      includedServices: servicesList.getItems()
+    });
+  }
+
+  /**
+   * Cambia la forma de pago (contado o financiado).
+   * @param {'cash'|'finance'} type
+   */
+  function setPayType(type) {
+    payType = type === 'cash' ? 'cash' : 'finance';
+    if (payType === 'cash') {
+      els.downPaymentInput.value = '0';
+      if (els.financedAmountInput) els.financedAmountInput.value = '0';
+    } else if (
+      (els.downPaymentInput.value === '0' || !els.downPaymentInput.value) &&
+      (!els.financedAmountInput?.value || els.financedAmountInput.value === '0')
+    ) {
+      scenario = 'down';
+      els.downPaymentInput.value = String(DEFAULTS.downPayment);
+      if (els.financedAmountInput) els.financedAmountInput.value = '';
+    }
+    updatePaymentUI();
+    recalculate();
+  }
+
+  /**
+   * Cambia qué dato del par entrada ↔ importe financiado introduce el usuario.
+   * Conserva el valor ya calculado del nuevo campo para no perder datos.
+   * @param {'down'|'financed'} next
+   */
+  function setScenario(next) {
+    scenario = next === 'financed' ? 'financed' : 'down';
+    updateScenarioUI();
+    recalculate();
+  }
+
+  /**
+   * Cambia qué dato del par TIN ↔ cuota introduce el usuario.
+   * @param {'tin'|'monthly'} next
+   */
+  function setRateMode(next) {
+    rateMode = next === 'tin' ? 'tin' : 'monthly';
+    updateScenarioUI();
     recalculate();
   }
 
   function updateImagePreview(url) {
     const { vehicleAutoPreview, imageThumb, imagePlaceholder } = els;
+    vehicleAutoPreview?.classList.toggle('has-image', Boolean(url));
     if (!url) {
-      setVisible(vehicleAutoPreview, false);
       if (imageThumb) {
         setVisible(imageThumb, false);
         imageThumb.src = '';
       }
+      setVisible(imagePlaceholder, true, 'flex');
       return;
     }
 
-    setVisible(vehicleAutoPreview, true, 'flex');
     if (imageThumb) {
       imageThumb.src = url;
       imageThumb.onload = () => {
@@ -415,6 +575,31 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   }
 
   // ---------------------------------------------------------------------------
+  // Navegación entre pasos
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Muestra el paso indicado del asistente.
+   * @param {number} step
+   */
+  function goToStep(step) {
+    currentStep = Math.min(TOTAL_STEPS, Math.max(1, Number(step) || 1));
+    form.querySelectorAll('.wizard-step').forEach(section => {
+      /** @type {HTMLElement} */ (section).hidden =
+        Number(/** @type {HTMLElement} */ (section).dataset.step) !== currentStep;
+    });
+    els.wizardProgress?.querySelectorAll('[data-go-step]').forEach(btn => {
+      const n = Number(/** @type {HTMLElement} */ (btn).dataset.goStep);
+      btn.classList.toggle('active', n === currentStep);
+      btn.classList.toggle('done', n < currentStep);
+      if (n === currentStep) btn.setAttribute('aria-current', 'step');
+      else btn.removeAttribute('aria-current');
+    });
+    setVisible(els.btnPrev, currentStep > 1, 'inline-flex');
+    setVisible(els.btnNext, currentStep < TOTAL_STEPS, 'inline-flex');
+  }
+
+  // ---------------------------------------------------------------------------
   // Eventos
   // ---------------------------------------------------------------------------
 
@@ -422,8 +607,24 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     input?.addEventListener('input', () => recalculate())
   );
 
-  els.flexibleCancelEarly?.addEventListener('change', () => {
-    setVisible(els.earlyCancellationContainer, els.flexibleCancelEarly.checked);
+  els.paymentType?.addEventListener('click', e => {
+    const btn = /** @type {HTMLElement} */ (e.target).closest('[data-pay]');
+    if (btn) setPayType(/** @type {'cash'|'finance'} */ (btn.getAttribute('data-pay')));
+  });
+
+  els.financingScenario?.addEventListener('click', e => {
+    const btn = /** @type {HTMLElement} */ (e.target).closest('[data-scenario]');
+    if (btn) setScenario(/** @type {'down'|'financed'} */ (btn.getAttribute('data-scenario')));
+  });
+
+  els.toggleRateModeBtn?.addEventListener('click', () => setRateMode(rateMode === 'monthly' ? 'tin' : 'monthly'));
+
+  els.cancelEarlyToggle?.addEventListener('change', () => {
+    if (els.cancelEarlyToggle.checked && !els.loanMonthsInput.value && !els.balloonPaymentInput.value) {
+      els.loanMonthsInput.value = EARLY_CANCELLATION_DEFAULT_MONTHS;
+      updateMonthsUI(EARLY_CANCELLATION_DEFAULT_MONTHS);
+    }
+    setVisible(els.earlyCancellationContainer, isCancelEarly());
     recalculate();
   });
 
@@ -445,16 +646,10 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     }
   });
 
-  els.modalitySelector.addEventListener('click', e => {
-    const btn = e.target.closest('.segmented-btn');
-    if (btn) updateModalityUI(btn.dataset.val);
-  });
-
   els.btnAddProduct?.addEventListener('click', () => {
     productsList.add({ id: generateId(ID_PREFIX_PRODUCT), ...NEW_LINKED_PRODUCT });
   });
 
-  // Presets de 1 clic (calibrados con RAV4 y Tucson)
   dialog.querySelectorAll('.btn-add-preset-service').forEach(btn => {
     btn.addEventListener('click', () => {
       servicesList.add({
@@ -469,16 +664,37 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     servicesList.add({ id: generateId(ID_PREFIX_SERVICE), ...NEW_CUSTOM_SERVICE });
   });
 
+  els.btnPrev?.addEventListener('click', () => goToStep(currentStep - 1));
+  els.btnNext?.addEventListener('click', () => goToStep(currentStep + 1));
+  els.wizardProgress?.addEventListener('click', e => {
+    const btn = /** @type {HTMLElement} */ (e.target).closest('[data-go-step]');
+    if (btn) goToStep(Number(btn.getAttribute('data-go-step')));
+  });
+
+  // Un campo obligatorio vacío en otro paso: mostrar ese paso antes de que el navegador lo señale
+  form.addEventListener(
+    'invalid',
+    e => {
+      const step = /** @type {HTMLElement} */ (e.target).closest?.('.wizard-step');
+      if (step && /** @type {HTMLElement} */ (step).hidden)
+        goToStep(Number(/** @type {HTMLElement} */ (step).dataset.step));
+    },
+    true
+  );
+
+  // Intro en un campo avanza al siguiente paso en lugar de guardar
+  form.addEventListener('keydown', e => {
+    const target = /** @type {HTMLElement} */ (e.target);
+    if (e.key === 'Enter' && target.tagName === 'INPUT' && currentStep < TOTAL_STEPS) {
+      e.preventDefault();
+      goToStep(currentStep + 1);
+    }
+  });
+
   form.addEventListener('submit', e => {
     e.preventDefault();
-    onSave(
-      formValuesToOffer(readFormValues(), {
-        modality: currentModality,
-        financingMode: financingPair.getMode(),
-        linkedProducts: productsList.getItems(),
-        includedServices: servicesList.getItems()
-      })
-    );
+    recalculate();
+    onSave(buildOffer());
     dialog.close();
   });
 
@@ -496,6 +712,7 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
   function fillFromOffer(offer) {
     const { values, modality, downPaymentMode, financingMode, linkedProducts, includedServices } =
       offerToFormValues(offer);
+    const choice = modalityToPaymentChoice(modality, values.cancelEarly);
 
     els.modalTitle.textContent = 'Editar oferta';
     els.idInput.value = values.id;
@@ -506,28 +723,38 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     els.financeDiscountInput.value = values.financeDiscount;
     updateImagePreview(getVehicleImageUrl(values.vehicle, offer.imageUrl));
 
+    payType = choice.payType;
+    scenario = downPaymentMode === 'financed' ? 'financed' : 'down';
+    rateMode = financingMode === 'monthly' ? 'monthly' : 'tin';
+    if (els.cancelEarlyToggle) els.cancelEarlyToggle.checked = choice.cancelEarly;
+
     downPaymentPair.setValues(values.downPayment, values.financedAmount, downPaymentMode);
     els.tradeInValueInput.value = values.tradeInValue;
     els.loanMonthsInput.value = values.months;
     updateMonthsUI(values.months);
-    els.balloonPaymentInput.value = values.balloonPayment;
+    // En contado o cancelación lineal la cuota final no aplica
+    els.balloonPaymentInput.value = modality === OFFER_MODALITIES.FLEXIBLE_FINANCE ? values.balloonPayment : '';
     financingPair.setValues(values.tin, values.manualMonthly, financingMode);
 
     earlyCancellationPanel.setValues(values.earlyCancelMonth, values.earlyCancelPenalty);
     productsList.setItems(linkedProducts);
     servicesList.setItems(includedServices);
-    if (els.flexibleCancelEarly) els.flexibleCancelEarly.checked = values.cancelEarly;
-    updateModalityUI(modality);
+
+    if (els.notesDisclosure) els.notesDisclosure.open = Boolean(values.notes);
+    if (els.tradeInDisclosure) els.tradeInDisclosure.open = parseLocaleNumber(values.tradeInValue || 0) > 0;
+    updatePaymentUI();
+    recalculate();
   }
 
   /**
    * Prepara el formulario vacío para una nueva oferta.
    * @param {string} vehicle Vehículo propuesto
+   * @param {'tin'|'monthly'} initialRateMode
    */
-  function fillEmpty(vehicle) {
-    els.modalTitle.textContent = 'Nueva oferta de concesionario';
+  function fillEmpty(vehicle, initialRateMode) {
+    els.modalTitle.textContent = 'Nueva oferta';
     els.idInput.value = '';
-    if (els.flexibleCancelEarly) els.flexibleCancelEarly.checked = false;
+    if (els.cancelEarlyToggle) els.cancelEarlyToggle.checked = false;
     if (els.vehicleInput) els.vehicleInput.value = vehicle;
     els.offerPriceInput.value = '';
     els.financeDiscountInput.value = '';
@@ -540,20 +767,26 @@ export function initOfferModal({ onSave, getKnownVehicles }) {
     earlyCancellationPanel.setValues(String(DEFAULTS.earlyCancellationMonth), '1,0');
     productsList.setItems([]);
     servicesList.setItems([]);
+    if (els.notesDisclosure) els.notesDisclosure.open = false;
+    if (els.tradeInDisclosure) els.tradeInDisclosure.open = false;
     updateImagePreview(getVehicleImageUrl(vehicle));
-    updateModalityUI(OFFER_MODALITIES.STANDARD_FINANCE);
+    scenario = 'down';
+    rateMode = initialRateMode;
+    setPayType('finance');
   }
 
   return {
-    open(offer = null, defaultVehicle = null) {
+    open(offer = null, defaultVehicle = null, { rateMode: initialRateMode = 'monthly', step } = {}) {
       form.reset();
       fillKnownVehicles();
       if (offer) {
         fillFromOffer(offer);
       } else {
-        fillEmpty(defaultVehicle || '');
+        fillEmpty(defaultVehicle || '', initialRateMode);
       }
       updateIncludedServicesTotalBadge();
+      // Al editar se va directamente a los datos del pago; todos los pasos siguen accesibles
+      goToStep(step || (offer ? 2 : 1));
       dialog.showModal();
     },
     close() {

@@ -14,51 +14,6 @@
   box-shadow: var(--shadow-xl);
 }
 
-.reverse-intro {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 1.25rem;
-}
-
-.btn-block {
-  width: 100%;
-  margin-top: 0.5rem;
-}
-
-#reverse-results-container {
-  display: none;
-}
-
-.reverse-results-title {
-  font-size: 0.95rem;
-  color: var(--accent-cyan);
-  margin-bottom: 0.5rem;
-}
-
-#rev-out-tin {
-  font-size: 1.5rem;
-  color: var(--accent-rose);
-}
-
-#rev-out-apr {
-  font-size: 1.5rem;
-  color: var(--accent-amber);
-}
-
-#rev-out-interest {
-  font-size: 1.5rem;
-  color: var(--accent-rose);
-}
-
-#rev-out-total {
-  font-size: 1.5rem;
-}
-
-.reverse-actions {
-  margin-top: 1rem;
-  text-align: right;
-}
-
 .empty-state-card {
   text-align: center;
   padding: 4rem 1.5rem;

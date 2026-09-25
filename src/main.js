@@ -17,7 +17,6 @@ import { el } from './ui/dom.js';
 import { initHeader } from './components/Header.js';
 import { initOfferModal } from './components/OfferModal.js';
 import { initAmortizationModal } from './components/AmortizationModal.js';
-import { initReverseCalcModal } from './components/ReverseCalcModal.js';
 
 import confetti from 'canvas-confetti';
 
@@ -97,23 +96,14 @@ offerModalCtrl = initOfferModal({
   }
 });
 
-const reverseCalcModalCtrl = initReverseCalcModal({
-  onApplyAsOffer: computedOffer => {
-    const fullOffer = createDefaultOffer({
-      ...computedOffer,
-      vehicle: store.getState().selectedVehicle || 'Nuevo vehículo'
-    });
-    saveOffer(fullOffer, 'Presupuesto inverso añadido a tus ofertas.', true);
-  }
-});
-
 function openNewOffer() {
   offerModalCtrl.open(null, store.getState().selectedVehicle);
 }
 
 initHeader({
   onNewOffer: openNewOffer,
-  onReverseCalc: () => reverseCalcModalCtrl.open()
+  // "Calcular el interés desde la cuota": el asistente deduce TIN, TAE e intereses a partir de la cuota
+  onReverseCalc: () => offerModalCtrl.open(null, store.getState().selectedVehicle, { rateMode: 'monthly', step: 2 })
 });
 document.getElementById('fab-new-offer')?.addEventListener('click', openNewOffer);
 
