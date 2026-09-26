@@ -20,7 +20,6 @@ function queryLayout() {
     // Pestaña 1 (Mismo Vehículo)
     vehicleChipsList: byId('vehicle-chips-list'),
     offersDisplaySlot: byId('offers-display-slot'),
-    bestOfferBanner: byId('best-offer-banner'),
     // Pestaña 2 (Coches Diferentes)
     crossModalitySelector: byId('cross-modality-select'),
     crossModalityField: byId('cross-modality-field'),

@@ -50,19 +50,14 @@ function createSpecRow(label, value, options = {}) {
 /**
  * Genera el elemento DOM para la tarjeta de un vehículo en comparativa cruzada.
  * @param {import('../core/normalizer.js').NormalizedOffer & { vehicleName: string, crossDiffVsWinner: number, crossHighlight: string }} offer
- * @param {boolean} isWinner
  * @param {object} handlers
  * @param {(vehicleName: string) => void} [handlers.onInspectVehicle]
  * @param {(offer: object) => void} [handlers.onEditOffer]
  * @returns {HTMLElement}
  */
-export function createCrossVehicleCardElement(
-  offer,
-  isWinner,
-  { onInspectVehicle, onEditOffer, allRankedOffers = [] } = {}
-) {
+export function createCrossVehicleCardElement(offer, { onInspectVehicle, onEditOffer, allRankedOffers = [] } = {}) {
   const card = document.createElement('article');
-  card.className = `offer-card cross-vehicle-card ${isWinner ? 'is-winner' : ''}`;
+  card.className = 'offer-card cross-vehicle-card';
   card.dataset.id = offer.id;
   // Imagen del modelo
   const imgUrl = offer.imageUrl || getVehicleImageUrl(offer.vehicle);
@@ -93,13 +88,6 @@ export function createCrossVehicleCardElement(
   const badges = document.createElement('div');
   badges.className = 'offer-badges';
 
-  if (offer.isTcoWinner && !isWinner) {
-    const b = document.createElement('span');
-    b.className = 'badge badge-winner';
-    b.textContent = '💎 Mejor TCO equiparado';
-    badges.appendChild(b);
-  }
-
   if (offer.includedServicesValue > 0) {
     const b = document.createElement('span');
     b.className = 'badge badge-info';
@@ -113,39 +101,23 @@ export function createCrossVehicleCardElement(
 
   const dealer = document.createElement('div');
   dealer.className = 'offer-dealer';
-  dealer.textContent = offer.dealer || 'Concesionario sin especificar';
+  dealer.textContent = offer.dealer || '';
 
   const headerMain = document.createElement('div');
   headerMain.className = 'offer-header-main';
   headerMain.appendChild(title);
-  headerMain.appendChild(dealer);
+  if (offer.dealer) headerMain.appendChild(dealer);
   header.appendChild(headerMain);
   header.appendChild(badges);
   card.appendChild(header);
 
-  // Cifras clave: coste total, cuota y diferencia con el coche más barato de la comparativa
-  const cheapest = allRankedOffers.reduce(
-    (min, o) => (!min || o.totalOutOfPocketCost < min.totalOutOfPocketCost ? o : min),
-    null
-  );
-  const diffVsBest = cheapest ? Number((offer.totalOutOfPocketCost - cheapest.totalOutOfPocketCost).toFixed(2)) : 0;
-  let vsBestText = '—';
-  let vsBestClass = '';
-  if (cheapest && cheapest.id === offer.id) {
-    vsBestText = '🏆 Mejor';
-    vsBestClass = 'highlight-save';
-  } else if (cheapest) {
-    vsBestText = `+${diffVsBest.toLocaleString('es-ES')} €`;
-    vsBestClass = diffVsBest > 0 ? 'highlight-trap' : '';
-  }
-
+  // Cifras clave: coste total, cuota y precio de contado (sin clasificar: la decisión no es solo el precio)
+  const cashPrice = offer.cashPriceReference || offer.vehiclePrice || offer.offerPrice || 0;
   card.appendChild(
     el('div', { className: 'offer-kpis' }, [
       createKpi('Coste total real', `${offer.totalOutOfPocketCost.toLocaleString('es-ES')} €`, 'offer-kpi--total'),
-      offer.isCash
-        ? createKpi('Pago', 'Único')
-        : createKpi('Cuota/mes', `${offer.monthlyPayment.toLocaleString('es-ES')} €`),
-      createKpi('vs. el mejor', vsBestText, '', vsBestClass)
+      createKpi('Cuota/mes', offer.isCash ? 'Sin cuotas' : `${offer.monthlyPayment.toLocaleString('es-ES')} €`),
+      createKpi('Precio contado', `${cashPrice.toLocaleString('es-ES')} €`)
     ])
   );
 

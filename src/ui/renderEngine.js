@@ -1,7 +1,7 @@
 /**
  * Motor de Renderizado Unificado (renderEngine).
  * Orquesta el ciclo de renderizado de ambas pestañas a partir del estado del store:
- * - Un coche: fila de chips de coches, mejor opción, tarjetas/tabla y desglose.
+ * - Un coche: fila de chips de coches, tarjetas/tabla y desglose.
  * - Todos los coches: modalidad cruzada, tarjetas/matriz y comparativa.
  * Cada vista vive en src/ui/views/.
  */
@@ -88,8 +88,7 @@ export function createAppRenderer({
 
     const rankedVehicleOffers = renderSameVehicleView({
       dom: {
-        displaySlot: dom.offersDisplaySlot,
-        bestOfferBanner: dom.bestOfferBanner
+        displaySlot: dom.offersDisplaySlot
       },
       normalizedList,
       activeVehicle,

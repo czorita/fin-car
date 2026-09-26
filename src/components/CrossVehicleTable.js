@@ -66,12 +66,9 @@ export function createCrossVehicleTableElement(rankedCrossOffers) {
   firstTh.className = 'table-th--label';
   headerTr.appendChild(firstTh);
 
-  rankedCrossOffers.forEach((o, index) => {
+  rankedCrossOffers.forEach(o => {
     const th = document.createElement('th');
     th.className = 'table-th--offer';
-    if (index === 0) {
-      th.classList.add('table-th--winner');
-    }
 
     const imgUrl = o.imageUrl || getVehicleImageUrl(o.vehicle);
     if (imgUrl) {
@@ -94,13 +91,6 @@ export function createCrossVehicleTableElement(rankedCrossOffers) {
     offerSub.className = 'table-th-subtitle';
     th.appendChild(vehicleTitle);
     th.appendChild(offerSub);
-
-    if (index > 0 && o.crossDiffVsWinner !== undefined) {
-      const badgeSpan = document.createElement('span');
-      badgeSpan.className = 'badge badge-neutral badge--small';
-      badgeSpan.textContent = `+${o.crossDiffVsWinner.toLocaleString('es-ES')} €`;
-      th.appendChild(badgeSpan);
-    }
 
     headerTr.appendChild(th);
   });

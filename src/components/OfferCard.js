@@ -5,7 +5,6 @@
 
 import { OFFER_MODALITIES, getOfferFinanceSubtitle } from '../core/types.js';
 import { formatAprPercent } from '../core/formatters.js';
-import { OFFER_HIGHLIGHTS } from '../core/normalizer.js';
 import { el } from '../ui/dom.js';
 
 /**
@@ -50,14 +49,13 @@ function createBadge(text, className) {
 /**
  * Renderiza una tarjeta de oferta clonando la plantilla HTML5.
  * @param {import('../core/normalizer.js').NormalizedOffer} offer
- * @param {boolean} isWinner
  * @param {object} handlers
  * @param {Function} handlers.onEdit
  * @param {Function} handlers.onSchedule
  * @param {Function} handlers.onDelete
  * @returns {HTMLElement} Elemento article listo para insertar en el DOM
  */
-export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, onDelete } = {}) {
+export function createOfferCardElement(offer, { onEdit, onSchedule, onDelete } = {}) {
   const template = document.getElementById('tmpl-offer-card');
   if (!template) {
     throw new Error('Plantilla #tmpl-offer-card no encontrada en el DOM');
@@ -70,27 +68,12 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   const isEarlyCancel = offer.modality === OFFER_MODALITIES.EARLY_CANCELLATION;
 
   card.dataset.id = offer.id;
-  if (isWinner) {
-    card.classList.add('is-winner');
-  }
 
-  // 1. Badges
+  // 1. Etiquetas descriptivas (sin clasificar ofertas: la decisión no es solo el precio)
   const badgesContainer = card.querySelector('.offer-badges');
-
-  if (isWinner) {
-    badgesContainer.appendChild(createBadge('🏆 Menor coste', 'badge-winner'));
-  }
 
   if (isEarlyCancel) {
     badgesContainer.appendChild(createBadge(`⚡ Cancelación mes ${offer.earlyCancellationMonth || 24}`, 'badge-info'));
-  }
-
-  if (offer.highlights && offer.highlights.length) {
-    offer.highlights.forEach(hl => {
-      if (hl !== OFFER_HIGHLIGHTS.LOWEST_TOTAL_COST) {
-        badgesContainer.appendChild(createBadge(hl, 'badge-info'));
-      }
-    });
   }
 
   if (offer.includedServicesValue > 0) {
@@ -101,7 +84,9 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
 
   // 2. Título (fórmula de financiación y meses) y Concesionario
   card.querySelector('.offer-title').textContent = getOfferFinanceSubtitle(offer);
-  card.querySelector('.dealer-text').textContent = offer.dealer || 'Concesionario sin especificar';
+  const dealerEl = card.querySelector('.offer-dealer');
+  card.querySelector('.dealer-text').textContent = offer.dealer || '';
+  if (dealerEl && !offer.dealer) dealerEl.style.display = 'none';
 
   // 3. Coste Hero
   card.querySelector('.cost-hero-amount').textContent = `${offer.totalOutOfPocketCost.toLocaleString('es-ES')} €`;
@@ -111,9 +96,9 @@ export function createOfferCardElement(offer, isWinner, { onEdit, onSchedule, on
   const monthlyValue = card.querySelector('.kpi-monthly-value');
   const vsCashValue = card.querySelector('.kpi-vs-cash-value');
   if (isCash) {
-    if (monthlyLabel) monthlyLabel.textContent = 'Pago';
-    if (monthlyValue) monthlyValue.textContent = 'Único';
-    if (vsCashValue) vsCashValue.textContent = 'Referencia';
+    if (monthlyLabel) monthlyLabel.textContent = 'Cuota/mes';
+    if (monthlyValue) monthlyValue.textContent = 'Sin cuotas';
+    if (vsCashValue) vsCashValue.textContent = '—';
   } else {
     if (monthlyValue) monthlyValue.textContent = `${offer.monthlyPayment.toLocaleString('es-ES')} €`;
     const hasServices = offer.includedServicesValue > 0 && offer.netEquatedDifferenceVsCashRef !== undefined;

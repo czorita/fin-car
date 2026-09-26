@@ -24,7 +24,7 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
   beforeEach(() => {
     document.body.innerHTML = `
       <div id="chips"></div>
-      <div id="slot"></div><div id="banner" hidden></div>
+      <div id="slot"></div>
       <select id="cross-selector">
         <option value="cash"></option>
         <option value="standard_finance"></option>
@@ -33,9 +33,9 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
       ${readPartial('tmpl-offer-card')}${readPartial('modal-trap-guide')}`;
   });
 
-  const sameDom = () => ({ displaySlot: $('slot'), bestOfferBanner: $('banner') });
+  const sameDom = () => ({ displaySlot: $('slot') });
 
-  test('Pestaña 1: una tarjeta por oferta del vehículo y la de menor coste marcada como ganadora', () => {
+  test('Pestaña 1: una tarjeta por oferta del vehículo, sin marcar ninguna como "mejor"', () => {
     const normalized = SAMPLE_OFFERS.map(normalizeOffer);
     const vehicle = normalized[0].vehicle;
     const ranked = renderSameVehicleView({
@@ -48,17 +48,12 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
     const cards = document.querySelectorAll('#slot .offer-card');
     assert.equal(cards.length, ranked.length);
     assert.ok(ranked.every(o => o.vehicle === vehicle));
-    const winners = document.querySelectorAll('#slot .offer-card.is-winner');
-    assert.equal(winners.length, 1, 'La oferta de menor coste total se resalta');
-    const cheapest = Math.min(...ranked.map(o => o.totalOutOfPocketCost));
-    assert.equal(winners[0].dataset.id, ranked.find(o => o.totalOutOfPocketCost === cheapest).id);
-    assert.equal($('banner').hidden, ranked.length < 2, 'La franja de mejor opción aparece con 2 o más ofertas');
-    if (ranked.length >= 2) {
-      assert.match($('banner').textContent, new RegExp(`Mejor opción para el ${vehicle}`));
-    }
+    // La decisión no es solo el precio: ninguna tarjeta se destaca como ganadora ni lleva insignias de ranking
+    assert.equal(document.querySelectorAll('#slot .offer-card.is-winner, #slot .badge-winner').length, 0);
+    assert.doesNotMatch($('slot').textContent, /Menor coste|Mejor|Menos intereses/);
   });
 
-  test('Pestaña 1 sin ofertas: estado vacío y sin franja de mejor opción', () => {
+  test('Pestaña 1 sin ofertas: estado vacío', () => {
     const emptyState = document.createElement('div');
     emptyState.className = 'empty';
     renderSameVehicleView({
@@ -69,7 +64,6 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
       callbacks: { renderEmptyState: () => emptyState }
     });
     assert.ok($('slot').querySelector('.empty'));
-    assert.equal($('banner').hidden, true);
   });
 
   test('Pestaña 2: sincroniza el selector de modalidad y muestra el aviso si no hay ofertas en ella', () => {
