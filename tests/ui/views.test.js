@@ -53,6 +53,25 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
     assert.doesNotMatch($('slot').textContent, /Menor coste|Mejor|Menos intereses/);
   });
 
+  test('Cancelación anticipada: el mes de cancelación va en el título, sin insignia redundante', () => {
+    const offer = normalizeOffer({
+      id: 'o_cancel',
+      vehicle: 'Coche Test',
+      modality: 'early_cancellation',
+      offerPrice: 25000,
+      downPayment: 5000,
+      months: 60,
+      contractMonths: 60,
+      tin: 8,
+      earlyCancellationMonth: 18
+    });
+    renderSameVehicleView({ dom: sameDom(), normalizedList: [offer], activeVehicle: 'Coche Test', view: 'cards' });
+
+    const card = document.querySelector('#slot .offer-card');
+    assert.match(card.querySelector('.offer-title').textContent, /Cancelación mes 18 \(de 60m\)/);
+    assert.doesNotMatch(card.querySelector('.offer-badges').textContent, /Cancelación/);
+  });
+
   test('Pestaña 1 sin ofertas: estado vacío', () => {
     const emptyState = document.createElement('div');
     emptyState.className = 'empty';

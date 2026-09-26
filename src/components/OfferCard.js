@@ -69,12 +69,8 @@ export function createOfferCardElement(offer, { onEdit, onSchedule, onDelete } =
 
   card.dataset.id = offer.id;
 
-  // 1. Etiquetas descriptivas (sin clasificar ofertas: la decisión no es solo el precio)
+  // 1. Etiquetas: solo información que no aparece ya en el título (p. ej. el mes de cancelación sí aparece)
   const badgesContainer = card.querySelector('.offer-badges');
-
-  if (isEarlyCancel) {
-    badgesContainer.appendChild(createBadge(`⚡ Cancelación mes ${offer.earlyCancellationMonth || 24}`, 'badge-info'));
-  }
 
   if (offer.includedServicesValue > 0) {
     badgesContainer.appendChild(
