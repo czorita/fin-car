@@ -9,20 +9,19 @@
 
 @media (max-width: 768px) {
   .app-layout {
-    padding: 1rem 1rem 5rem 1rem;
+    padding: 0 1rem 5rem 1rem;
   }
-  .app-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .header-actions {
-    width: 100%;
-    justify-content: flex-start;
+  /* En móvil la acción principal es el botón flotante */
+  #btn-new-offer {
+    display: none;
   }
   .mobile-fab {
     display: block;
   }
-  .segmented-control:not(.cross-modality-selector):not(.cross-view-switcher) {
+  .btn-link-label {
+    display: none;
+  }
+  .segmented-control:not(.view-switcher) {
     grid-template-columns: 1fr;
   }
 }

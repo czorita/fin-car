@@ -38,19 +38,3 @@
 .data-table td:first-child {
   text-align: center;
 }
-
-/* Modal Calculadora Inversa */
-.reverse-result-box {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  margin-top: 1.25rem;
-}
-
-.reverse-result-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-top: 0.75rem;
-}

@@ -14,7 +14,7 @@ dialog.app-modal {
 }
 
 #modal-offer {
-  max-width: 800px;
+  max-width: 980px;
 }
 
 dialog.app-modal:not([open]) {

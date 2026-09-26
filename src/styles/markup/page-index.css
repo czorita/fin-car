@@ -7,90 +7,11 @@
   gap: 0.45rem;
 }
 
-.toolbar-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-#offers-count-label {
-  font-size: 0.92rem;
-  color: var(--text-secondary);
-}
-
-.toolbar-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.view-switcher {
-  width: 220px;
-}
-
-.cross-view-switcher {
-  width: 200px;
-}
-
-#cross-count-label {
-  font-size: 0.92rem;
-  color: var(--text-secondary);
-  margin-bottom: 1.25rem;
-}
-
 #fab-new-offer {
   width: 52px;
   height: 52px;
   border-radius: 50%;
   box-shadow: var(--shadow-xl);
-}
-
-.reverse-intro {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 1.25rem;
-}
-
-.btn-block {
-  width: 100%;
-  margin-top: 0.5rem;
-}
-
-#reverse-results-container {
-  display: none;
-}
-
-.reverse-results-title {
-  font-size: 0.95rem;
-  color: var(--accent-cyan);
-  margin-bottom: 0.5rem;
-}
-
-#rev-out-tin {
-  font-size: 1.5rem;
-  color: var(--accent-rose);
-}
-
-#rev-out-apr {
-  font-size: 1.5rem;
-  color: var(--accent-amber);
-}
-
-#rev-out-interest {
-  font-size: 1.5rem;
-  color: var(--accent-rose);
-}
-
-#rev-out-total {
-  font-size: 1.5rem;
-}
-
-.reverse-actions {
-  margin-top: 1rem;
-  text-align: right;
 }
 
 .empty-state-card {

@@ -1,16 +1,17 @@
-<!-- Sección de Desglose Visual y Gráficos -->
-<section id="analytics-section" class="analytics-section">
-  <div class="analytics-header">
-    <div class="analytics-title">
-      <h2 id="analytics-heading">Desglose visual del coste total</h2>
-      <p id="analytics-subtext">
-        Compara visualmente qué parte del importe final corresponde al precio neto del vehículo y cuánto se pierde en
-        intereses bancarios, comisiones y seguros vinculados.
-      </p>
-    </div>
-  </div>
+<!-- Sección de Desglose Visual y Gráficos (plegable, debajo de las ofertas) -->
+<details id="analytics-section" class="analytics-section analytics-collapsible">
+  <summary class="analytics-header">
+    <span class="analytics-title">
+      <span class="analytics-summary-icon" aria-hidden="true">📊</span>
+      <span id="analytics-heading">Ver desglose visual del coste</span>
+    </span>
+    <span class="analytics-toggle-hint" aria-hidden="true">▾</span>
+  </summary>
+  <p id="analytics-subtext" class="analytics-subtext">
+    Qué parte del coste final es el coche y cuánto se va en intereses, comisiones y seguros.
+  </p>
 
   <div class="chart-canvas-container">
     <canvas id="cost-breakdown-canvas"></canvas>
   </div>
-</section>
+</details>

@@ -1,0 +1,27 @@
+<!-- Franja única de navegación: coches (o "Todos los coches") + modalidad comparada + tipo de vista -->
+<div class="vehicle-bar" id="vehicle-selector-bar">
+  <div class="vehicle-chips-list" id="vehicle-chips-list" role="toolbar" aria-label="Elige un coche">
+    <!-- Se inyecta un chip por coche y el chip "Todos los coches" -->
+  </div>
+
+  <div class="vehicle-bar-tools">
+    <label class="cross-modality-field" id="cross-modality-field" hidden>
+      <span class="cross-modality-label">Comparar en</span>
+      <select id="cross-modality-select" class="form-input form-input--compact">
+        <option value="cash">💵 Al contado</option>
+        <option value="standard_finance">📆 Financiación lineal</option>
+        <option value="flexible_finance">🔄 Compra flexible</option>
+        <option value="early_cancellation">⚡ Cancelación anticipada</option>
+      </select>
+    </label>
+
+    <div class="segmented-control view-switcher" role="group" aria-label="Tipo de vista">
+      <button id="view-cards-btn" class="segmented-btn active" type="button" title="Ver como tarjetas">
+        🗂️<span class="view-switcher-text"> Tarjetas</span>
+      </button>
+      <button id="view-table-btn" class="segmented-btn" type="button" title="Ver como tabla comparativa">
+        📊<span class="view-switcher-text"> Tabla</span>
+      </button>
+    </div>
+  </div>
+</div>

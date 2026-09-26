@@ -237,3 +237,31 @@ export function offerToFormValues(offer) {
       : []
   };
 }
+
+/**
+ * Deduce la modalidad de la oferta a partir de lo que el usuario indica en el formulario:
+ * cómo paga, si hay cuota final y si piensa cancelar antes de tiempo.
+ * @param {object} params
+ * @param {'cash'|'finance'} params.payType
+ * @param {string|number} [params.balloonPayment] Cuota final tal como la da el concesionario
+ * @param {boolean} [params.cancelEarly]
+ * @returns {string} Valor de OFFER_MODALITIES
+ */
+export function deriveModality({ payType, balloonPayment = 0, cancelEarly = false }) {
+  if (payType === 'cash') return OFFER_MODALITIES.CASH;
+  if (parseLocaleNumber(balloonPayment || 0) > 0) return OFFER_MODALITIES.FLEXIBLE_FINANCE;
+  return cancelEarly ? OFFER_MODALITIES.EARLY_CANCELLATION : OFFER_MODALITIES.STANDARD_FINANCE;
+}
+
+/**
+ * Inversa de deriveModality: cómo se presenta en el formulario una modalidad guardada.
+ * @param {string} modality
+ * @param {boolean} [cancelEarly] Cancelación anticipada en financiación flexible
+ * @returns {{ payType: 'cash'|'finance', cancelEarly: boolean }}
+ */
+export function modalityToPaymentChoice(modality, cancelEarly = false) {
+  if (modality === OFFER_MODALITIES.CASH) return { payType: 'cash', cancelEarly: false };
+  if (modality === OFFER_MODALITIES.EARLY_CANCELLATION) return { payType: 'finance', cancelEarly: true };
+  if (modality === OFFER_MODALITIES.FLEXIBLE_FINANCE) return { payType: 'finance', cancelEarly: Boolean(cancelEarly) };
+  return { payType: 'finance', cancelEarly: false };
+}

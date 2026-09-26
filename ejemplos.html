@@ -12,7 +12,7 @@
     <div class="ambient-glow" aria-hidden="true"></div>
 
     <div class="app-layout">
-      <!-- Header Semántico -->
+      <!-- Cabecera compacta -->
       <header class="app-header">
         <div class="brand-wrapper">
           <div class="brand-icon" aria-hidden="true">
@@ -32,47 +32,26 @@
               <circle cx="17" cy="17" r="2" />
             </svg>
           </div>
-          <div>
-            <h1 class="brand-title">
-              FinCar
-              <span class="badge badge-info badge--xxs">EJEMPLOS</span>
-            </h1>
-            <p class="brand-subtitle">3 ofertas reales precargadas en el volumen Docker</p>
-          </div>
+          <h1 class="brand-title">
+            FinCar
+            <span class="badge badge-info badge--xxs">EJEMPLOS</span>
+          </h1>
         </div>
 
-        <!-- Navegación por Pestañas Integrada en Cabecera -->
-        <nav class="main-tabs-nav" role="tablist" aria-label="Modo de comparación">
-          <button
-            id="tab-btn-same-vehicle"
-            class="main-tab-btn active"
-            role="tab"
-            aria-selected="true"
-            aria-controls="tab-same-vehicle-panel"
-            title="Comparar modalidades de un mismo vehículo"
-          >
-            <span class="tab-btn-icon">🚗</span>
-            <span class="tab-btn-title">Mismo vehículo</span>
-          </button>
-          <button
-            id="tab-btn-cross-vehicle"
-            class="main-tab-btn"
-            role="tab"
-            aria-selected="false"
-            aria-controls="tab-cross-vehicle-panel"
-            title="Comparar modelos diferentes bajo la misma modalidad"
-          >
-            <span class="tab-btn-icon">🏎️</span>
-            <span class="tab-btn-title">Coches diferentes</span>
-          </button>
-        </nav>
-
         <nav class="header-actions" aria-label="Acciones de navegación">
-          <a href="/" class="btn btn-secondary btn-link-inline">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <a href="/" class="btn btn-secondary btn-link-inline" title="Mis presupuestos">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              aria-hidden="true"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            Mis presupuestos
+            <span class="btn-link-label">Mis presupuestos</span>
           </a>
 
           <button id="btn-theme-toggle" class="btn btn-ghost btn-icon" title="Cambiar tema claro/oscuro" type="button">
@@ -81,133 +60,22 @@
         </nav>
       </header>
 
-      <!-- Banner explicativo de la web de ejemplos -->
-      <aside class="examples-intro">
-        <div class="examples-intro-body">
-          <span class="examples-intro-icon">💡</span>
-          <div>
-            <h2 class="examples-intro-title">Web de ejemplos precargados</h2>
-            <p class="examples-intro-text">
-              Estas ofertas de ejemplo provienen de documentos estructurados en JSON ubicados en el volumen Docker
-              (<code>/app/data/examples/</code>). Puedes analizarlas para un mismo vehículo o comparar diferentes
-              modelos en la pestaña <strong>"Coches diferentes"</strong>.
-            </p>
-          </div>
-        </div>
-      </aside>
+      <p class="examples-intro">
+        💡 Presupuestos reales de concesionario para ver cómo funciona el comparador. Pulsa
+        <strong>Guardar en mis ofertas</strong> en cualquiera para copiarlo a tus presupuestos.
+      </p>
 
-      <!-- Panel Pestaña 1: Mismo vehículo -->
-      <section id="tab-same-vehicle-panel" role="tabpanel" aria-labelledby="tab-btn-same-vehicle">
-        <!-- Selector de Vehículo Activo en Carrusel -->
-        <div class="vehicle-carousel-container" id="vehicle-selector-bar">
-          <div class="vehicle-carousel-header">
-            <div class="vehicle-carousel-title-group">
-              <span class="vehicle-carousel-badge">🚗 Modelos de ejemplo</span>
-              <span class="vehicle-carousel-hint">Selecciona un vehículo para comparar sus presupuestos:</span>
-            </div>
-            <div class="vehicle-carousel-actions">
-              <div class="carousel-nav-controls">
-                <button
-                  id="btn-vehicle-carousel-prev"
-                  class="carousel-nav-btn"
-                  type="button"
-                  aria-label="Vehículo anterior"
-                  title="Anterior"
-                >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="m15 18-6-6 6-6" />
-                  </svg>
-                </button>
-                <button
-                  id="btn-vehicle-carousel-next"
-                  class="carousel-nav-btn"
-                  type="button"
-                  aria-label="Vehículo siguiente"
-                  title="Siguiente"
-                >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="m9 18 6-6-6-6" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="vehicle-carousel-track-wrapper">
-            <div
-              class="vehicle-chips-list vehicle-carousel-track"
-              id="vehicle-chips-list"
-              role="region"
-              aria-label="Carrusel de vehículos"
-            >
-              <!-- Se inyectan las tarjetas de carrusel para cada coche de ejemplo -->
-            </div>
-          </div>
-        </div>
+      <!-- @include partials/vehicle-bar.html -->
 
-        <!-- Barra de Control de Vistas -->
-        <div class="toolbar-row">
-          <div id="offers-count-label">Cargando ejemplos...</div>
-
-          <div class="segmented-control view-switcher">
-            <button id="view-cards-btn" class="segmented-btn active" title="Ver como tarjetas detalladas" type="button">
-              🗂️ Tarjetas
-            </button>
-            <button id="view-table-btn" class="segmented-btn" title="Ver como tabla comparativa" type="button">
-              📊 Tabla
-            </button>
-          </div>
-        </div>
-
-        <!-- Espacio donde se inyectan las tarjetas o tabla -->
+      <!-- Panel: ofertas de un coche -->
+      <section id="tab-same-vehicle-panel" role="region" aria-label="Ofertas del coche seleccionado">
         <main id="offers-display-slot" aria-live="polite">
           <div class="loading-message">Cargando ofertas de ejemplo...</div>
         </main>
       </section>
 
-      <!-- Panel Pestaña 2: Coches Diferentes -->
-      <section id="tab-cross-vehicle-panel" role="tabpanel" aria-labelledby="tab-btn-cross-vehicle" hidden>
-        <!-- Barra de Filtro de Modalidad y Vista -->
-        <div class="cross-filter-bar">
-          <div class="cross-filter-group">
-            <span class="cross-filter-label">Comparar en modalidad:</span>
-            <div class="segmented-control cross-modality-selector" id="cross-modality-selector">
-              <button type="button" class="segmented-btn active" data-modality="cash">💵 Al contado</button>
-              <button type="button" class="segmented-btn" data-modality="standard_finance">
-                📆 Financiación lineal
-              </button>
-              <button type="button" class="segmented-btn" data-modality="flexible_finance">🔄 Compra flexible</button>
-              <button type="button" class="segmented-btn" data-modality="early_cancellation">
-                ⚡ Cancelación anticipada
-              </button>
-            </div>
-          </div>
-          <div class="segmented-control cross-view-switcher">
-            <button id="cross-view-cards-btn" class="segmented-btn active" type="button">🗂️ Tarjetas</button>
-            <button id="cross-view-table-btn" class="segmented-btn" type="button">📊 Tabla</button>
-          </div>
-        </div>
-
-        <div id="cross-count-label">Comparando <strong>0</strong> vehículos</div>
-
-        <!-- Contenedor de la Comparativa entre Coches -->
+      <!-- Panel: comparativa entre todos los coches -->
+      <section id="tab-cross-vehicle-panel" role="region" aria-label="Comparativa entre coches" hidden>
         <div id="cross-display-slot"></div>
       </section>
 

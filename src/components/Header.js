@@ -19,4 +19,19 @@ export function initHeader({ onNewOffer, onReverseCalc } = {}) {
   if (typeof onReverseCalc === 'function') {
     btnReverseCalc?.addEventListener('click', onReverseCalc);
   }
+  initHeaderMenu();
+}
+
+/**
+ * Cierra el menú secundario (⋯) al elegir una opción o al hacer clic fuera de él.
+ */
+export function initHeaderMenu() {
+  const menu = document.querySelector('.header-menu');
+  if (!menu) return;
+  menu.querySelectorAll('.header-menu-item').forEach(item => {
+    item.addEventListener('click', () => menu.removeAttribute('open'));
+  });
+  document.addEventListener('click', e => {
+    if (menu.hasAttribute('open') && !menu.contains(/** @type {Node} */ (e.target))) menu.removeAttribute('open');
+  });
 }

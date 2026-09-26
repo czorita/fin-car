@@ -4,6 +4,7 @@ import { setupDom, readPartial } from '../helpers/dom.js';
 
 let renderSameVehicleView;
 let renderCrossVehicleView;
+let renderVehicleCarousel;
 let initTrapGuideModal;
 let normalizeOffer;
 let SAMPLE_OFFERS;
@@ -14,6 +15,7 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
     setupDom();
     ({ renderSameVehicleView } = await import('../../src/ui/views/sameVehicleView.js'));
     ({ renderCrossVehicleView } = await import('../../src/ui/views/crossVehicleView.js'));
+    ({ renderVehicleCarousel } = await import('../../src/ui/views/vehicleCarousel.js'));
     ({ initTrapGuideModal } = await import('../../src/components/TrapGuideModal.js'));
     ({ normalizeOffer } = await import('../../src/core/normalizer.js'));
     ({ SAMPLE_OFFERS } = await import('../../src/core/presets.js'));
@@ -21,18 +23,19 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
 
   beforeEach(() => {
     document.body.innerHTML = `
-      <div id="slot"></div><div id="count"></div><button id="add"></button>
-      <div id="cross-selector">
-        <button class="segmented-btn" data-modality="cash"></button>
-        <button class="segmented-btn" data-modality="standard_finance"></button>
-      </div>
+      <div id="chips"></div>
+      <div id="slot"></div>
+      <select id="cross-selector">
+        <option value="cash"></option>
+        <option value="standard_finance"></option>
+      </select>
       <div id="cross-slot"></div><div id="cross-count"></div>
       ${readPartial('tmpl-offer-card')}${readPartial('modal-trap-guide')}`;
   });
 
-  const sameDom = () => ({ displaySlot: $('slot'), countLabel: $('count'), btnAddForVehicle: $('add') });
+  const sameDom = () => ({ displaySlot: $('slot') });
 
-  test('Pestaña 1: una tarjeta por oferta del vehículo y la de menor coste marcada como ganadora', () => {
+  test('Pestaña 1: una tarjeta por oferta del vehículo, sin marcar ninguna como "mejor"', () => {
     const normalized = SAMPLE_OFFERS.map(normalizeOffer);
     const vehicle = normalized[0].vehicle;
     const ranked = renderSameVehicleView({
@@ -45,15 +48,31 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
     const cards = document.querySelectorAll('#slot .offer-card');
     assert.equal(cards.length, ranked.length);
     assert.ok(ranked.every(o => o.vehicle === vehicle));
-    const winners = document.querySelectorAll('#slot .offer-card.is-winner');
-    assert.equal(winners.length, 1, 'La oferta de menor coste total se resalta');
-    const cheapest = Math.min(...ranked.map(o => o.totalOutOfPocketCost));
-    assert.equal(winners[0].dataset.id, ranked.find(o => o.totalOutOfPocketCost === cheapest).id);
-    assert.match($('count').textContent, new RegExp(`Mostrando ${ranked.length} ofertas para ${vehicle}`));
-    assert.equal($('add').style.display, 'inline-flex');
+    // La decisión no es solo el precio: ninguna tarjeta se destaca como ganadora ni lleva insignias de ranking
+    assert.equal(document.querySelectorAll('#slot .offer-card.is-winner, #slot .badge-winner').length, 0);
+    assert.doesNotMatch($('slot').textContent, /Menor coste|Mejor|Menos intereses/);
   });
 
-  test('Pestaña 1 sin ofertas: estado vacío, contador a 0 y botón de añadir oculto', () => {
+  test('Cancelación anticipada: el mes de cancelación va en el título, sin insignia redundante', () => {
+    const offer = normalizeOffer({
+      id: 'o_cancel',
+      vehicle: 'Coche Test',
+      modality: 'early_cancellation',
+      offerPrice: 25000,
+      downPayment: 5000,
+      months: 60,
+      contractMonths: 60,
+      tin: 8,
+      earlyCancellationMonth: 18
+    });
+    renderSameVehicleView({ dom: sameDom(), normalizedList: [offer], activeVehicle: 'Coche Test', view: 'cards' });
+
+    const card = document.querySelector('#slot .offer-card');
+    assert.match(card.querySelector('.offer-title').textContent, /Cancelación mes 18 \(de 60m\)/);
+    assert.doesNotMatch(card.querySelector('.offer-badges').textContent, /Cancelación/);
+  });
+
+  test('Pestaña 1 sin ofertas: estado vacío', () => {
     const emptyState = document.createElement('div');
     emptyState.className = 'empty';
     renderSameVehicleView({
@@ -64,19 +83,54 @@ describe('Vistas de las pestañas y guía de trampas (ui/views, TrapGuideModal)'
       callbacks: { renderEmptyState: () => emptyState }
     });
     assert.ok($('slot').querySelector('.empty'));
-    assert.equal($('count').textContent, 'Mostrando 0 ofertas');
-    assert.equal($('add').style.display, 'none');
   });
 
-  test('Pestaña 2: marca la modalidad activa y muestra el aviso si no hay ofertas en ella', () => {
+  test('Pestaña 2: sincroniza el selector de modalidad y muestra el aviso si no hay ofertas en ella', () => {
     const normalized = SAMPLE_OFFERS.map(normalizeOffer).filter(o => o.modality !== 'cash');
     const dom = { modalitySelector: $('cross-selector'), displaySlot: $('cross-slot'), countLabel: $('cross-count') };
     renderCrossVehicleView({ dom, normalizedList: normalized, modality: 'cash', view: 'cards' });
 
-    assert.ok(document.querySelector('[data-modality="cash"]').classList.contains('active'));
-    assert.ok(!document.querySelector('[data-modality="standard_finance"]').classList.contains('active'));
+    assert.equal($('cross-selector').value, 'cash');
     assert.match($('cross-slot').querySelector('.cross-empty-title').textContent, /Sin ofertas de Pago al contado/);
     assert.match($('cross-count').textContent, /Comparando 0 vehículos/);
+  });
+
+  test('Fila de coches: un chip por coche, chip "Todos los coches" y selección', () => {
+    const selected = [];
+    let allClicks = 0;
+    const vehicles = [
+      { name: 'Hyundai i30', count: 2 },
+      { name: 'Toyota Corolla', count: 3 }
+    ];
+    renderVehicleCarousel($('chips'), vehicles, 'Toyota Corolla', {
+      onSelect: name => selected.push(name),
+      onSelectAll: () => allClicks++
+    });
+
+    const chips = document.querySelectorAll('#chips .vehicle-chip');
+    assert.equal(chips.length, 3);
+    assert.equal(chips[1].getAttribute('aria-pressed'), 'true');
+    assert.match(chips[2].textContent, /Todos los coches/);
+    chips[0].click();
+    chips[2].click();
+    assert.deepEqual(selected, ['Hyundai i30']);
+    assert.equal(allClicks, 1);
+
+    renderVehicleCarousel($('chips'), vehicles, 'Toyota Corolla', {
+      isAllActive: true,
+      onSelect() {},
+      onSelectAll() {}
+    });
+    const active = document.querySelectorAll('#chips .vehicle-chip.active');
+    assert.equal(active.length, 1);
+    assert.ok(active[0].classList.contains('vehicle-chip--all'));
+
+    renderVehicleCarousel($('chips'), [vehicles[0]], 'Hyundai i30', { onSelect() {}, onSelectAll() {} });
+    assert.equal(
+      document.querySelectorAll('#chips .vehicle-chip--all').length,
+      0,
+      'Con un solo coche no hay comparativa'
+    );
   });
 
   test('Guía de trampas: lista las ofertas con trampa como texto (sin interpretar HTML)', () => {

@@ -6,7 +6,22 @@
 import { getOfferVehicle } from '../core/types.js';
 import { formatAprPercent } from '../core/formatters.js';
 import { getVehicleImageUrl, FALLBACK_CAR_SVG } from '../core/vehicleCatalog.js';
-import { createIcon } from '../ui/dom.js';
+import { createIcon, el } from '../ui/dom.js';
+
+/**
+ * Crea una de las cifras clave de la tarjeta.
+ * @param {string} label
+ * @param {string} value
+ * @param {string} [extraClass]
+ * @param {string} [valueClass]
+ * @returns {HTMLElement}
+ */
+function createKpi(label, value, extraClass = '', valueClass = '') {
+  return el('div', { className: `offer-kpi ${extraClass}`.trim() }, [
+    el('span', { className: 'offer-kpi-label', text: label }),
+    el('span', { className: `offer-kpi-value ${valueClass}`.trim(), text: value })
+  ]);
+}
 
 /**
  * Crea una fila de especificación para la tarjeta de coche.
@@ -35,19 +50,14 @@ function createSpecRow(label, value, options = {}) {
 /**
  * Genera el elemento DOM para la tarjeta de un vehículo en comparativa cruzada.
  * @param {import('../core/normalizer.js').NormalizedOffer & { vehicleName: string, crossDiffVsWinner: number, crossHighlight: string }} offer
- * @param {boolean} isWinner
  * @param {object} handlers
  * @param {(vehicleName: string) => void} [handlers.onInspectVehicle]
  * @param {(offer: object) => void} [handlers.onEditOffer]
  * @returns {HTMLElement}
  */
-export function createCrossVehicleCardElement(
-  offer,
-  isWinner,
-  { onInspectVehicle, onEditOffer, allRankedOffers = [] } = {}
-) {
+export function createCrossVehicleCardElement(offer, { onInspectVehicle, onEditOffer, allRankedOffers = [] } = {}) {
   const card = document.createElement('article');
-  card.className = `offer-card cross-vehicle-card ${isWinner ? 'is-winner' : ''}`;
+  card.className = 'offer-card cross-vehicle-card';
   card.dataset.id = offer.id;
   // Imagen del modelo
   const imgUrl = offer.imageUrl || getVehicleImageUrl(offer.vehicle);
@@ -78,13 +88,6 @@ export function createCrossVehicleCardElement(
   const badges = document.createElement('div');
   badges.className = 'offer-badges';
 
-  if (offer.isTcoWinner && !isWinner) {
-    const b = document.createElement('span');
-    b.className = 'badge badge-winner';
-    b.textContent = '💎 Mejor TCO equiparado';
-    badges.appendChild(b);
-  }
-
   if (offer.includedServicesValue > 0) {
     const b = document.createElement('span');
     b.className = 'badge badge-info';
@@ -98,42 +101,36 @@ export function createCrossVehicleCardElement(
 
   const dealer = document.createElement('div');
   dealer.className = 'offer-dealer';
-  dealer.textContent = offer.dealer || 'Concesionario sin especificar';
+  dealer.textContent = offer.dealer || '';
 
+  const headerMain = document.createElement('div');
+  headerMain.className = 'offer-header-main';
+  headerMain.appendChild(title);
+  if (offer.dealer) headerMain.appendChild(dealer);
+  header.appendChild(headerMain);
   header.appendChild(badges);
-  header.appendChild(title);
-  header.appendChild(dealer);
   card.appendChild(header);
 
-  // Hero Cost
-  const hero = document.createElement('div');
-  hero.className = 'offer-cost-hero';
-
-  const heroLabel = document.createElement('div');
-  heroLabel.className = 'cost-hero-label';
-  heroLabel.textContent = 'Coste total real';
-
-  const heroAmount = document.createElement('div');
-  heroAmount.className = 'cost-hero-amount';
-  heroAmount.textContent = `${offer.totalOutOfPocketCost.toLocaleString('es-ES')} €`;
-
-  hero.appendChild(heroLabel);
-  hero.appendChild(heroAmount);
+  // Cifras clave: coste total, cuota y precio de contado (sin clasificar: la decisión no es solo el precio)
+  const cashPrice = offer.cashPriceReference || offer.vehiclePrice || offer.offerPrice || 0;
+  card.appendChild(
+    el('div', { className: 'offer-kpis' }, [
+      createKpi('Coste total real', `${offer.totalOutOfPocketCost.toLocaleString('es-ES')} €`, 'offer-kpi--total'),
+      createKpi('Cuota/mes', offer.isCash ? 'Sin cuotas' : `${offer.monthlyPayment.toLocaleString('es-ES')} €`),
+      createKpi('Precio contado', `${cashPrice.toLocaleString('es-ES')} €`)
+    ])
+  );
 
   if (!offer.isCash) {
-    const heroSub = document.createElement('div');
-    heroSub.className = 'cost-hero-sub';
-    if (offer.isEarlyCancellation && offer.isFlexible) {
-      heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} € (cuota final cancelada)`;
-    } else if (offer.isEarlyCancellation) {
-      heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes + Finiquito mes ${offer.earlyCancellationMonth}: ${offer.finalSettlementPayment.toLocaleString('es-ES')} €`;
-    } else {
-      heroSub.textContent = `Entrada: ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} meses a ${offer.monthlyPayment.toLocaleString('es-ES')} €/mes`;
+    const upfront = `Entrada ${offer.upfrontPayment.toLocaleString('es-ES')} € + ${offer.totalMonths} cuotas`;
+    let planText = upfront;
+    if (offer.isEarlyCancellation) {
+      planText = `${upfront} + finiquito en el mes ${offer.earlyCancellationMonth} de ${offer.finalSettlementPayment.toLocaleString('es-ES')} €`;
+    } else if (offer.balloonPayment > 0) {
+      planText = `${upfront} + cuota final de ${offer.balloonPayment.toLocaleString('es-ES')} €`;
     }
-    hero.appendChild(heroSub);
+    card.appendChild(el('p', { className: 'cost-hero-sub', text: planText }));
   }
-
-  card.appendChild(hero);
 
   // Specs
   const specs = document.createElement('div');
@@ -228,7 +225,11 @@ export function createCrossVehicleCardElement(
     });
   }
 
-  card.appendChild(specs);
+  const breakdown = el('details', { className: 'offer-breakdown' }, [
+    el('summary', { className: 'offer-breakdown-toggle', text: 'Ver desglose' }),
+    specs
+  ]);
+  card.appendChild(breakdown);
 
   // Actions
   const actions = document.createElement('div');

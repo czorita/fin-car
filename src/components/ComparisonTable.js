@@ -73,14 +73,6 @@ export function createComparisonTableElement(offers) {
     titleDiv.className = 'table-th-title';
     titleDiv.textContent = getOfferFinanceSubtitle(o);
 
-    const isWinner = o.highlights && o.highlights.length > 0;
-    if (isWinner) {
-      const badgeSpan = document.createElement('span');
-      badgeSpan.className = 'badge badge-winner badge--small';
-      badgeSpan.textContent = o.highlights[0];
-      th.appendChild(badgeSpan);
-    }
-
     th.appendChild(titleDiv);
     headerTr.appendChild(th);
   });

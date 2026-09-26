@@ -4,12 +4,10 @@
 @import './components/forms.css';
 @import './components/segmented-control.css';
 @import './components/modals.css';
-@import './components/price-summary.css';
 @import './components/kpi-cards.css';
 @import './components/checkbox.css';
 @import './components/months-pills.css';
 @import './components/trap-guide.css';
-@import './components/main-tabs.css';
 @import './components/vehicle-carousel.css';
 @import './components/cross-vehicle-filter.css';
 @import './components/vehicle-media.css';

@@ -1,493 +1,484 @@
-<!-- Modal Formulario de Oferta -->
-<dialog id="modal-offer" class="app-modal">
+<!-- Modal Formulario de Oferta: asistente en 3 pasos (coche → pago → letra pequeña) con resumen en vivo -->
+<dialog id="modal-offer" class="app-modal app-modal--wizard" aria-labelledby="modal-offer-title">
   <div class="modal-header">
-    <h2 id="modal-offer-title">
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        aria-hidden="true"
-      >
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-      </svg>
-      Configurar oferta
-    </h2>
-    <button id="btn-close-offer-modal" class="btn btn-ghost btn-icon" type="button">&times;</button>
+    <h2 id="modal-offer-title">Nueva oferta</h2>
+    <button id="btn-close-offer-modal" class="btn btn-ghost btn-icon" type="button" aria-label="Cerrar">&times;</button>
   </div>
 
-  <form id="form-offer" class="modal-body">
+  <nav class="wizard-progress" id="wizard-progress" aria-label="Pasos del formulario">
+    <button type="button" class="wizard-progress-step active" data-go-step="1">
+      <span class="wizard-progress-num">1</span> Coche
+    </button>
+    <button type="button" class="wizard-progress-step" data-go-step="2">
+      <span class="wizard-progress-num">2</span> Pago
+    </button>
+    <button type="button" class="wizard-progress-step" data-go-step="3">
+      <span class="wizard-progress-num">3</span> Letra pequeña
+    </button>
+  </nav>
+
+  <form id="form-offer" class="wizard-form">
     <input type="hidden" id="offer-id" />
 
-    <div class="form-group">
-      <label class="form-label" for="offer-vehicle">
-        Vehículo / modelo *
-        <span class="helper-icon" title="Modelo de coche sobre el que se aplica la oferta">ⓘ</span>
-      </label>
-      <input
-        type="text"
-        id="offer-vehicle"
-        list="vehicles-datalist"
-        class="form-input"
-        placeholder="Ej: Hyundai Tucson, Toyota RAV4"
-        required
-        autocomplete="off"
-      />
-      <datalist id="vehicles-datalist"></datalist>
-    </div>
-
-    <!-- Vista Previa Automática del Modelo Detectado -->
-    <div class="vehicle-auto-preview-container" id="vehicle-auto-preview">
-      <div class="vehicle-image-preview-box" id="vehicle-image-preview" title="Vista previa del modelo">
-        <div class="vehicle-image-placeholder" id="vehicle-image-placeholder">🚗</div>
-        <img id="vehicle-image-thumb" src="" alt="Vista previa del modelo" />
-      </div>
-      <div class="vehicle-auto-preview-info">
-        <span class="vehicle-auto-preview-badge">✓ Foto oficial vinculada automáticamente</span>
-        <span class="form-helper" id="vehicle-image-status"
-          >Fotografía asignada desde el catálogo para las comparativas.</span
-        >
-      </div>
-    </div>
-
-    <div class="form-grid-2">
-      <div class="form-group">
-        <label class="form-label" for="offer-dealer">Concesionario / vendedor</label>
-        <input type="text" id="offer-dealer" class="form-input" placeholder="Ej: Concesionario Oficial Madrid" />
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="offer-notes">Notas / acabado</label>
-        <input type="text" id="offer-notes" class="form-input" placeholder="Ej: Pintura bi-tono, entrega 15 días" />
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Modalidad de oferta</label>
-      <div class="segmented-control" id="modality-selector">
-        <button type="button" class="segmented-btn" data-val="cash">Al contado</button>
-        <button type="button" class="segmented-btn active" data-val="standard_finance">Financiación lineal</button>
-        <button type="button" class="segmented-btn" data-val="flexible_finance">Flexible / balloon</button>
-        <button type="button" class="segmented-btn" data-val="early_cancellation">⚡ Cancelación anticipada</button>
-      </div>
-    </div>
-
-    <div id="price-fields-container" class="price-fields">
-      <div class="form-group" id="group-vehicle-price">
-        <label class="form-label" for="offer-price">
-          Precio del vehículo *
-          <span
-            class="helper-icon"
-            title="Precio ofertado del vehículo con el descuento por financiar ya incluido (si aplica)"
-            >ⓘ</span
-          >
-        </label>
-        <div class="input-wrapper">
-          <input
-            type="text"
-            inputmode="decimal"
-            id="offer-price"
-            class="form-input has-addon"
-            placeholder="Ej: 24200 o 24.200,00"
-            required
-          />
-          <span class="input-addon">€</span>
-        </div>
-      </div>
-
-      <div class="form-group" id="group-finance-discount">
-        <label class="form-label" for="finance-discount">
-          Descuento por financiar aplicado
-          <span
-            class="helper-icon"
-            title="Descuento que promete el concesionario respecto al precio al contado (se suma al precio financiado para obtener el equivalente al contado)"
-            >ⓘ</span
-          >
-        </label>
-        <div class="input-wrapper">
-          <input
-            type="text"
-            inputmode="decimal"
-            id="finance-discount"
-            class="form-input has-addon"
-            placeholder="Ej: 3300 o 3.300,00"
-          />
-          <span class="input-addon">€</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Indicador dinámico del Precio Resultante para Cálculos -->
-    <div id="net-calc-price-indicator" class="calc-price-summary">
-      <div>
-        <span class="calc-price-label" id="net-calc-price-label">Precio base financiado:</span>
-        <span class="calc-price-val" id="net-calc-price-val">24.200 €</span>
-      </div>
-      <div id="cash-ref-summary-box">
-        <span id="cash-ref-summary-text">Equivalente al contado: 27.500 €</span>
-      </div>
-    </div>
-
-    <div id="down-payment-fields-container">
-      <div class="form-group" id="group-down-payment">
-        <div class="form-label-row">
-          <label class="form-label form-label--flush" for="down-payment">
-            Entrada (€)
-            <span class="helper-icon" title="Dinero aportado de tu bolsillo al inicio">ⓘ</span>
-          </label>
-          <button
-            type="button"
-            id="btn-unlock-down"
-            class="btn-link-action"
-            title="Permite introducir la entrada en lugar de la cantidad a financiar"
-          >
-            Editar entrada
-          </button>
-        </div>
-        <div class="input-wrapper">
-          <input
-            type="text"
-            inputmode="decimal"
-            id="down-payment"
-            class="form-input has-addon"
-            placeholder="4000 o 4.000,00"
-          />
-          <span class="input-addon">€</span>
-        </div>
-        <span class="form-helper" id="down-payment-helper"></span>
-      </div>
-
-      <div class="form-group" id="group-financed-amount">
-        <div class="form-label-row">
-          <label class="form-label form-label--flush" for="financed-amount">
-            O cantidad a financiar (€)
-            <span class="helper-icon" title="Importe neto del préstamo solicitado a la entidad">ⓘ</span>
-          </label>
-          <button
-            type="button"
-            id="btn-unlock-financed"
-            class="btn-link-action"
-            title="Permite fijar la cantidad total a financiar"
-          >
-            Editar financiado
-          </button>
-        </div>
-        <div class="input-wrapper">
-          <input
-            type="text"
-            inputmode="decimal"
-            id="financed-amount"
-            class="form-input has-addon"
-            placeholder="Autocalcular (ej: 20.200)"
-          />
-          <span class="input-addon">€</span>
-        </div>
-        <span class="form-helper" id="financed-amount-helper"></span>
-      </div>
-
-      <div class="form-group" id="group-trade-in">
-        <label class="form-label form-label--tight" for="trade-in-value">
-          Tasación coche usado
-          <span class="helper-icon" title="Valor del vehículo antiguo entregado a cambio">ⓘ</span>
-        </label>
-        <div class="input-wrapper">
-          <input type="text" inputmode="decimal" id="trade-in-value" class="form-input has-addon" placeholder="0" />
-          <span class="input-addon">€</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Campos Específicos de Financiación -->
-    <div id="finance-fields-container">
-      <div class="form-section-divider">
-        <h4 class="form-section-title">Parámetros de financiación</h4>
-      </div>
-
-      <div class="form-grid-3">
-        <div class="form-group">
-          <label class="form-label form-label--split" for="loan-months">
-            <span>Plazo (meses)</span>
-            <span id="loan-months-badge" class="months-duration-badge">5 años</span>
-          </label>
-          <div class="input-wrapper">
-            <input
-              type="number"
-              id="loan-months"
-              class="form-input has-addon"
-              min="1"
-              max="240"
-              step="1"
-              placeholder="60"
-              value="60"
-              required
-            />
-            <span class="input-addon">meses</span>
-          </div>
-          <div class="months-quick-pills" id="loan-months-pills">
-            <button type="button" class="months-pill-btn" data-months="24">24m</button>
-            <button type="button" class="months-pill-btn" data-months="36">36m</button>
-            <button type="button" class="months-pill-btn" data-months="48">48m</button>
-            <button type="button" class="months-pill-btn active" data-months="60">60m</button>
-            <button type="button" class="months-pill-btn" data-months="72">72m</button>
-            <button type="button" class="months-pill-btn" data-months="84">84m</button>
-            <button type="button" class="months-pill-btn" data-months="96">96m</button>
-            <button type="button" class="months-pill-btn" data-months="120">120m</button>
-          </div>
-        </div>
-
-        <div class="form-group" id="group-loan-tin">
-          <div class="form-label-row">
-            <label class="form-label form-label--flush" for="loan-tin">
-              TIN anual (%)
-              <span class="helper-icon" title="Tipo de Interés Nominal fijado en el contrato">ⓘ</span>
-            </label>
-            <button
-              type="button"
-              id="btn-unlock-tin"
-              class="btn-link-action"
-              title="Permite introducir el TIN en lugar de la cuota"
-            >
-              Editar TIN
-            </button>
-          </div>
-          <div class="input-wrapper">
-            <input type="text" inputmode="decimal" id="loan-tin" class="form-input has-addon" placeholder="8,5" />
-            <span class="input-addon">%</span>
-          </div>
-          <span class="form-helper" id="loan-tin-helper"></span>
-        </div>
-
-        <div class="form-group" id="group-manual-monthly">
-          <div class="form-label-row">
-            <label class="form-label form-label--flush" for="manual-monthly">
-              O cuota ofertada (€)
-              <span class="helper-icon" title="Opcional: Si el comercial te fijó la cuota mensual exacta">ⓘ</span>
-            </label>
-            <button
-              type="button"
-              id="btn-unlock-monthly"
-              class="btn-link-action"
-              title="Permite fijar la cuota mensual exacta"
-            >
-              Editar cuota
-            </button>
-          </div>
-          <div class="input-wrapper">
-            <input
-              type="text"
-              inputmode="decimal"
-              id="manual-monthly"
-              class="form-input has-addon"
-              placeholder="Autocalcular (ej: 345,50)"
-            />
-            <span class="input-addon">€/mes</span>
-          </div>
-          <span class="form-helper" id="manual-monthly-helper"></span>
-        </div>
-      </div>
-
-      <!-- Feedback dinámico de sincronización entre TIN y cuota -->
-      <div id="finance-calc-feedback">
-        <span id="finance-calc-feedback-text"></span>
-      </div>
-
-      <!-- Cuota Final (Multiopción) -->
-      <div id="flexible-balloon-container">
-        <div class="form-group form-group--flush">
-          <label class="form-label" for="balloon-payment">
-            Cuota final / valor futuro (VFG) *
-            <span class="helper-icon" title="Último pago balloon de la financiación flexible">ⓘ</span>
-          </label>
-          <div class="input-wrapper">
-            <input
-              type="text"
-              inputmode="decimal"
-              id="balloon-payment"
-              class="form-input has-addon"
-              placeholder="13000 o 13.000,00"
-            />
-            <span class="input-addon">€</span>
-          </div>
-        </div>
-
-        <div class="flexible-cancel-option">
-          <label class="checkbox-inline-label">
-            <input type="checkbox" id="flexible-cancel-early" />
-            <span>⚡ Planear cancelación anticipada en permanencia (ahorrarte los intereses del balloon)</span>
-          </label>
-          <span class="checkbox-inline-help">
-            Cancela el préstamo al cumplir la permanencia obligatoria (ej. mes 24) para quedarte el coche con el
-            descuento y evitar devengar intereses sobre la cuota final.
-          </span>
-        </div>
-      </div>
-
-      <!-- Cancelación Anticipada (Permanencia con Penalización) -->
-      <div id="early-cancellation-container">
-        <div class="early-cancel-header">
-          <h5 class="early-cancel-title">⚡ Parámetros de Permanencia y Cancelación</h5>
-          <span class="badge badge-success badge--xs">Permanencia y Finiquito</span>
-        </div>
-        <div class="form-grid-2--spaced">
-          <div class="form-group form-group--flush">
-            <label class="form-label" for="early-cancel-month">
-              Mes de cancelación (permanencia) *
-              <span
-                class="helper-icon"
-                title="Mes en el que la financiera permite cancelar sin penalizaciones comerciales de devolución del descuento (típicamente 18, 24 o 36 meses)."
-                >ⓘ</span
-              >
-            </label>
-            <div class="input-wrapper">
-              <input
-                type="number"
-                id="early-cancel-month"
-                class="form-input has-addon"
-                min="1"
-                max="120"
-                step="1"
-                placeholder="24"
-                value="24"
-              />
-              <span class="input-addon">mes</span>
-            </div>
-            <div class="months-quick-pills" id="cancel-months-pills">
-              <button type="button" class="months-pill-btn" data-cancel="12">12m</button>
-              <button type="button" class="months-pill-btn" data-cancel="18">18m</button>
-              <button type="button" class="months-pill-btn active" data-cancel="24">24m</button>
-              <button type="button" class="months-pill-btn" data-cancel="36">36m</button>
-            </div>
-          </div>
-
-          <div class="form-group form-group--flush">
-            <label class="form-label" for="early-cancel-penalty">
-              Comisión de cancelación anticipada (%)
-              <span
-                class="helper-icon"
-                title="Comisión de amortización bancaria fijada en el contrato. Máximo legal en España (Ley 16/2011): 1.0% si queda > 1 año; 0.5% si queda ≤ 1 año."
-                >ⓘ</span
-              >
-            </label>
-            <div class="input-wrapper">
+    <div class="modal-body wizard-layout">
+      <div class="wizard-steps">
+        <!-- ================= Paso 1 · Coche ================= -->
+        <section class="wizard-step" data-step="1" aria-label="Paso 1: coche">
+          <div class="form-group">
+            <label class="form-label" for="offer-vehicle">¿Qué coche es? *</label>
+            <div class="vehicle-input-row">
+              <div class="vehicle-auto-preview-container" id="vehicle-auto-preview">
+                <div class="vehicle-image-preview-box" id="vehicle-image-preview">
+                  <div class="vehicle-image-placeholder" id="vehicle-image-placeholder">🚗</div>
+                  <img id="vehicle-image-thumb" src="" alt="Foto del modelo" />
+                </div>
+              </div>
               <input
                 type="text"
-                inputmode="decimal"
-                id="early-cancel-penalty"
-                class="form-input has-addon"
-                placeholder="1,0"
-                value="1,0"
+                id="offer-vehicle"
+                list="vehicles-datalist"
+                class="form-input"
+                placeholder="Ej: Hyundai Tucson, Toyota RAV4"
+                required
+                autocomplete="off"
               />
-              <span class="input-addon">%</span>
             </div>
-            <div class="months-quick-pills" id="penalty-quick-pills">
-              <button type="button" class="months-pill-btn" data-penalty="0">0% (Gratis)</button>
-              <button type="button" class="months-pill-btn" data-penalty="0.5">0.5%</button>
-              <button type="button" class="months-pill-btn active" data-penalty="1">1.0% (Límite legal)</button>
+            <datalist id="vehicles-datalist"></datalist>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="offer-dealer">Concesionario</label>
+            <input type="text" id="offer-dealer" class="form-input" placeholder="Ej: Concesionario Oficial Madrid" />
+          </div>
+
+          <details class="form-disclosure" id="notes-disclosure">
+            <summary>+ Añadir una nota (acabado, plazo de entrega…)</summary>
+            <div class="form-group">
+              <label class="form-label" for="offer-notes">Nota</label>
+              <input
+                type="text"
+                id="offer-notes"
+                class="form-input"
+                placeholder="Ej: Pintura bi-tono, entrega 15 días"
+              />
+            </div>
+          </details>
+        </section>
+
+        <!-- ================= Paso 2 · Pago ================= -->
+        <section class="wizard-step" data-step="2" aria-label="Paso 2: pago" hidden>
+          <div class="form-group">
+            <span class="form-label">¿Cómo lo pagas?</span>
+            <div class="choice-cards" id="payment-type" role="radiogroup" aria-label="Forma de pago">
+              <button type="button" class="choice-card" data-pay="cash" role="radio" aria-checked="false">
+                <span class="choice-card-icon" aria-hidden="true">💵</span>
+                <span class="choice-card-title">Lo pago entero</span>
+                <span class="choice-card-desc">Al contado</span>
+              </button>
+              <button type="button" class="choice-card active" data-pay="finance" role="radio" aria-checked="true">
+                <span class="choice-card-icon" aria-hidden="true">📆</span>
+                <span class="choice-card-title">Lo financio</span>
+                <span class="choice-card-desc">Cuotas, con o sin cuota final</span>
+              </button>
             </div>
           </div>
-        </div>
 
-        <!-- Resumen dinámico en vivo del finiquito -->
-        <div id="early-cancel-live-summary">
-          <div class="summary-row">
-            <span>Capital vivo a liquidar en mes <strong id="cancel-summary-month">24</strong>:</span>
-            <strong id="cancel-summary-capital">-- €</strong>
-          </div>
-          <div class="summary-row">
-            <span>Comisión bancaria de cancelación (<span id="cancel-summary-rate">1.0</span>%):</span>
-            <strong id="cancel-summary-penalty">+-- €</strong>
-          </div>
-          <div class="summary-row--total">
-            <span>Pago total finiquito (Capital + Comisión):</span>
-            <strong id="cancel-summary-settlement">-- €</strong>
-          </div>
-          <div class="summary-row--highlight">
-            <span>Intereses futuros que te ahorras de pagar:</span>
-            <strong id="cancel-summary-saved">-- €</strong>
-          </div>
-        </div>
-      </div>
+          <div id="price-fields-container" class="price-fields">
+            <div class="form-group" id="group-vehicle-price">
+              <label class="form-label" for="offer-price" id="offer-price-label">Precio final financiado *</label>
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  id="offer-price"
+                  class="form-input has-addon"
+                  placeholder="Ej: 24200 o 24.200,00"
+                  required
+                />
+                <span class="input-addon">€</span>
+              </div>
+              <span class="form-helper" id="offer-price-help">Con el descuento por financiar ya aplicado.</span>
+            </div>
 
-      <!-- Productos Vinculados -->
-      <div class="form-section">
-        <div class="section-header-row">
-          <label class="form-label form-label--no-margin">
-            Productos obligatorios vinculados
-            <span
-              class="helper-icon"
-              title="Seguros de vida, packs de mantenimiento, etc. exigidos para obtener el descuento"
-              >ⓘ</span
-            >
-          </label>
-          <button type="button" id="btn-add-product" class="btn btn-secondary btn-sm">+ Añadir seguro/pack</button>
-        </div>
-        <div id="linked-products-list">
-          <!-- Se inyectan filas con tmpl-linked-product -->
-        </div>
-      </div>
-    </div>
+            <div class="form-group" id="group-finance-discount">
+              <label class="form-label" for="finance-discount">Descuento por financiar (opcional)</label>
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  id="finance-discount"
+                  class="form-input has-addon"
+                  placeholder="Ej: 3300"
+                />
+                <span class="input-addon">€</span>
+              </div>
+              <span class="form-helper" id="cash-ref-summary-box">
+                <span id="cash-ref-summary-text">Sirve para calcular el precio equivalente al contado.</span>
+              </span>
+            </div>
+          </div>
 
-    <!-- Servicios y ventajas incluidas de serie / bonificadas (TCO Equiparado) -->
-    <div class="form-section-divider--wide">
-      <div class="services-header">
-        <div>
-          <label class="form-label services-label">
-            <span>🎁 Servicios y ventajas incluidas (bonificados / de serie)</span>
-            <span
-              class="helper-icon"
-              title="Mantenimiento, seguro, extensión de garantía, etc. incluidos en la oferta a coste 0 € en factura. Permite comparar a igualdad de condiciones frente al contado u otros coches."
-              >ⓘ</span
-            >
-          </label>
-          <p class="services-help">
-            Coste estimado si tuvieras que pagarlo por tu cuenta (a mano). Se deduce del coste total para comparar en
-            igualdad de condiciones (TCO).
+          <details class="form-disclosure" id="trade-in-disclosure">
+            <summary>+ Entrego mi coche usado</summary>
+            <div class="form-group" id="group-trade-in">
+              <label class="form-label" for="trade-in-value">Tasación de mi coche usado</label>
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  id="trade-in-value"
+                  class="form-input has-addon"
+                  placeholder="0"
+                />
+                <span class="input-addon">€</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- Campos de financiación: se introducen tal cual los da el concesionario y el resto se calcula -->
+          <div id="finance-fields-container">
+            <div class="form-group">
+              <span class="form-label">¿Qué datos te han dado?</span>
+              <div class="segmented-control scenario-selector" id="financing-scenario" role="radiogroup">
+                <button
+                  type="button"
+                  class="segmented-btn active"
+                  data-scenario="down"
+                  role="radio"
+                  aria-checked="true"
+                >
+                  Entrada + cuotas
+                </button>
+                <button type="button" class="segmented-btn" data-scenario="financed" role="radio" aria-checked="false">
+                  Importe a financiar + cuotas
+                </button>
+              </div>
+            </div>
+
+            <div class="form-grid-2" id="down-payment-fields-container">
+              <div class="form-group" id="group-down-payment">
+                <label class="form-label" for="down-payment">Entrada</label>
+                <div class="input-wrapper">
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    id="down-payment"
+                    class="form-input has-addon"
+                    placeholder="4000 o 4.000,00"
+                  />
+                  <span class="input-addon">€</span>
+                </div>
+                <span class="form-helper" id="down-payment-helper"></span>
+              </div>
+
+              <div class="form-group" id="group-financed-amount">
+                <label class="form-label" for="financed-amount">Importe a financiar</label>
+                <div class="input-wrapper">
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    id="financed-amount"
+                    class="form-input has-addon"
+                    placeholder="Ej: 20.200"
+                  />
+                  <span class="input-addon">€</span>
+                </div>
+                <span class="form-helper" id="financed-amount-helper"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label form-label--split" for="loan-months">
+                  <span>Plazo</span>
+                  <span id="loan-months-badge" class="months-duration-badge"></span>
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    id="loan-months"
+                    class="form-input has-addon"
+                    min="1"
+                    max="240"
+                    step="1"
+                    placeholder="60"
+                    required
+                  />
+                  <span class="input-addon">meses</span>
+                </div>
+                <div class="months-quick-pills" id="loan-months-pills">
+                  <button type="button" class="months-pill-btn" data-months="24">24</button>
+                  <button type="button" class="months-pill-btn" data-months="36">36</button>
+                  <button type="button" class="months-pill-btn" data-months="48">48</button>
+                  <button type="button" class="months-pill-btn" data-months="60">60</button>
+                  <button type="button" class="months-pill-btn" data-months="72">72</button>
+                  <button type="button" class="months-pill-btn" data-months="84">84</button>
+                  <button type="button" class="months-pill-btn" data-months="96">96</button>
+                  <button type="button" class="months-pill-btn" data-months="120">120</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group" id="group-manual-monthly">
+                <label class="form-label" for="manual-monthly">Cuota mensual</label>
+                <div class="input-wrapper">
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    id="manual-monthly"
+                    class="form-input has-addon"
+                    placeholder="Ej: 345,50"
+                  />
+                  <span class="input-addon">€/mes</span>
+                </div>
+                <span class="form-helper" id="manual-monthly-helper"></span>
+              </div>
+
+              <div class="form-group" id="group-loan-tin">
+                <label class="form-label" for="loan-tin">TIN anual</label>
+                <div class="input-wrapper">
+                  <input type="text" inputmode="decimal" id="loan-tin" class="form-input has-addon" placeholder="8,5" />
+                  <span class="input-addon">%</span>
+                </div>
+                <span class="form-helper" id="loan-tin-helper"></span>
+              </div>
+
+              <div class="form-group" id="flexible-balloon-container">
+                <label class="form-label" for="balloon-payment">Cuota final (opcional)</label>
+                <div class="input-wrapper">
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    id="balloon-payment"
+                    class="form-input has-addon"
+                    placeholder="Sin cuota final"
+                  />
+                  <span class="input-addon">€</span>
+                </div>
+                <span class="form-helper">Tal como te la dan (con la comisión, si viene incluida).</span>
+              </div>
+            </div>
+
+            <button type="button" id="toggle-rate-mode" class="btn-link-action">
+              ¿Te han dado el TIN en vez de la cuota?
+            </button>
+
+            <!-- Lo que se calcula a partir de lo introducido -->
+            <div id="finance-calc-feedback" class="scenario-derived">
+              <span id="scenario-derived-text"></span>
+              <span id="finance-calc-feedback-text"></span>
+            </div>
+
+            <label class="toggle-row">
+              <input type="checkbox" id="cancel-early-toggle" />
+              <span>
+                <strong>Pienso cancelar el préstamo antes de tiempo</strong>
+                <span class="toggle-row-help">P. ej. al acabar la permanencia, para no pagar más intereses.</span>
+              </span>
+            </label>
+
+            <!-- Cancelación Anticipada (Permanencia con Penalización) -->
+            <div id="early-cancellation-container">
+              <div class="form-grid-2--spaced">
+                <div class="form-group form-group--flush">
+                  <label class="form-label" for="early-cancel-month">
+                    Mes en el que cancelas *
+                    <span
+                      class="helper-icon"
+                      title="Mes en el que la financiera permite cancelar sin perder el descuento (típicamente 18, 24 o 36 meses)."
+                      >ⓘ</span
+                    >
+                  </label>
+                  <div class="input-wrapper">
+                    <input
+                      type="number"
+                      id="early-cancel-month"
+                      class="form-input has-addon"
+                      min="1"
+                      max="120"
+                      step="1"
+                      placeholder="24"
+                      value="24"
+                    />
+                    <span class="input-addon">mes</span>
+                  </div>
+                  <div class="months-quick-pills" id="cancel-months-pills">
+                    <button type="button" class="months-pill-btn" data-cancel="12">12</button>
+                    <button type="button" class="months-pill-btn" data-cancel="18">18</button>
+                    <button type="button" class="months-pill-btn active" data-cancel="24">24</button>
+                    <button type="button" class="months-pill-btn" data-cancel="36">36</button>
+                  </div>
+                </div>
+
+                <div class="form-group form-group--flush">
+                  <label class="form-label" for="early-cancel-penalty">
+                    Comisión por cancelar
+                    <span
+                      class="helper-icon"
+                      title="Comisión de amortización anticipada del contrato. Máximo legal en España (Ley 16/2011): 1% si queda más de 1 año; 0,5% si queda 1 año o menos."
+                      >ⓘ</span
+                    >
+                  </label>
+                  <div class="input-wrapper">
+                    <input
+                      type="text"
+                      inputmode="decimal"
+                      id="early-cancel-penalty"
+                      class="form-input has-addon"
+                      placeholder="1,0"
+                      value="1,0"
+                    />
+                    <span class="input-addon">%</span>
+                  </div>
+                  <div class="months-quick-pills" id="penalty-quick-pills">
+                    <button type="button" class="months-pill-btn" data-penalty="0">0%</button>
+                    <button type="button" class="months-pill-btn" data-penalty="0.5">0,5%</button>
+                    <button type="button" class="months-pill-btn active" data-penalty="1">1% (máx. legal)</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Resumen dinámico en vivo del finiquito -->
+              <div id="early-cancel-live-summary">
+                <div class="summary-row">
+                  <span>Capital pendiente en el mes <strong id="cancel-summary-month">24</strong>:</span>
+                  <strong id="cancel-summary-capital">-- €</strong>
+                </div>
+                <div class="summary-row">
+                  <span>Comisión de cancelación (<span id="cancel-summary-rate">1.0</span>%):</span>
+                  <strong id="cancel-summary-penalty">+-- €</strong>
+                </div>
+                <div class="summary-row--total">
+                  <span>Pago para cancelar (capital + comisión):</span>
+                  <strong id="cancel-summary-settlement">-- €</strong>
+                </div>
+                <div class="summary-row--highlight">
+                  <span>Intereses que te ahorras:</span>
+                  <strong id="cancel-summary-saved">-- €</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= Paso 3 · Letra pequeña (opcional) ================= -->
+        <section class="wizard-step" data-step="3" aria-label="Paso 3: letra pequeña" hidden>
+          <p class="wizard-step-intro">
+            Opcional: añade lo que suma o resta al coste real. Puedes guardar sin rellenarlo.
           </p>
-        </div>
-        <span id="included-services-total-badge" class="badge badge-info">0 € en servicios</span>
+
+          <div class="form-section" id="linked-products-section">
+            <div class="section-header-row">
+              <span class="form-label form-label--no-margin">
+                Lo que te obligan a contratar
+                <span
+                  class="helper-icon"
+                  title="Seguros, packs de mantenimiento, etc. exigidos para obtener el descuento"
+                  >ⓘ</span
+                >
+              </span>
+              <button type="button" id="btn-add-product" class="btn btn-secondary btn-sm">+ Añadir</button>
+            </div>
+            <div id="linked-products-list">
+              <!-- Se inyectan filas con tmpl-linked-product -->
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="services-header">
+              <span class="form-label services-label">
+                Lo que te regalan
+                <span
+                  class="helper-icon"
+                  title="Mantenimiento, seguro, garantía… incluidos a coste 0 €. Se descuenta su valor para comparar en igualdad de condiciones."
+                  >ⓘ</span
+                >
+              </span>
+              <span id="included-services-total-badge" class="badge badge-info">0 € en servicios</span>
+            </div>
+            <p class="services-help">Pon lo que te costaría contratarlo por tu cuenta.</p>
+
+            <div id="included-services-list">
+              <!-- Se inyectan filas con tmpl-included-service -->
+            </div>
+
+            <div class="service-quick-presets">
+              <span class="service-quick-presets-label">Sugerencias:</span>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm btn-add-preset-service"
+                data-name="Mantenimiento oficial (4-5 años)"
+                data-value="1200"
+                title="Coste aproximado de 4-5 revisiones oficiales"
+              >
+                + Mantenimiento
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm btn-add-preset-service"
+                data-name="Seguro a todo riesgo (1er año)"
+                data-value="750"
+                title="Póliza a todo riesgo estimada"
+              >
+                + Seguro 1 año
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm btn-add-preset-service"
+                data-name="Extensión de garantía oficial (+2-3 años)"
+                data-value="600"
+                title="Extensión de garantía oficial"
+              >
+                + Garantía
+              </button>
+              <button type="button" id="btn-add-custom-service" class="btn btn-ghost btn-sm">+ Otro</button>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <!-- Presets rápidos calibrados con RAV4 / Tucson -->
-      <div class="service-quick-presets">
-        <button
-          type="button"
-          class="btn btn-secondary btn-sm btn-add-preset-service"
-          data-name="Mantenimiento oficial (4-5 años)"
-          data-value="1200"
-          title="Coste conservador de 4-5 revisiones oficiales para SUV (RAV4/Tucson)"
-        >
-          + Mantenimiento (1.200 €)
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary btn-sm btn-add-preset-service"
-          data-name="Seguro a todo riesgo (1er año)"
-          data-value="750"
-          title="Póliza todo riesgo estimada para SUV de 35k-45k€"
-        >
-          + Seguro 1 año (750 €)
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary btn-sm btn-add-preset-service"
-          data-name="Extensión de garantía oficial (+2-3 años)"
-          data-value="600"
-          title="Extensión de garantía oficial"
-        >
-          + Garantía (+600 €)
-        </button>
-        <button type="button" id="btn-add-custom-service" class="btn btn-ghost btn-sm">+ Personalizado</button>
-      </div>
-
-      <div id="included-services-list">
-        <!-- Se inyectan filas con tmpl-included-service -->
-      </div>
+      <!-- Resumen en vivo: lo que se calcula con los datos introducidos -->
+      <aside id="offer-live-summary" class="offer-live-summary" aria-live="polite">
+        <h3 class="live-summary-title">Resumen</h3>
+        <p class="live-summary-empty" id="live-summary-empty">Introduce el precio para ver el coste real.</p>
+        <dl class="live-summary-list" id="live-summary-list" hidden>
+          <div class="live-summary-row live-summary-row--total">
+            <dt>Coste total real</dt>
+            <dd id="live-total"></dd>
+          </div>
+          <div class="live-summary-row live-summary-row--key" data-finance-only>
+            <dt>Cuota/mes</dt>
+            <dd id="live-monthly"></dd>
+          </div>
+          <div class="live-summary-row" data-finance-only>
+            <dt>Entrada</dt>
+            <dd id="live-down"></dd>
+          </div>
+          <div class="live-summary-row" data-finance-only>
+            <dt>Financias</dt>
+            <dd id="live-financed"></dd>
+          </div>
+          <div class="live-summary-row" data-finance-only>
+            <dt>TIN / TAE</dt>
+            <dd id="live-rates"></dd>
+          </div>
+          <div class="live-summary-row" data-finance-only>
+            <dt>Intereses</dt>
+            <dd id="live-interest"></dd>
+          </div>
+          <div class="live-summary-row live-summary-row--key" data-finance-only>
+            <dt>vs. contado</dt>
+            <dd id="live-vs-cash"></dd>
+          </div>
+        </dl>
+        <p class="live-summary-verdict" id="live-verdict" hidden></p>
+      </aside>
     </div>
 
-    <div class="modal-footer modal-footer--bleed">
+    <div class="modal-footer wizard-footer">
       <button type="button" id="btn-cancel-offer" class="btn btn-ghost">Cancelar</button>
+      <span class="wizard-footer-spacer"></span>
+      <button type="button" id="btn-wizard-prev" class="btn btn-secondary">Atrás</button>
+      <button type="button" id="btn-wizard-next" class="btn btn-secondary">Siguiente</button>
       <button type="submit" class="btn btn-primary">Guardar oferta</button>
     </div>
   </form>

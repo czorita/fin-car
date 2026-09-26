@@ -48,9 +48,9 @@ export function renderCrossVehicleView({ dom, normalizedList, modality, view, ca
   const { modalitySelector, displaySlot, countLabel } = dom;
   if (!displaySlot) return [];
 
-  modalitySelector?.querySelectorAll('.segmented-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.modality === modality);
-  });
+  if (modalitySelector?.tagName === 'SELECT') {
+    /** @type {HTMLSelectElement} */ (modalitySelector).value = modality;
+  }
 
   if (normalizedList.length === 0) {
     const emptyEl = callbacks.renderEmptyState?.();
@@ -76,10 +76,9 @@ export function renderCrossVehicleView({ dom, normalizedList, modality, view, ca
 
   if (view === 'cards') {
     const grid = el('div', { className: 'offers-grid' });
-    rankedOffers.forEach((offer, idx) => {
-      const isWinner = idx === 0 && rankedOffers.length > 1;
+    rankedOffers.forEach(offer => {
       grid.appendChild(
-        createCrossVehicleCardElement(offer, isWinner, {
+        createCrossVehicleCardElement(offer, {
           allRankedOffers: rankedOffers,
           onInspectVehicle: vName => callbacks.onInspectVehicle?.(vName),
           onEditOffer: target => callbacks.getCardHandlers?.(target)?.onEdit?.(target)

@@ -6,6 +6,8 @@ Aplicación web para comparar y analizar el coste financiero real de ofertas de 
 
 ## ✨ Características Principales
 
+- **Alta de ofertas en 3 pasos (coche → pago → letra pequeña):** se introducen los datos tal como los da el concesionario (entrada + cuotas, o importe a financiar + cuotas; cuota o TIN; cuota final opcional) y el resto se calcula, con un resumen en vivo del coste real.
+- **Pantalla centrada en las ofertas:** una fila de coches (con "Todos los coches" para comparar modelos) y tarjetas con coste total, cuota y diferencia frente al contado; el desglose completo se despliega bajo demanda.
 - **Web de ejemplos precargados (`/ejemplos.html`):** Incluye 5 casos de estudio de concesionario listos para analizar o copiar a tus ofertas.
 - **Persistencia en documentos JSON y volúmenes Docker:** Cada oferta se guarda como un archivo `.json` estructurado e individual en el volumen montado (`./data:/app/data`).
 

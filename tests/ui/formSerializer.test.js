@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {
   computeFinancedPrincipal,
   computeNetBeforeDownPayment,
+  deriveModality,
   formValuesToOffer,
+  modalityToPaymentChoice,
   offerToFormValues,
   parseMonths
 } from '../../src/components/offerModal/formSerializer.js';
@@ -222,5 +224,53 @@ describe('Serialización del formulario de oferta (formSerializer.js)', () => {
     assert.equal(cash.downPaymentMode, null);
     assert.equal(cash.values.downPayment, '0');
     assert.equal(cash.values.financedAmount, '0');
+  });
+});
+
+describe('Modalidad deducida del formulario (deriveModality / modalityToPaymentChoice)', () => {
+  test('Contado, lineal, flexible (hay cuota final) y cancelación anticipada', () => {
+    assert.equal(deriveModality({ payType: 'cash', balloonPayment: '9000', cancelEarly: true }), OFFER_MODALITIES.CASH);
+    assert.equal(deriveModality({ payType: 'finance' }), OFFER_MODALITIES.STANDARD_FINANCE);
+    assert.equal(
+      deriveModality({ payType: 'finance', balloonPayment: '12.000,50' }),
+      OFFER_MODALITIES.FLEXIBLE_FINANCE
+    );
+    assert.equal(
+      deriveModality({ payType: 'finance', balloonPayment: '12000', cancelEarly: true }),
+      OFFER_MODALITIES.FLEXIBLE_FINANCE,
+      'Con cuota final y cancelación: flexible con cancelEarly'
+    );
+    assert.equal(deriveModality({ payType: 'finance', cancelEarly: true }), OFFER_MODALITIES.EARLY_CANCELLATION);
+    assert.equal(deriveModality({ payType: 'finance', balloonPayment: '0' }), OFFER_MODALITIES.STANDARD_FINANCE);
+  });
+
+  test('Inversa: cómo se presenta cada modalidad guardada', () => {
+    assert.deepEqual(modalityToPaymentChoice(OFFER_MODALITIES.CASH), { payType: 'cash', cancelEarly: false });
+    assert.deepEqual(modalityToPaymentChoice(OFFER_MODALITIES.STANDARD_FINANCE), {
+      payType: 'finance',
+      cancelEarly: false
+    });
+    assert.deepEqual(modalityToPaymentChoice(OFFER_MODALITIES.EARLY_CANCELLATION), {
+      payType: 'finance',
+      cancelEarly: true
+    });
+    assert.deepEqual(modalityToPaymentChoice(OFFER_MODALITIES.FLEXIBLE_FINANCE, true), {
+      payType: 'finance',
+      cancelEarly: true
+    });
+  });
+
+  test('Ida y vuelta: toda modalidad guardada se vuelve a deducir igual', () => {
+    const cases = [
+      [OFFER_MODALITIES.CASH, false, ''],
+      [OFFER_MODALITIES.STANDARD_FINANCE, false, ''],
+      [OFFER_MODALITIES.EARLY_CANCELLATION, false, ''],
+      [OFFER_MODALITIES.FLEXIBLE_FINANCE, false, '12000'],
+      [OFFER_MODALITIES.FLEXIBLE_FINANCE, true, '12000']
+    ];
+    for (const [modality, cancelEarly, balloonPayment] of cases) {
+      const choice = modalityToPaymentChoice(modality, cancelEarly);
+      assert.equal(deriveModality({ ...choice, balloonPayment }), modality, modality);
+    }
   });
 });

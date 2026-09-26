@@ -67,12 +67,6 @@
   color: var(--text-muted);
 }
 
-.table-th--winner {
-  background: rgba(16, 185, 129, 0.08) !important;
-  border-left: 1px solid var(--accent-emerald);
-  border-right: 1px solid var(--accent-emerald);
-}
-
 .cross-vehicle-table td:nth-child(2) {
   background: rgba(16, 185, 129, 0.03);
 }
